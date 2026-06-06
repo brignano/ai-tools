@@ -1,26 +1,34 @@
 #!/usr/bin/env bash
-# Install ai-tools global Claude context on Mac or Linux.
+# Install ai-tools context on Mac or Linux.
 # Run once per machine. Re-run anytime to update symlinks.
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CLAUDE_DIR="$HOME/.claude"
-COMMANDS_DIR="$CLAUDE_DIR/commands"
+AGENTS_MD="$REPO_DIR/AGENTS.md"
+COMMANDS_DIR="$REPO_DIR/commands"
 
-echo "==> Creating ~/.claude directories"
-mkdir -p "$COMMANDS_DIR"
+link() {
+  local src="$1" dest="$2"
+  mkdir -p "$(dirname "$dest")"
+  ln -sf "$src" "$dest"
+  echo "    $dest"
+}
 
-echo "==> Symlinking CLAUDE.md"
-ln -sf "$REPO_DIR/claude/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
-
-echo "==> Symlinking commands"
-for file in "$REPO_DIR/claude/commands/"*.md; do
-  name="$(basename "$file")"
-  ln -sf "$file" "$COMMANDS_DIR/$name"
-  echo "    linked $name"
+echo "==> Claude Code (~/.claude/)"
+link "$AGENTS_MD" "$HOME/.claude/CLAUDE.md"
+for file in "$COMMANDS_DIR"/*.md; do
+  link "$file" "$HOME/.claude/commands/$(basename "$file")"
 done
 
+# -- Add new agents below as needed --
+# echo "==> Cursor (~/.cursorrules)"
+# link "$AGENTS_MD" "$HOME/.cursorrules"
+
+# echo "==> GitHub Copilot"
+# link "$AGENTS_MD" "$HOME/.github/copilot-instructions.md"
+
+# echo "==> Windsurf"
+# link "$AGENTS_MD" "$HOME/.windsurfrules"
+
 echo ""
-echo "Done. Global Claude context is active."
-echo "Commands available in every Claude Code session:"
-ls "$COMMANDS_DIR"
+echo "Done. AGENTS.md is active for all installed AI tools."
