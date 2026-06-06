@@ -17,8 +17,16 @@ Docker, Portainer, Tailscale, Prometheus, Grafana, Ollama, Open WebUI, PostgreSQ
 ## Conventions
 - Docker Compose v2 (`docker compose`, not `docker-compose`)
 - Each service in its own `docker/<name>/` directory
-- Secrets use `${VAR:?required}` — never committed to git
+- Secrets: never committed to git — see **Secrets & credentials** below
 - Document changes in `docs/setup-log.md`
+
+## Secrets & credentials
+- **Never commit secrets to git.** Reference them from compose; never inline a real value in a compose file or source.
+- **Sensitive values (passwords, API keys, tokens) use Docker secrets or a mounted secret file**, not plain environment variables — env vars leak via `docker inspect`, process listings, and logs. Reserve `${VAR:?required}` env vars for *non-sensitive* config only (ports, hostnames, feature flags). This is the canonical rule; the older "`${VAR:?required}` for secrets" guidance is superseded.
+- **Lock down secret files at rest:** owned by a dedicated non-root service user, directory `0700` / files `0600` (`chmod 600`), never world-readable. Run containers as non-root wherever the image supports it.
+- **Encrypt the disk:** the Proxmox host / Docker VM uses full-disk encryption (LUKS) so a stolen NVMe doesn't expose every `.env`. Encrypt backups too, or keep secrets out of the backup set and store them separately.
+- **Rotation & revocation:** prefer scoped, revocable credentials (app-specific passwords, scoped API tokens) over master passwords. Rotate periodically and note where each secret lives so it can be killed fast if leaked.
+- **Scale-up option (only when there are many secrets):** centralize with `systemd` `LoadCredential` / `systemd-creds`, or a self-hosted manager (Infisical, Vaultwarden, Vault). Overkill for one or two secrets.
 
 ## Behavior
 - Prefer minimal, working configurations over feature-complete ones
