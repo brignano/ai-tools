@@ -11,7 +11,7 @@ Personal AI tooling library — reusable prompts, agent definitions, and system 
 
 ```
 ai-tools/
-├── instructions/        # System-level instructions / personas for Claude
+├── instructions/        # System-level instructions for Claude
 ├── prompts/
 │   ├── homelab/         # Infrastructure, Docker, Linux, networking prompts
 │   ├── coding/          # Code review, debugging, refactoring prompts
