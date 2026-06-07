@@ -15,7 +15,7 @@ $ClaudeDir   = Join-Path $env:USERPROFILE ".claude"
 
 function Link-File($src, $dest) {
     if ((Test-Path $dest) -and -not ((Get-Item $dest -Force).LinkType)) {
-        Write-Host "    SKIP (real file present — back it up and remove, then re-run): $dest"
+        Write-Host "    SKIP (real file present - back it up and remove, then re-run): $dest"
         return
     }
     if ($DryRun) { Write-Host "    [dry-run] link $dest"; return }
@@ -61,7 +61,7 @@ if (Get-Command tailscale -ErrorAction SilentlyContinue) {
     Write-Host "      then:     tailscale up --accept-routes"
 }
 
-# 3. SSH key — generate if missing; can't auto-authorize (needs the server password)
+# 3. SSH key - generate if missing; can't auto-authorize (needs the server password)
 $SshKey = Join-Path $env:USERPROFILE ".ssh\id_ed25519"
 if (Test-Path $SshKey) { Write-Host "    ssh key: present ($SshKey)" }
 elseif ($DryRun) { Write-Host "    [dry-run] ssh-keygen -t ed25519 -f $SshKey -N `"`" (no passphrase)" }
@@ -69,18 +69,18 @@ else {
     New-Item -ItemType Directory -Force -Path (Split-Path $SshKey) | Out-Null
     ssh-keygen -t ed25519 -f $SshKey -N '""' -q
     if (Test-Path $SshKey) { Write-Host "    ssh key: generated $SshKey (no passphrase)" }
-    else { Write-Host "    ssh key: generation FAILED — create one with 'ssh-keygen -t ed25519'" }
+    else { Write-Host "    ssh key: generation FAILED - create one with 'ssh-keygen -t ed25519'" }
 }
 Write-Host "      authorize on the homelab (one time, Windows has no ssh-copy-id):"
 Write-Host "        type `$env:USERPROFILE\.ssh\id_ed25519.pub | ssh $HlHost `"cat >> .ssh/authorized_keys`""
 
-# 4. Homelab repo — the hl-* aliases source from it
+# 4. Homelab repo - the hl-* aliases source from it
 if (Test-Path (Join-Path $HomelabDirDefault ".git")) { Write-Host "    homelab repo: present ($HomelabDirDefault)" }
 elseif ($DryRun) { Write-Host "    [dry-run] offer to clone homelab into $HomelabDirDefault" }
 else {
-    $ans = Read-Host "    homelab repo not found at $HomelabDirDefault — clone it now? [y/N]"
+    $ans = Read-Host "    homelab repo not found at $HomelabDirDefault - clone it now? [y/N]"
     if ($ans -match '^[yY]') { git clone https://github.com/brignano/homelab $HomelabDirDefault; Write-Host "    cloned to $HomelabDirDefault" }
-    else { Write-Host "    skipped — clone later:  git clone https://github.com/brignano/homelab $HomelabDirDefault" }
+    else { Write-Host "    skipped - clone later:  git clone https://github.com/brignano/homelab $HomelabDirDefault" }
 }
 
 Write-Host "==> Context (~/.claude/CLAUDE.md)"
@@ -101,10 +101,10 @@ Get-ChildItem $StylesDir -Filter "*.md" | ForEach-Object {
 Write-Host "==> Settings (~/.claude/settings.json)"
 Link-File $Settings (Join-Path $ClaudeDir "settings.json")
 
-Write-Host "==> Secrets (secrets.env — gitignored)"
+Write-Host "==> Secrets (secrets.env - gitignored)"
 if (-not (Test-Path $Secrets)) {
     if (-not $DryRun) { Copy-Item (Join-Path $RepoDir ".env.example") $Secrets }
-    Write-Host "    created from template — FILL IN TOKENS, then open a new shell"
+    Write-Host "    created from template - FILL IN TOKENS, then open a new shell"
 } else { Write-Host "    exists (leaving as-is)" }
 # Load secrets.env into each new PowerShell session.
 $marker = "# ai-tools secrets"
@@ -155,7 +155,7 @@ if ((Test-Path $PROFILE) -and (Select-String -Path $PROFILE -SimpleMatch $HlBegi
 
 Write-Host "==> MCP servers (user scope)"
 if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
-    Write-Host "    'claude' CLI not found — skipping (install Claude Code, then re-run)"
+    Write-Host "    'claude' CLI not found - skipping (install Claude Code, then re-run)"
 } else {
     $servers = (Get-Content $McpJson -Raw | ConvertFrom-Json).mcpServers
     foreach ($name in $servers.PSObject.Properties.Name) {
@@ -164,10 +164,10 @@ if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
         claude mcp remove $name -s user 2>$null | Out-Null
         claude mcp add-json $name $json -s user 2>$null | Out-Null
         if ($LASTEXITCODE -eq 0) { Write-Host "    registered: $name" }
-        else { Write-Host "    FAILED: $name — register manually with 'claude mcp add-json'" }
+        else { Write-Host "    FAILED: $name - register manually with 'claude mcp add-json'" }
     }
 }
 
 Write-Host ""
 Write-Host "Done. Open a new shell so secrets.env is loaded, then run 'claude'."
-if ($DryRun) { Write-Host "(dry-run — nothing was changed)" }
+if ($DryRun) { Write-Host "(dry-run - nothing was changed)" }
