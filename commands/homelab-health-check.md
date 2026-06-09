@@ -1,4 +1,7 @@
-# Agent — Homelab health check
+---
+description: Audit all running containers and system resources; surface anything worth attention
+allowed-tools: Bash(docker ps:*), Bash(docker logs:*), Bash(docker system df:*), Bash(df:*), Bash(free:*)
+---
 
 **Purpose:** Audit the current state of all running Docker stacks and surface anything worth attention.
 

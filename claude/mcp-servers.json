@@ -1,0 +1,32 @@
+{
+  "_comment": "Source of truth for user-scope MCP servers. install.sh/install.ps1 registers each via 'claude mcp add-json -s user'. NO SECRETS HERE — values come from secrets.env (gitignored) at launch. See .env.example.",
+  "mcpServers": {
+    "terraform": {
+      "type": "stdio",
+      "command": "docker",
+      "args": [
+        "run", "--rm", "-i",
+        "-e", "TFE_TOKEN",
+        "-e", "TFE_ADDRESS=https://app.terraform.io",
+        "hashicorp/terraform-mcp-server"
+      ],
+      "env": {}
+    },
+    "aws-mcp": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "mcp-proxy-for-aws==1.6.0",
+        "https://aws-mcp.us-east-1.api.aws/mcp",
+        "--metadata", "AWS_REGION=us-east-1"
+      ]
+    },
+    "homelab": {
+      "type": "http",
+      "url": "http://mcp.home/mcp",
+      "headers": {
+        "Authorization": "${HOMELAB_MCP_TOKEN}"
+      }
+    }
+  }
+}

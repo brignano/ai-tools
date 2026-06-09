@@ -1,4 +1,7 @@
-# System instruction — Code review defaults
+---
+name: Code review defaults
+description: Direct, simplicity-first stance for code review, architecture, and implementation
+---
 
 Assist with code review, architecture, and implementation.
 
