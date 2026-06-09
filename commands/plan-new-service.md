@@ -1,6 +1,9 @@
-# Prompt — Plan a new homelab service
+---
+description: Plan a new homelab service end to end (image, compose, exposure, secrets, Proxmox)
+argument-hint: [service name]
+---
 
-I want to add **[SERVICE NAME]** to my homelab.
+I want to add **$ARGUMENTS** to my homelab.
 
 Hardware: GMKtec M5 Ultra (Ryzen 7 7730U, CPU-only, 16 GB RAM, 512 GB NVMe)
 Hypervisor: Proxmox VE → Docker VM (Debian)
