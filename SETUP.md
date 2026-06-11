@@ -61,7 +61,7 @@ symlinks the Claude config, registers the MCP servers, and wires `hl-*` + secret
 your shell profile. It's idempotent — re-run any time to update.
 
 > **On the homelab server itself**, point it at the server's checkout:
-> `HOMELAB_DIR=/opt/homelab ~/.ai-tools/install.sh`. There the `hl-*` commands run
+> `HOMELAB_DIR=/root/homelab ~/.ai-tools/install.sh`. There the `hl-*` commands run
 > Docker locally instead of over SSH.
 
 ## 4. Authorize your SSH key on the homelab — **manual** (one time)
@@ -117,7 +117,7 @@ redo step 4). `hl-status` exists precisely so a Tailscale flap doesn't read as a
 - **macOS** — primary dev machine; `hl-*` run over SSH to the LXC.
 - **Windows** — no WSL; PowerShell `$PROFILE` gets the `hl-*` functions. Run the installer
   elevated (symlinks). `hl-*` run over SSH.
-- **Linux homelab server** — run with `HOMELAB_DIR=/opt/homelab`; `hl-*` run Docker locally.
+- **Linux homelab server** — run with `HOMELAB_DIR=/root/homelab`; `hl-*` run Docker locally.
 
 ## Updating later
 
