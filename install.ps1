@@ -36,6 +36,53 @@ function Prune-Dir($dir) {
     }
 }
 
+# Prerequisites for the homelab hl-* commands and remote access. Safe, mechanical
+# parts are done here; steps needing a human (server password, browser login) are
+# printed. See SETUP.md.
+$HlHost = "root@10.0.0.201"                              # homelab Docker LXC
+$HomelabDirDefault = if ($env:HOMELAB_DIR) { $env:HOMELAB_DIR } else { Join-Path $env:USERPROFILE "Projects\homelab" }
+Write-Host "==> Prerequisites"
+
+# 1. Base CLIs
+$miss = @(); foreach ($c in 'git','ssh','curl') { if (-not (Get-Command $c -ErrorAction SilentlyContinue)) { $miss += $c } }
+if ($miss) {
+    Write-Host "    MISSING: $($miss -join ' ')"
+    Write-Host "      install:  winget install $($miss -join ' ')   (Git.Git, OpenSSH.Client, cURL.cURL)"
+} else { Write-Host "    base CLIs (git, ssh, curl): present" }
+
+# 2. Tailscale
+if (Get-Command tailscale -ErrorAction SilentlyContinue) {
+    tailscale status *> $null
+    if ($LASTEXITCODE -eq 0) { Write-Host "    tailscale: up" }
+    else { Write-Host "    tailscale: installed but DOWN -> run:  tailscale up --accept-routes" }
+} else {
+    Write-Host "    tailscale: NOT installed"
+    Write-Host "      install:  winget install tailscale.tailscale   (or tailscale.com/download)"
+    Write-Host "      then:     tailscale up --accept-routes"
+}
+
+# 3. SSH key — generate if missing; can't auto-authorize (needs the server password)
+$SshKey = Join-Path $env:USERPROFILE ".ssh\id_ed25519"
+if (Test-Path $SshKey) { Write-Host "    ssh key: present ($SshKey)" }
+elseif ($DryRun) { Write-Host "    [dry-run] ssh-keygen -t ed25519 -f $SshKey -N `"`" (no passphrase)" }
+else {
+    New-Item -ItemType Directory -Force -Path (Split-Path $SshKey) | Out-Null
+    ssh-keygen -t ed25519 -f $SshKey -N '""' -q
+    if (Test-Path $SshKey) { Write-Host "    ssh key: generated $SshKey (no passphrase)" }
+    else { Write-Host "    ssh key: generation FAILED — create one with 'ssh-keygen -t ed25519'" }
+}
+Write-Host "      authorize on the homelab (one time, Windows has no ssh-copy-id):"
+Write-Host "        type `$env:USERPROFILE\.ssh\id_ed25519.pub | ssh $HlHost `"cat >> .ssh/authorized_keys`""
+
+# 4. Homelab repo — the hl-* aliases source from it
+if (Test-Path (Join-Path $HomelabDirDefault ".git")) { Write-Host "    homelab repo: present ($HomelabDirDefault)" }
+elseif ($DryRun) { Write-Host "    [dry-run] offer to clone homelab into $HomelabDirDefault" }
+else {
+    $ans = Read-Host "    homelab repo not found at $HomelabDirDefault — clone it now? [y/N]"
+    if ($ans -match '^[yY]') { git clone https://github.com/brignano/homelab $HomelabDirDefault; Write-Host "    cloned to $HomelabDirDefault" }
+    else { Write-Host "    skipped — clone later:  git clone https://github.com/brignano/homelab $HomelabDirDefault" }
+}
+
 Write-Host "==> Context (~/.claude/CLAUDE.md)"
 Link-File $AgentsMd (Join-Path $ClaudeDir "CLAUDE.md")
 
