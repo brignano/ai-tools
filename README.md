@@ -3,6 +3,10 @@
 One source of truth for AI-agent context, commands, output styles, settings, and MCP
 servers — installed once per device so every machine stays in sync.
 
+> **Setting up a new machine?** Follow **[SETUP.md](SETUP.md)** — the end-to-end runbook
+> that ties this repo and `homelab` together (prereqs, SSH key, Tailscale, `hl-*` commands).
+> The section below covers just this repo's installer.
+
 ## What gets installed
 
 | Repo file | Symlinked / registered to | Purpose |
