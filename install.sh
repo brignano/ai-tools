@@ -155,7 +155,7 @@ fi
 # Wire the homelab `hl-*` shell commands into the same profile. Guarded (no error
 # if the homelab repo isn't cloned on this machine) and idempotent (a sentinel
 # marker stops re-runs from duplicating it). Override the checkout path with
-# HOMELAB_DIR, e.g. on the server: HOMELAB_DIR=/opt/homelab ./install.sh
+# HOMELAB_DIR, e.g. on the server: HOMELAB_DIR=/root/homelab ./install.sh
 echo "==> Homelab hl-* commands ($PROFILE)"
 HL_BEGIN="# >>> homelab hl-* >>>"
 if [ -n "${HOMELAB_DIR:-}" ]; then
