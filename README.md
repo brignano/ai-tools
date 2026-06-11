@@ -1,76 +1,83 @@
 # ai-tools
 
-AI-agnostic context and commands — one source of truth, installed once per device, works with any AI coding agent.
+One source of truth for AI-agent context, commands, output styles, settings, and MCP
+servers — installed once per device so every machine stays in sync.
 
-## How it works
+## What gets installed
 
-`AGENTS.md` is the single source of truth for your preferences, devices, and conventions. The install script symlinks it to wherever each AI tool expects to find context — so you write it once and every agent on every machine stays in sync.
+| Repo file | Symlinked / registered to | Purpose |
+|-----------|---------------------------|---------|
+| `AGENTS.md` | `~/.claude/CLAUDE.md` | Your context, preferences, conventions |
+| `commands/*.md` | `~/.claude/commands/` | Slash commands (`/new-tsd`, `/review-pr`, …) |
+| `output-styles/*.md` | `~/.claude/output-styles/` | Switchable personas (`/output-style`) |
+| `claude/settings.json` | `~/.claude/settings.json` | Baseline permission allowlist |
+| `claude/mcp-servers.json` | user-scope MCP (`claude mcp add-json`) | terraform, aws-mcp, homelab |
+| `.env.example` → `secrets.env` | sourced by your shell profile | Tokens (gitignored, never committed) |
 
-| AI Tool | Reads from |
-|---------|-----------|
-| Claude Code | `~/.claude/CLAUDE.md` |
-| Cursor | `~/.cursorrules` |
-| GitHub Copilot | `~/.github/copilot-instructions.md` |
-| Windsurf | `~/.windsurfrules` |
+`AGENTS.md` is AI-agnostic — other tools (Cursor, Copilot, Windsurf) can point at the
+same file; uncomment the relevant block in the install scripts. The commands, output
+styles, settings, and MCP wiring are Claude Code-specific.
 
-All pointing at the same `AGENTS.md`. Adding a new tool = uncommenting one line in the install script.
+## Install (once per machine)
 
-## Install
-
-**Mac / Linux (run once per machine):**
+**Mac / Linux:**
 ```bash
 git clone https://github.com/brignano/ai-tools ~/.ai-tools
 chmod +x ~/.ai-tools/install.sh
-~/.ai-tools/install.sh
+~/.ai-tools/install.sh --dry-run   # preview — touches nothing
+~/.ai-tools/install.sh             # apply
 ```
 
-**Windows (run once in PowerShell as Administrator):**
+**Windows (PowerShell as Administrator, or with Developer Mode on):**
 ```powershell
 git clone https://github.com/brignano/ai-tools $env:USERPROFILE\.ai-tools
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-~\.ai-tools\install.ps1
+~\.ai-tools\install.ps1 -DryRun    # preview
+~\.ai-tools\install.ps1            # apply
 ```
+
+Then fill in tokens and reload your shell:
+```bash
+$EDITOR ~/.ai-tools/secrets.env    # paste HOMELAB_MCP_TOKEN, TFE_TOKEN
+exec $SHELL                        # reload so Claude Code sees them
+claude
+```
+
+The installer is safe to re-run: it refuses to clobber real (non-symlink) files, prunes
+stale symlinks for commands/styles you've deleted, and re-registers MCP servers idempotently.
 
 ## Update (any machine)
 
 ```bash
-# Mac/Linux
-cd ~/.ai-tools && git pull
-
-# Windows
-cd $env:USERPROFILE\.ai-tools; git pull
+cd ~/.ai-tools && git pull        # symlinks update instantly
+~/.ai-tools/install.sh            # only needed if commands/styles/MCP changed
 ```
 
-Symlinks mean the update is instant — no re-install needed.
+## What's NOT handled
+
+Installing Claude Code itself, and `claude` login/auth — do those once per machine
+manually. `aws-mcp` uses your ambient AWS credentials, so ensure your AWS profile /
+`aws sso login` is active.
 
 ## Structure
 
 ```
 ai-tools/
-├── AGENTS.md           # Source of truth — your context, preferences, conventions
-├── install.sh          # Mac/Linux installer
-├── install.ps1         # Windows installer (no WSL required)
-└── commands/           # Slash commands (Claude Code today, more agents soon)
-    ├── new-tsd.md
-    ├── review-docker-compose.md
-    ├── plan-new-service.md
-    ├── review-pr.md
-    ├── write-setup-log.md
-    ├── homelab-health-check.md
-    ├── app-preview-deploy.md
-    ├── code-review-defaults.md
-    └── homelab-assistant.md
+├── AGENTS.md              # Source of truth — context, preferences, conventions
+├── commands/             # Slash commands
+├── output-styles/        # Switchable personas / system instructions
+├── claude/
+│   ├── settings.json     # Baseline permission allowlist (no secrets)
+│   └── mcp-servers.json  # MCP server defs with ${VAR} secret placeholders
+├── .env.example          # Template → copy to secrets.env (gitignored)
+├── install.sh            # Mac/Linux installer
+└── install.ps1           # Windows installer (no WSL)
 ```
 
-## Adding a new AI tool
+## Adding things
 
-1. Open `install.sh` and `install.ps1`
-2. Uncomment the block for that tool (or add a new one following the same pattern)
-3. `git push`
-4. `git pull` + re-run install on each machine
-
-## Adding a new command
-
-1. Add a `.md` file to `commands/`
-2. `git push`
-3. `git pull` on any other machine — symlinks update automatically
+- **Command:** drop a `.md` (with `description` / `argument-hint` frontmatter) in `commands/`, `git push`, then `git pull` + re-run install elsewhere.
+- **Output style:** same, in `output-styles/` (frontmatter: `name`, `description`).
+- **MCP server:** add it to `claude/mcp-servers.json` (use `${VAR}` for any secret, add the var to `.env.example`), then re-run install.
+- **Permission:** add a pattern to `claude/settings.json` `permissions.allow`.
+- **Another AI tool:** uncomment its block in both install scripts.

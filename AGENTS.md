@@ -29,13 +29,8 @@
 - Prefer proven tools over new ones unless there's a clear reason
 - Always consider: what does this cost to run monthly?
 
-## Custom commands available everywhere
-| Command | Purpose |
-|---------|---------|
-| `/new-tsd` | Draft a new TSD from any idea, rough or detailed |
-| `/review-docker-compose` | Security and reliability audit of a compose file |
-| `/plan-new-service` | Plan a new homelab service end to end |
-| `/review-pr` | Code review focused on correctness and security |
-| `/write-setup-log` | Write a dated entry for a setup log |
-| `/homelab-health-check` | Audit all running containers and system resources |
-| `/app-preview-deploy` | Deploy a local app for friends via Cloudflare Tunnel |
+## Custom commands & output styles
+Installed globally from the `ai-tools` repo. Slash commands live in `commands/`
+(each self-describes via frontmatter — run `/` to list them); reusable personas live
+in `output-styles/` (`/output-style` to switch). This list is intentionally not
+duplicated here — the directories are the source of truth.

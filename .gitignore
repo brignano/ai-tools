@@ -1,2 +1,6 @@
 .DS_Store
 *.swp
+
+# Real secrets — only .env.example is committed
+secrets.env
+.env

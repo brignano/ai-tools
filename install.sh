@@ -1,72 +1,134 @@
 #!/usr/bin/env bash
-# Install ai-tools context on Mac or Linux.
-# Run once per machine. Re-run anytime to update symlinks.
+# Install ai-tools on Mac or Linux. Run once per machine; re-run anytime to update.
+#   ./install.sh            apply changes
+#   ./install.sh --dry-run  show what would change, touch nothing
 set -euo pipefail
+
+DRY_RUN=0
+[ "${1:-}" = "--dry-run" ] && DRY_RUN=1
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENTS_MD="$REPO_DIR/AGENTS.md"
 COMMANDS_DIR="$REPO_DIR/commands"
+STYLES_DIR="$REPO_DIR/output-styles"
+SETTINGS="$REPO_DIR/claude/settings.json"
+MCP_JSON="$REPO_DIR/claude/mcp-servers.json"
+SECRETS="$REPO_DIR/secrets.env"
+CLAUDE_DIR="$HOME/.claude"
 
+run() { if [ "$DRY_RUN" = 1 ]; then echo "    [dry-run] $*"; else "$@"; fi; }
+
+# Symlink src -> dest, but never clobber a real (non-symlink) file.
 link() {
   local src="$1" dest="$2"
-  mkdir -p "$(dirname "$dest")"
-  ln -sf "$src" "$dest"
+  if [ -e "$dest" ] && [ ! -L "$dest" ]; then
+    echo "    SKIP (real file present — back it up and remove, then re-run): $dest"
+    return
+  fi
+  run mkdir -p "$(dirname "$dest")"
+  run ln -sf "$src" "$dest"
   echo "    $dest"
 }
 
-echo "==> Claude Code (~/.claude/)"
-link "$AGENTS_MD" "$HOME/.claude/CLAUDE.md"
-for file in "$COMMANDS_DIR"/*.md; do
-  link "$file" "$HOME/.claude/commands/$(basename "$file")"
-done
-
-# Wire the homelab `hl-*` shell commands into the shell profile(s). The block is
-# guarded (no error if the homelab repo isn't cloned here) and idempotent (a
-# sentinel marker stops re-runs from duplicating it). Override the checkout path
-# by running with HOMELAB_DIR set, e.g. on the server: HOMELAB_DIR=/opt/homelab.
-wire_homelab_shell() {
-  local begin="# >>> homelab hl-* >>>" end="# <<< homelab hl-* <<<" dir_line
-  if [ -n "${HOMELAB_DIR:-}" ]; then
-    dir_line="HOMELAB_DIR=\"$HOMELAB_DIR\""              # bake the explicit path
-  else
-    dir_line="HOMELAB_DIR=\"\${HOMELAB_DIR:-\$HOME/Projects/homelab}\""
-  fi
-  local block
-  block="$(printf '%s\n%s\n%s\n%s' \
-    "$begin" "$dir_line" \
-    'if [ -f "$HOMELAB_DIR/shell/aliases.sh" ]; then . "$HOMELAB_DIR/shell/aliases.sh"; fi' \
-    "$end")"
-
-  local wrote=0 rc
-  for rc in "$HOME/.zshrc" "$HOME/.bashrc"; do
-    [ -e "$rc" ] || continue
-    wrote=1
-    if grep -qF "$begin" "$rc" 2>/dev/null; then
-      echo "    $rc (already wired)"
-    else
-      printf '\n%s\n' "$block" >> "$rc"
-      echo "    $rc"
-    fi
+# Remove symlinks in $1 that point into this repo but whose target no longer exists
+# (a command/style deleted or moved upstream leaves a dangling link otherwise).
+prune() {
+  local dir="$1" l tgt
+  [ -d "$dir" ] || return 0
+  for l in "$dir"/*; do
+    [ -L "$l" ] || continue
+    tgt="$(readlink "$l")"
+    case "$tgt" in
+      "$REPO_DIR"/*) [ -e "$l" ] || { echo "    prune (stale): $l"; run rm -f "$l"; } ;;
+    esac
   done
-  if [ "$wrote" -eq 0 ]; then                            # no rc yet — create the right one
-    case "${SHELL:-}" in *zsh) rc="$HOME/.zshrc" ;; *) rc="$HOME/.bashrc" ;; esac
-    printf '\n%s\n' "$block" >> "$rc"
-    echo "    $rc (created)"
-  fi
 }
 
-echo "==> Homelab hl-* commands (shell profile)"
-wire_homelab_shell
+echo "==> Context (~/.claude/CLAUDE.md)"
+link "$AGENTS_MD" "$CLAUDE_DIR/CLAUDE.md"
 
-# -- Add new agents below as needed --
-# echo "==> Cursor (~/.cursorrules)"
-# link "$AGENTS_MD" "$HOME/.cursorrules"
+echo "==> Commands (~/.claude/commands/)"
+prune "$CLAUDE_DIR/commands"
+for f in "$COMMANDS_DIR"/*.md; do link "$f" "$CLAUDE_DIR/commands/$(basename "$f")"; done
 
-# echo "==> GitHub Copilot"
-# link "$AGENTS_MD" "$HOME/.github/copilot-instructions.md"
+echo "==> Output styles (~/.claude/output-styles/)"
+prune "$CLAUDE_DIR/output-styles"
+for f in "$STYLES_DIR"/*.md; do link "$f" "$CLAUDE_DIR/output-styles/$(basename "$f")"; done
 
-# echo "==> Windsurf"
-# link "$AGENTS_MD" "$HOME/.windsurfrules"
+echo "==> Settings (~/.claude/settings.json)"
+link "$SETTINGS" "$CLAUDE_DIR/settings.json"
+
+echo "==> Secrets (secrets.env — gitignored)"
+if [ ! -f "$SECRETS" ]; then
+  run cp "$REPO_DIR/.env.example" "$SECRETS"
+  echo "    created from template — FILL IN TOKENS, then open a new shell"
+else
+  echo "    exists (leaving as-is)"
+fi
+# Source secrets.env from the shell profile so Claude Code sees the tokens at launch.
+case "$(basename "${SHELL:-/bin/bash}")" in
+  zsh) PROFILE="$HOME/.zshrc" ;;
+  *)   PROFILE="$HOME/.bashrc" ;;
+esac
+SRC_LINE="[ -f \"$SECRETS\" ] && set -a && . \"$SECRETS\" && set +a  # ai-tools secrets"
+if ! grep -qF "ai-tools secrets" "$PROFILE" 2>/dev/null; then
+  if [ "$DRY_RUN" = 1 ]; then
+    echo "    [dry-run] append secrets-sourcing line to $PROFILE"
+  else
+    printf '%s\n' "$SRC_LINE" >> "$PROFILE"
+    echo "    added sourcing line to $PROFILE"
+  fi
+else
+  echo "    $PROFILE already sources secrets.env"
+fi
+
+# Wire the homelab `hl-*` shell commands into the same profile. Guarded (no error
+# if the homelab repo isn't cloned on this machine) and idempotent (a sentinel
+# marker stops re-runs from duplicating it). Override the checkout path with
+# HOMELAB_DIR, e.g. on the server: HOMELAB_DIR=/opt/homelab ./install.sh
+echo "==> Homelab hl-* commands ($PROFILE)"
+HL_BEGIN="# >>> homelab hl-* >>>"
+if [ -n "${HOMELAB_DIR:-}" ]; then
+  HL_DIR_LINE="HOMELAB_DIR=\"$HOMELAB_DIR\""                       # bake the explicit path
+else
+  HL_DIR_LINE="HOMELAB_DIR=\"\${HOMELAB_DIR:-\$HOME/Projects/homelab}\""
+fi
+if grep -qF "$HL_BEGIN" "$PROFILE" 2>/dev/null; then
+  echo "    $PROFILE already wires hl-*"
+elif [ "$DRY_RUN" = 1 ]; then
+  echo "    [dry-run] append hl-* wiring to $PROFILE"
+else
+  {
+    printf '%s\n' "$HL_BEGIN"
+    printf '%s\n' "$HL_DIR_LINE"
+    printf '%s\n' 'if [ -f "$HOMELAB_DIR/shell/aliases.sh" ]; then . "$HOMELAB_DIR/shell/aliases.sh"; fi'
+    printf '%s\n' "# <<< homelab hl-* <<<"
+  } >> "$PROFILE"
+  echo "    wired hl-* into $PROFILE"
+fi
+
+echo "==> MCP servers (user scope)"
+if ! command -v claude >/dev/null 2>&1; then
+  echo "    'claude' CLI not found — skipping (install Claude Code, then re-run)"
+elif ! command -v python3 >/dev/null 2>&1; then
+  echo "    python3 not found — skipping MCP registration"
+else
+  while IFS= read -r name; do
+    [ -z "$name" ] && continue
+    json="$(python3 -c "import json,sys; print(json.dumps(json.load(open('$MCP_JSON'))['mcpServers'][sys.argv[1]]))" "$name")"
+    if [ "$DRY_RUN" = 1 ]; then
+      echo "    [dry-run] claude mcp add-json $name -s user '<json>'"
+    else
+      claude mcp remove "$name" -s user >/dev/null 2>&1 || true
+      if claude mcp add-json "$name" "$json" -s user >/dev/null 2>&1; then
+        echo "    registered: $name"
+      else
+        echo "    FAILED: $name — register manually with 'claude mcp add-json'"
+      fi
+    fi
+  done < <(python3 -c "import json; print('\n'.join(json.load(open('$MCP_JSON'))['mcpServers']))")
+fi
 
 echo ""
-echo "Done. AGENTS.md is active for all installed AI tools."
+echo "Done. Open a new shell so secrets.env is loaded, then run 'claude'."
+[ "$DRY_RUN" = 1 ] && echo "(dry-run — nothing was changed)"

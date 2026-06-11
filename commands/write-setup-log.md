@@ -1,6 +1,11 @@
-# Prompt — Write a setup log entry
+---
+description: Write a dated entry for docs/setup-log.md (newest at top)
+argument-hint: [what you did]
+---
 
-Write a new entry for `docs/setup-log.md` using the template below.
+Write a new entry for `docs/setup-log.md` describing: **$ARGUMENTS**
+
+Use the template below.
 
 **Date:** [YYYY-MM-DD]
 **Title:** [short description]

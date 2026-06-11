@@ -1,6 +1,11 @@
-# Agent — App preview deploy
+---
+description: Deploy a local app to the homelab for friends to preview via Cloudflare Tunnel, then tear it down
+argument-hint: [app dir] [port] [hostname]
+---
 
 **Purpose:** Deploy a local app to the homelab for friends to preview via Cloudflare Tunnel, then tear it down when done.
+
+Parse **$ARGUMENTS** for the app directory, port, and public hostname if provided; ask for any that are missing.
 
 ## Inputs required
 - App directory path

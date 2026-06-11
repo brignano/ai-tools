@@ -1,6 +1,12 @@
-# Prompt — Review Docker Compose file
+---
+description: Security and reliability audit of a Docker Compose file
+argument-hint: [path to compose file, or paste below]
+allowed-tools: Read, Bash(cat:*)
+---
 
-Review the following Docker Compose file for:
+If **$ARGUMENTS** is a file path, read that compose file. Otherwise review the file pasted below.
+
+Review for:
 
 1. **Security issues** — ports exposed to 0.0.0.0, secrets in environment variables (vs. files/secrets), privileged mode without justification, world-writable volume mounts
 2. **Reliability issues** — missing restart policy, no healthcheck on stateful services, volumes that would lose data on container removal
