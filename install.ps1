@@ -80,6 +80,32 @@ if (-not (Test-Path $PROFILE) -or -not (Select-String -Path $PROFILE -SimpleMatc
     }
 } else { Write-Host "    $PROFILE already loads secrets.env" }
 
+# Wire the homelab hl-* commands into $PROFILE. Guarded (no error if the homelab
+# repo isn't cloned here) and idempotent (a sentinel marker stops re-runs from
+# duplicating it). Override the checkout path with $env:HOMELAB_DIR.
+Write-Host "==> Homelab hl-* commands ($PROFILE)"
+$HlBegin = "# >>> homelab hl-* >>>"
+if ($env:HOMELAB_DIR) {
+    $HlDirLine = "`$HomelabDir = `"$env:HOMELAB_DIR`""           # bake the explicit path
+} else {
+    $HlDirLine = "`$HomelabDir = if (`$env:HOMELAB_DIR) { `$env:HOMELAB_DIR } else { `"`$HOME\Projects\homelab`" }"
+}
+$HlBlock = @(
+    $HlBegin
+    $HlDirLine
+    "if (Test-Path `"`$HomelabDir\shell\aliases.ps1`") { . `"`$HomelabDir\shell\aliases.ps1`" }"
+    "# <<< homelab hl-* <<<"
+) -join "`r`n"
+if ((Test-Path $PROFILE) -and (Select-String -Path $PROFILE -SimpleMatch $HlBegin -Quiet)) {
+    Write-Host "    $PROFILE already wires hl-*"
+} elseif ($DryRun) {
+    Write-Host "    [dry-run] append hl-* wiring to $PROFILE"
+} else {
+    New-Item -ItemType Directory -Force -Path (Split-Path $PROFILE) | Out-Null
+    Add-Content -Path $PROFILE -Value "`r`n$HlBlock"
+    Write-Host "    wired hl-* into $PROFILE"
+}
+
 Write-Host "==> MCP servers (user scope)"
 if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
     Write-Host "    'claude' CLI not found — skipping (install Claude Code, then re-run)"

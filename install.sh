@@ -82,6 +82,31 @@ else
   echo "    $PROFILE already sources secrets.env"
 fi
 
+# Wire the homelab `hl-*` shell commands into the same profile. Guarded (no error
+# if the homelab repo isn't cloned on this machine) and idempotent (a sentinel
+# marker stops re-runs from duplicating it). Override the checkout path with
+# HOMELAB_DIR, e.g. on the server: HOMELAB_DIR=/opt/homelab ./install.sh
+echo "==> Homelab hl-* commands ($PROFILE)"
+HL_BEGIN="# >>> homelab hl-* >>>"
+if [ -n "${HOMELAB_DIR:-}" ]; then
+  HL_DIR_LINE="HOMELAB_DIR=\"$HOMELAB_DIR\""                       # bake the explicit path
+else
+  HL_DIR_LINE="HOMELAB_DIR=\"\${HOMELAB_DIR:-\$HOME/Projects/homelab}\""
+fi
+if grep -qF "$HL_BEGIN" "$PROFILE" 2>/dev/null; then
+  echo "    $PROFILE already wires hl-*"
+elif [ "$DRY_RUN" = 1 ]; then
+  echo "    [dry-run] append hl-* wiring to $PROFILE"
+else
+  {
+    printf '%s\n' "$HL_BEGIN"
+    printf '%s\n' "$HL_DIR_LINE"
+    printf '%s\n' 'if [ -f "$HOMELAB_DIR/shell/aliases.sh" ]; then . "$HOMELAB_DIR/shell/aliases.sh"; fi'
+    printf '%s\n' "# <<< homelab hl-* <<<"
+  } >> "$PROFILE"
+  echo "    wired hl-* into $PROFILE"
+fi
+
 echo "==> MCP servers (user scope)"
 if ! command -v claude >/dev/null 2>&1; then
   echo "    'claude' CLI not found — skipping (install Claude Code, then re-run)"
