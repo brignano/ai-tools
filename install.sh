@@ -131,4 +131,6 @@ fi
 
 echo ""
 echo "Done. Open a new shell so secrets.env is loaded, then run 'claude'."
-[ "$DRY_RUN" = 1 ] && echo "(dry-run — nothing was changed)"
+# if-form, not `[ ... ] && echo`: the latter returns 1 on a real run (DRY_RUN=0),
+# making the whole script exit non-zero even though everything succeeded.
+if [ "$DRY_RUN" = 1 ]; then echo "(dry-run — nothing was changed)"; fi
