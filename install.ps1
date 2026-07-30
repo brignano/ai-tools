@@ -61,6 +61,18 @@ if (Get-Command tailscale -ErrorAction SilentlyContinue) {
     Write-Host "      then:     tailscale up --accept-routes"
 }
 
+# 2b. Shell niceties - PowerShell 7 and Starship power the oh-my-zsh-style prompt
+if (Get-Command pwsh -ErrorAction SilentlyContinue) { Write-Host "    pwsh (PowerShell 7): present" }
+else {
+    Write-Host "    pwsh (PowerShell 7): NOT installed - shell profile works on 5.1, but autosuggestions need 7"
+    Write-Host "      install:  winget install Microsoft.PowerShell"
+}
+if (Get-Command starship -ErrorAction SilentlyContinue) { Write-Host "    starship: present" }
+else {
+    Write-Host "    starship: NOT installed - prompt falls back to the PowerShell default"
+    Write-Host "      install:  winget install Starship.Starship"
+}
+
 # 3. SSH key - generate if missing; can't auto-authorize (needs the server password)
 $SshKey = Join-Path $env:USERPROFILE ".ssh\id_ed25519"
 if (Test-Path $SshKey) { Write-Host "    ssh key: present ($SshKey)" }
@@ -151,6 +163,33 @@ if ((Test-Path $PROFILE) -and (Select-String -Path $PROFILE -SimpleMatch $HlBegi
     New-Item -ItemType Directory -Force -Path (Split-Path $PROFILE) | Out-Null
     Add-Content -Path $PROFILE -Value "`r`n$HlBlock"
     Write-Host "    wired hl-* into $PROFILE"
+}
+
+# Wire the shell profile (nav + git aliases, PSReadLine, Starship) into BOTH
+# PowerShell profiles - Windows PowerShell 5.1 and PowerShell 7 keep separate
+# $PROFILE paths, and either may be the one a terminal opens.
+Write-Host "==> Shell profile (aliases, PSReadLine, Starship)"
+$ShBegin = "# >>> ai-tools shell >>>"
+$ShBlock = @(
+    $ShBegin
+    ". `"$RepoDir\shell\profile.ps1`""
+    "# <<< ai-tools shell <<<"
+) -join "`r`n"
+$MyDocs = [Environment]::GetFolderPath('MyDocuments')
+$ProfilePaths = @(
+    (Join-Path $MyDocs "WindowsPowerShell\Microsoft.PowerShell_profile.ps1")
+    (Join-Path $MyDocs "PowerShell\Microsoft.PowerShell_profile.ps1")
+)
+foreach ($pf in $ProfilePaths) {
+    if ((Test-Path $pf) -and (Select-String -Path $pf -SimpleMatch $ShBegin -Quiet)) {
+        Write-Host "    already wired: $pf"
+    } elseif ($DryRun) {
+        Write-Host "    [dry-run] append shell wiring to $pf"
+    } else {
+        New-Item -ItemType Directory -Force -Path (Split-Path $pf) | Out-Null
+        Add-Content -Path $pf -Value "`r`n$ShBlock"
+        Write-Host "    wired: $pf"
+    }
 }
 
 Write-Host "==> MCP servers (user scope)"
