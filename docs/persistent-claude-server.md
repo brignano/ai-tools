@@ -74,7 +74,10 @@ only**, relayed through Anthropic — **the phone needs no Tailscale and no inbo
 ports**. Confirmed: the session shows up on the phone and survives the Mac being closed.
 
 Notes:
-- The process must stay running — use tmux or a systemd unit, or the session ends.
+- The process must stay running — use tmux or a systemd unit, or the session ends. If you
+  install Node via `fnm`, its PATH wiring lives in `~/.bashrc`, which a systemd unit does
+  not read: use the absolute binary path (`readlink -f "$(command -v claude)"`) or have
+  the unit source `fnm env`, or it fails with `claude: command not found`.
 - The middleman is **Anthropic's relay**, not your server; the box is the always-on
   *host*, not the wire.
 - This is a live, phone-reachable agent that can run commands on your homelab. Run it as
@@ -101,9 +104,8 @@ plan, not metered API billing).
 
 ```bash
 # as root
-adduser --gecos "" claude                 # no sudo, not in docker group (socket = root)
+adduser --disabled-password --gecos "" claude    # SSH-key only; no sudo, not in docker group
 install -d -m 700 -o claude -g claude /home/claude/.claude
-install -d -m 755 -o claude -g claude /home/claude/projects
 
 # as claude
 curl -fsSL https://fnm.vercel.app/install | bash && source ~/.bashrc
@@ -112,16 +114,22 @@ npm install -g @anthropic-ai/claude-code
 claude                                    # /login — claude.ai OAuth
 ```
 
-> `claude` is deliberately **not** in the `docker` group — that's root-equivalent via the
-> socket. Lab actions go through an explicit `ssh root@<host> hl-...`. Cleaner isolation
-> later: give Claude its own small LXC, walled off from lab infra.
+Sessions and history land in `~/.claude/` (created above); clone any repos you want the
+agent to work on under `/home/claude/` as the `claude` user.
+
+> **On privilege:** `claude` is deliberately **not** in the `docker` group — group
+> membership is root-equivalent via the socket. Note that handing it a root SSH key to
+> run `hl-*` on the lab box would be *strictly worse* — that's full root, not just
+> Docker. If the agent needs specific lab actions, grant them narrowly: a `sudo` rule
+> scoped to the exact commands, or a wrapper script exposing only what's needed. Cleanest
+> isolation: give Claude its own small LXC, walled off from lab infra.
 
 **Prerequisite — the box must actually stay up.** Make it survive reboots before relying
-on it:
+on it (as root):
 
 ```bash
 systemctl status tailscaled
-sudo systemctl enable --now tailscaled    # tailnet returns after reboot
+systemctl enable --now tailscaled         # tailnet returns after reboot
 tailscale up --accept-routes
 ```
 
@@ -134,12 +142,16 @@ can't recur.
 > the LAN address resolves to the wrong host. Off-LAN, reach the server by its
 > **Tailscale IP / MagicDNS name**, not its LAN IP.
 
-**Teardown** (what a test leaves behind — the OAuth token is the part that matters):
+**Teardown** (what a test leaves behind — the stored OAuth token is the part that
+matters). Run as the **same user that logged in**, or name the path explicitly:
 
 ```bash
 npm rm -g @anthropic-ai/claude-code
-rm -rf ~/.claude          # includes .credentials.json
+rm -rf /home/claude/.claude      # or /root/.claude if you tested as root
 ```
+
+`~/.claude/.credentials.json` holds the credential, so removing the CLI alone is not
+enough — delete the directory for **every** user that ran `/login`.
 
 ---
 
