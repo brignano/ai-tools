@@ -128,9 +128,9 @@ project.
 | Site | Host | Access |
 |---|---|---|
 | `brignano.io`, `anthonybrignano.com` | Vercel (static Next export), grey-cloud | public by design |
-| `life.brignano.io` | Cloudflare **Pages** (`life-5sy`) | Access — me only |
-| `trips.brignano.io` | Workers static assets — **not yet created** | Access — family + friends |
-| `hoststats.brignano.io` | Cloudflare **Workers** static assets | Access — family |
+| `life.brignano.io` | Cloudflare **Pages** (project `life`) | `Me` — verified enforcing 2026-08-24 |
+| `trips.brignano.io` | Workers static assets — **not yet created** | `Me` + `Family` + `Trip friends` |
+| `hoststats.brignano.io` | Cloudflare **Workers** static assets | **public** — `bypass` / everyone |
 
 New sites use **Workers static assets**, not Pages — Cloudflare's own docs now
 open the Pages section with "Start new projects with Workers". `life` predates
@@ -138,12 +138,53 @@ that; migrating it is worth doing but is not a prerequisite for anything, and
 should follow `trips` rather than lead it, since a migration creates new
 hostnames that must be Access-covered before they serve.
 
-**Access is per site, not per account.** Each site is its own Worker with its
-own Access application and its own policy — `hoststats` allows family, `life`
-allows only me, `trips` allows family and friends. Protecting one Worker says
-nothing about the others. If you want the default inverted, **Protect all
-Workers** (Workers & Pages → Protect all Workers) makes every existing and
-future Worker private, with an explicit per-Worker bypass to publish one.
+### Access: private by default, public on purpose
+
+The account-wide Workers Access floor is **on** (Workers & Pages → Cloudflare
+Access), set to the `Me` policy. Every Worker is therefore private from its
+first deploy — including one you create tomorrow and forget about. A site is
+public only because someone attached a **bypass** policy saying so.
+
+Rules are evaluated most-specific-first, and a more specific rule **replaces**
+the broader one rather than stacking with it:
+
+1. Hostname or path application
+2. Worker-level application
+3. Account-wide floor
+
+That third point is the one that bites: a Worker with its own policy no longer
+consults the floor, so **attach `Me` alongside whatever audience a site admits**
+or you lock yourself out of your own site.
+
+**Audiences are reusable policies**, named for who they are rather than which
+site uses them, under Zero Trust → Access controls → Policies:
+
+| Policy | Who | Attached to |
+|---|---|---|
+| `Me` | just me | everything, plus the account-wide floor |
+| `Family` | permanent people, every address each wants to use | `trips` |
+| `Trip friends` | ad-hoc, created with the first real member | `trips` |
+
+`hoststats` is the deliberate exception — an MIT-licensed public tool with a
+live URL in its README, exempted with a `bypass` / `everyone` policy.
+
+Adding a relative is one edit to `Family` and it lands on every site that
+includes it. **Include rules are OR** — so one person holding two addresses is
+just two entries, and a site admitting two audiences is just both policies
+attached.
+
+Two traps worth remembering:
+
+- **Google sign-in matches the Google account's address.** Allow-listing
+  someone's other email means Google sign-in fails for them even though the
+  method is enabled. Ask which address they actually sign in with; list both if
+  they want both routes.
+- **Never set MFA or session policy account-wide.** Set session duration on the
+  audience policy instead — it supersedes the app and global values, so family
+  get long sessions everywhere without touching anyone else.
+
+An IdP is only how someone proves they hold an address; enabling one never
+widens who is allowed in.
 
 ## Releases — the GitHub release page is the changelog
 
