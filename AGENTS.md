@@ -60,6 +60,70 @@ The rules that matter most, so you can apply them without reading everything:
 If a project genuinely needs something the system lacks, add it to
 `brignano/design` and bump the pin — do not invent a local value.
 
+## Hosting & access — one pattern, one decision
+
+**Read this before standing up any site or subdomain.** There is not a "public
+pattern" and a "private pattern". There is one hosting pattern, and a separate
+access decision layered on it. Conflating them is how a site meant to be private
+ends up public.
+
+```mermaid
+flowchart TD
+  A["Static site<br/>(Next/Astro export)"] --> B["Cloudflare Workers static assets<br/>wrangler.jsonc → assets.directory"]
+  B --> C["GitHub Actions: npx wrangler deploy on push to main"]
+  C --> D["Custom domain on the brignano.io zone<br/>(auto-created, proxied/orange)"]
+  D --> E{"Who should reach it?"}
+  E -->|Anyone| F["Leave it. No Access app."]
+  E -->|Only people I name| G["Cloudflare Access:<br/>Protect this Worker, production + previews"]
+```
+
+**Default to private.** `life`, `trips`, `hoststats` and anything holding
+personal data are Access-gated. Public is the deliberate exception, not the
+fallback — if you cannot tell which one applies, ask.
+
+### Rules that are load-bearing
+- **Protect the *Worker*, not the hostname.** Since 2026-08-14 Access attaches
+  to the Worker itself and covers its routes, custom domains, `workers.dev`
+  URL and previews — nothing to keep in sync when domains change. Only drop to
+  a hostname-based self-hosted app if you need WebSockets (worker-level
+  policies 403 the upgrade) or deliberately want one hostname open.
+- **Cover previews too.** A preview URL serves the same app; leaving it open
+  defeats the point.
+- **Create the Access application BEFORE any DNS resolves.** A Worker is live
+  on `workers.dev` from its first deploy and a custom domain serves the moment
+  it is attached. The account-wide Default-Deny is **off** (it rejected
+  already-authorised requests — Error 1050), so an unprotected hostname is
+  *served*, not blocked. There is no backstop.
+- **Proxy status is not uniform.** Cloudflare-hosted hostnames must be
+  **orange/proxied** — Access only enforces on proxied traffic, and a
+  grey-cloud record bypasses it entirely. Vercel hostnames (`brignano.io`,
+  `www`) must stay **grey/DNS-only** or certificate issuance breaks.
+- **Never set MFA or session policy account-wide.** Org-level TOTP applies to
+  every app and every person, including family. Anything that changes the login
+  experience belongs on the individual application.
+- **One-time PIN is the default sign-in method** for family and friends — no
+  IdP to configure. Google is worth it if everyone has an account. Facebook is
+  a dead end for a personal site (Advanced Access needs business verification).
+
+### Where the worked example lives
+[`hoststats/docs/DEPLOYING.md`](https://github.com/brignano/hoststats/blob/main/docs/DEPLOYING.md)
+is the reference implementation — hosting, GitHub Actions secrets/variables,
+custom domain, Access, and a symptom→cause table. Copy it rather than
+re-deriving. `life/DEPLOY.md` covers the same ground for a Cloudflare Pages
+project.
+
+### Current estate
+| Site | Host | Access |
+|---|---|---|
+| `brignano.io`, `anthonybrignano.com` | Vercel (static Next export), grey-cloud | public by design |
+| `life.brignano.io` | Cloudflare **Pages** (`life-5sy`) | Access — me only |
+| `trips.brignano.io` | Cloudflare Pages — **not yet created** | Access — family + friends |
+| `hoststats.brignano.io` | Cloudflare **Workers** static assets | Access — family |
+
+New sites use **Workers static assets**, not Pages. `life` predates that and
+Cloudflare now publishes a Pages→Workers migration guide; migrating it is
+worth doing but is not a prerequisite for anything.
+
 ## Communication preferences
 - Short, direct responses
 - No unnecessary caveats or softening
