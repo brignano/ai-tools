@@ -128,7 +128,8 @@ ai-tools/
 ├── shell/
 │   ├── profile.ps1       # Windows shell: aliases, PSReadLine, Starship init
 │   ├── aliases.sh        # Mac/Linux: same aliases for zsh/bash
-│   └── starship.toml     # robbyrussell-style prompt config (shared)
+│   └── starship.toml     # robbyrussell-style prompt config (Windows only — the
+│                         #   Mac keeps its oh-my-zsh prompt)
 ├── .env.example          # Template → copy to secrets.env (gitignored)
 ├── install.sh            # Mac/Linux installer
 └── install.ps1           # Windows installer (no WSL)
