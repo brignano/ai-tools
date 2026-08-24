@@ -106,6 +106,17 @@ fallback — if you cannot tell which one applies, ask.
     account-wide policy allows a single identity, so a Worker deployed before
     its own application exists is *private to me*, not shared. The per-Worker
     policy is what lets other people in, not what keeps strangers out.
+- **A per-Worker application governs — account-wide membership is not a grant**
+  (verified 2026-08-24). Once a Worker has its own Access application, that
+  application decides on its own. An address on the account-wide policy but
+  absent from the Worker's policy is refused with *"That account does not have
+  access"*; adding it to the Worker's policy admits it immediately. **Put every
+  identity that needs access on the application's own policy, mine included.**
+- **Two Allow policies, not one list.** `Me` (my address) and `Family` or
+  whoever else. The second list is the one that churns — someone added for a
+  trip, someone removed later, the whole thing rebuilt for a new identity
+  provider — and my own access should never live inside the list I keep
+  editing. Separate policies also let their session duration differ from mine.
 - **Proxy status is not uniform.** Cloudflare-hosted hostnames must be
   **orange/proxied** — Access only enforces on proxied traffic, and a
   grey-cloud record bypasses it entirely. Vercel hostnames (`brignano.io`,
