@@ -170,10 +170,20 @@ What this means when you are helping me cut one:
 ### Release automation, where a repo has any
 A workflow on `v*` tags must **verify, never create**. Publishing from the UI is
 what creates the tag, so by the time the workflow runs the release already
-exists — anything calling `gh release create` collides with it and goes red on
-every release. Have it re-run the checks against the tagged tree and fail loudly
-when the tag disagrees with the version in `package.json`; that mismatch is
-invisible once a release page exists.
+exists and there is nothing left for it to make. Have it re-run the checks
+against the tagged tree and fail loudly when the tag disagrees with the version
+in `package.json` — that mismatch is invisible once a release page exists.
+
+Do not expect a stray `gh release create` to announce itself by failing. With
+`--draft` it **succeeds**: a draft is not bound to a tag, so it does not collide
+with the published release, and you get a second release object, same name,
+unpublished, authored by `github-actions[bot]`. `hoststats` v0.1.0 left exactly
+one of those behind. Only a non-draft create errors. Silent duplication is both
+the likelier outcome and the harder one to spot.
+
+Note also that verification lands *after* publication, so a red run means "pull
+that release", not "the release was blocked". Say so in the workflow rather than
+implying a gate that is not there.
 
 ## Communication preferences
 - Short, direct responses
