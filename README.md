@@ -17,6 +17,8 @@ servers — installed once per device so every machine stays in sync.
 | `claude/settings.json` | `~/.claude/settings.json` | Baseline permission allowlist |
 | `claude/mcp-servers.json` | user-scope MCP (`claude mcp add-json`) | terraform, aws-mcp, homelab |
 | `.env.example` → `secrets.env` | sourced by your shell profile | Tokens (gitignored, never committed) |
+| `shell/profile.ps1` | sourced by both PowerShell `$PROFILE`s | oh-my-zsh-style Windows shell: nav + git aliases, PSReadLine, Starship prompt |
+| `shell/aliases.sh` | sourced by `~/.zshrc` / `~/.bashrc` | Same nav + git aliases on Mac/Linux (prompt untouched — omz stays) |
 
 `AGENTS.md` is AI-agnostic — other tools (Cursor, Copilot, Windsurf) can point at the
 same file; uncomment the relevant block in the install scripts. The commands, output
@@ -123,6 +125,10 @@ ai-tools/
 ├── claude/
 │   ├── settings.json     # Baseline permission allowlist (no secrets)
 │   └── mcp-servers.json  # MCP server defs with ${VAR} secret placeholders
+├── shell/
+│   ├── profile.ps1       # Windows shell: aliases, PSReadLine, Starship init
+│   ├── aliases.sh        # Mac/Linux: same aliases for zsh/bash
+│   └── starship.toml     # robbyrussell-style prompt config (shared)
 ├── .env.example          # Template → copy to secrets.env (gitignored)
 ├── install.sh            # Mac/Linux installer
 └── install.ps1           # Windows installer (no WSL)
@@ -134,4 +140,5 @@ ai-tools/
 - **Output style:** same, in `output-styles/` (frontmatter: `name`, `description`).
 - **MCP server:** add it to `claude/mcp-servers.json` (use `${VAR}` for any secret, add the var to `.env.example`), then re-run install.
 - **Permission:** add a pattern to `claude/settings.json` `permissions.allow`.
+- **Shell alias:** add it to both `shell/profile.ps1` (PowerShell) and `shell/aliases.sh` (zsh/bash), `git push` — no re-install needed, profiles source the repo files directly.
 - **Another AI tool:** uncomment its block in both install scripts.

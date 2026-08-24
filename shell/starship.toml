@@ -1,0 +1,37 @@
+# Starship prompt — robbyrussell (oh-my-zsh default) lookalike.
+# Shared across machines via ai-tools; plain Unicode only, no Nerd Font required.
+# ➜  ~/Projects/homelab git:(main) ✗
+
+add_newline = false
+format = "$character$directory$git_branch$git_status$cmd_duration"
+
+[character]
+success_symbol = "[➜](bold green) "
+error_symbol = "[➜](bold red) "
+
+[directory]
+style = "bold cyan"
+truncation_length = 3
+truncate_to_repo = true
+
+[git_branch]
+format = '[git:\(](bold blue)[$branch](bold red)[\)](bold blue) '
+
+[git_status]
+style = "bold yellow"
+format = '([$all_status$ahead_behind]($style) )'
+conflicted = "="
+ahead = "⇡"
+behind = "⇣"
+diverged = "⇕"
+untracked = "?"
+stashed = "»"
+modified = "✗"
+staged = "+"
+renamed = "→"
+deleted = "D"
+
+[cmd_duration]
+min_time = 3000
+style = "yellow"
+format = "took [$duration]($style) "

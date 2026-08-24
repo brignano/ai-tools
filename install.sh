@@ -216,6 +216,24 @@ else
   echo "    defined ai-refresh in $PROFILE (run: exec \$SHELL)"
 fi
 
+# Wire the shared shell aliases (proj/desk/docs, .., git shorthands) into the same
+# profile. Prompt is untouched here — oh-my-zsh (Mac) / the existing prompt stays;
+# shell/profile.ps1 recreates the omz feel on Windows.
+echo "==> Shell aliases ($PROFILE)"
+SH_BEGIN="# >>> ai-tools shell >>>"
+if grep -qF "$SH_BEGIN" "$PROFILE" 2>/dev/null; then
+  echo "    $PROFILE already wires shell aliases"
+elif [ "$DRY_RUN" = 1 ]; then
+  echo "    [dry-run] append shell-aliases wiring to $PROFILE"
+else
+  {
+    printf '%s\n' "$SH_BEGIN"
+    printf '%s\n' ". \"$REPO_DIR/shell/aliases.sh\""
+    printf '%s\n' "# <<< ai-tools shell <<<"
+  } >> "$PROFILE"
+  echo "    wired shell aliases into $PROFILE"
+fi
+
 echo "==> MCP servers (user scope)"
 if ! command -v claude >/dev/null 2>&1; then
   echo "    'claude' CLI not found — skipping (install Claude Code, then re-run)"
