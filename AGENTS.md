@@ -91,9 +91,21 @@ fallback — if you cannot tell which one applies, ask.
   defeats the point.
 - **Create the Access application BEFORE any DNS resolves.** A Worker is live
   on `workers.dev` from its first deploy and a custom domain serves the moment
-  it is attached. The account-wide Default-Deny is **off** (it rejected
-  already-authorised requests — Error 1050), so an unprotected hostname is
-  *served*, not blocked. There is no backstop.
+  it is attached.
+  - **Workers do have a backstop** (corrected 2026-08-24). The account-wide
+    **Workers** Access policy — Workers & Pages → Cloudflare Access, scope *All
+    traffic* — is Enabled and covers every Worker's production and preview
+    traffic from the first deploy. Do not confuse it with the Zero Trust
+    *"block traffic to all domains in this account"* Default-Deny, which is
+    **off** and stays off: that one rejected already-authorised requests with
+    Error 1050.
+  - **Nothing else has one.** A Pages project, or any hostname that is not a
+    Worker, is served unprotected — so the destination list on a hostname-based
+    application still has to be right.
+  - **The ordering rule holds anyway**, for a different reason: the
+    account-wide policy allows a single identity, so a Worker deployed before
+    its own application exists is *private to me*, not shared. The per-Worker
+    policy is what lets other people in, not what keeps strangers out.
 - **Proxy status is not uniform.** Cloudflare-hosted hostnames must be
   **orange/proxied** — Access only enforces on proxied traffic, and a
   grey-cloud record bypasses it entirely. Vercel hostnames (`brignano.io`,
