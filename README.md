@@ -52,7 +52,57 @@ claude
 The installer is safe to re-run: it refuses to clobber real (non-symlink) files, prunes
 stale symlinks for commands/styles you've deleted, and re-registers MCP servers idempotently.
 
+## MCP servers
+
+`claude/mcp-servers.json` is the source of truth; `install.sh` registers each one
+at user scope. Two kinds live there:
+
+- **Remote (`type: http`)** — GitHub, Notion, Slack, Vercel. These authenticate
+  with OAuth from Claude Code itself, so they carry **no token**. Run
+  `claude mcp login <name>` once per machine, or open `/mcp` and sign in.
+- **Local (`stdio`) or private** — terraform, aws-mcp, homelab. These need
+  per-machine wiring (Docker, `uvx`, a private URL) and read their secrets from
+  `secrets.env`.
+
+### Why some connectors aren't here
+
+Anything you've added at [claude.ai connectors](https://claude.ai/customize/connectors)
+is **already available in Claude Code automatically** when you're signed in with a
+claude.ai account — nothing to install. The entries above exist because they are
+worth pinning in git regardless: the config is versioned, and they keep working if
+your auth is ever an API key, Bedrock, or a profile, in which case connectors are
+not loaded at all.
+
+**Gmail, Google Calendar and Microsoft 365 cannot be moved here.** Their upstream
+identity providers only accept the redirect URL claude.ai registered, so local
+OAuth from Claude Code is not possible. Connect them at claude.ai and they appear
+in Claude Code on their own.
+
+If a server here points at the same URL as a claude.ai connector, **this one wins**
+and `/mcp` lists the connector as hidden.
+
 ## Update (any machine)
+
+```bash
+ai-refresh              # pull + re-run the installer
+ai-refresh --dry-run    # show what would change, touch nothing
+```
+
+`ai-refresh` is defined in your shell profile by `install.sh`, so it exists on
+every machine after the first install (open a new shell, or `exec $SHELL`, to
+pick it up). It refuses to run if the checkout has uncommitted changes, so it
+can never clobber local edits, and it leaves your working directory unchanged.
+
+It's a shell **function**, not an alias — an alias can't take `--dry-run`,
+guard on a dirty tree, or return a non-zero exit code.
+
+If the repo isn't at the path baked in at install time, point it somewhere else:
+
+```bash
+AI_TOOLS_DIR=/path/to/ai-tools ai-refresh
+```
+
+Equivalent by hand:
 
 ```bash
 cd ~/.ai-tools && git pull        # symlinks update instantly
