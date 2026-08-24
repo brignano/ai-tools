@@ -1,5 +1,7 @@
 # ai-tools shell profile for PowerShell (5.1 and 7+).
-# Sourced from $PROFILE by install.ps1 — do not copy, edit here and re-open the shell.
+# Sourced from $PROFILE by install.ps1 - do not copy, edit here and re-open the shell.
+# Keep this file pure ASCII: it is BOM-less, and Windows PowerShell 5.1 reads BOM-less
+# scripts as ANSI, which mangles non-ASCII bytes (see the install.ps1 fix in #6).
 # Mirrors the oh-my-zsh feel from the Mac/Linux machines: nav shortcuts, omz-style
 # git shorthands, zsh-like history/completion, Starship prompt.
 
@@ -25,9 +27,11 @@ function grep { $input | Select-String @args }
 function open { Invoke-Item @args }
 
 # --- Git (oh-my-zsh git-plugin names) -------------------------------------------
-# PowerShell ships aliases that shadow these (gc, gcb, gl, gm, gp, gpv); aliases win
-# over functions, so drop the built-ins first.
-foreach ($a in 'gc','gcb','gl','gm','gp','gpv') {
+# PowerShell ships aliases that shadow four of these (gc, gcb, gl, gp); aliases win
+# over functions, so drop those built-ins first. Only ever drop a name this file
+# goes on to redefine - removing one we don't replace (gm, gpv) would just delete
+# a useful built-in from the session.
+foreach ($a in 'gc','gcb','gl','gp') {
     if (Test-Path "Alias:$a") { Remove-Item "Alias:$a" -Force }
 }
 function gst   { git status @args }
@@ -54,10 +58,10 @@ function gclean { git clean -fd @args }
 # --- zsh-like line editing (PSReadLine) ------------------------------------------
 if (Get-Module -ListAvailable PSReadLine) {
     Set-PSReadLineOption -HistorySearchCursorMovesToEnd
-    Set-PSReadLineKeyHandler -Key UpArrow   -Function HistorySearchBackward   # type a prefix, ↑ filters history
+    Set-PSReadLineKeyHandler -Key UpArrow   -Function HistorySearchBackward   # type a prefix, Up filters history
     Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
     Set-PSReadLineKeyHandler -Key Tab       -Function MenuComplete            # zsh-style completion menu
-    # Inline autosuggestions (zsh-autosuggestions) need PSReadLine >= 2.1 — PS7 has it,
+    # Inline autosuggestions (zsh-autosuggestions) need PSReadLine >= 2.1 - PS7 has it,
     # Windows PowerShell 5.1 ships 2.0 and silently skips this.
     try { Set-PSReadLineOption -PredictionSource History -ErrorAction Stop } catch {}
 }
