@@ -117,12 +117,21 @@ project.
 |---|---|---|
 | `brignano.io`, `anthonybrignano.com` | Vercel (static Next export), grey-cloud | public by design |
 | `life.brignano.io` | Cloudflare **Pages** (`life-5sy`) | Access — me only |
-| `trips.brignano.io` | Cloudflare Pages — **not yet created** | Access — family + friends |
+| `trips.brignano.io` | Workers static assets — **not yet created** | Access — family + friends |
 | `hoststats.brignano.io` | Cloudflare **Workers** static assets | Access — family |
 
-New sites use **Workers static assets**, not Pages. `life` predates that and
-Cloudflare now publishes a Pages→Workers migration guide; migrating it is
-worth doing but is not a prerequisite for anything.
+New sites use **Workers static assets**, not Pages — Cloudflare's own docs now
+open the Pages section with "Start new projects with Workers". `life` predates
+that; migrating it is worth doing but is not a prerequisite for anything, and
+should follow `trips` rather than lead it, since a migration creates new
+hostnames that must be Access-covered before they serve.
+
+**Access is per site, not per account.** Each site is its own Worker with its
+own Access application and its own policy — `hoststats` allows family, `life`
+allows only me, `trips` allows family and friends. Protecting one Worker says
+nothing about the others. If you want the default inverted, **Protect all
+Workers** (Workers & Pages → Protect all Workers) makes every existing and
+future Worker private, with an explicit per-Worker bypass to publish one.
 
 ## Communication preferences
 - Short, direct responses
