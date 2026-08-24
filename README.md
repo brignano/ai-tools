@@ -53,6 +53,27 @@ stale symlinks for commands/styles you've deleted, and re-registers MCP servers 
 ## Update (any machine)
 
 ```bash
+ai-refresh              # pull + re-run the installer
+ai-refresh --dry-run    # show what would change, touch nothing
+```
+
+`ai-refresh` is defined in your shell profile by `install.sh`, so it exists on
+every machine after the first install (open a new shell, or `exec $SHELL`, to
+pick it up). It refuses to run if the checkout has uncommitted changes, so it
+can never clobber local edits, and it leaves your working directory unchanged.
+
+It's a shell **function**, not an alias — an alias can't take `--dry-run`,
+guard on a dirty tree, or return a non-zero exit code.
+
+If the repo isn't at the path baked in at install time, point it somewhere else:
+
+```bash
+AI_TOOLS_DIR=/path/to/ai-tools ai-refresh
+```
+
+Equivalent by hand:
+
+```bash
 cd ~/.ai-tools && git pull        # symlinks update instantly
 ~/.ai-tools/install.sh            # only needed if commands/styles/MCP changed
 ```

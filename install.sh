@@ -177,6 +177,45 @@ else
   echo "    wired hl-* into $PROFILE"
 fi
 
+# Define `ai-refresh` — pull this repo and re-run the installer in one step, so a
+# machine can be brought fully up to date without remembering two commands. Same
+# sentinel + idempotency approach as the hl-* block above.
+#
+# It is a FUNCTION, not an alias: it needs a guard clause, an argument pass-through
+# (so `ai-refresh --dry-run` works), and a non-zero exit on failure — none of which
+# an alias can express. The subshell body keeps the `cd` from leaking into the
+# caller's shell.
+echo "==> ai-refresh command ($PROFILE)"
+AR_BEGIN="# >>> ai-tools ai-refresh >>>"
+if grep -qF "$AR_BEGIN" "$PROFILE" 2>/dev/null; then
+  echo "    $PROFILE already defines ai-refresh"
+elif [ "$DRY_RUN" = 1 ]; then
+  echo "    [dry-run] append ai-refresh to $PROFILE"
+else
+  {
+    printf '%s\n' "$AR_BEGIN"
+    printf '%s\n' "AI_TOOLS_DIR=\"\${AI_TOOLS_DIR:-$REPO_DIR}\""
+    printf '%s\n' 'ai-refresh() ('
+    printf '%s\n' '  set -e'
+    printf '%s\n' '  dir="${AI_TOOLS_DIR:-$HOME/.ai-tools}"'
+    printf '%s\n' '  if [ ! -d "$dir/.git" ]; then'
+    printf '%s\n' '    echo "ai-refresh: no git checkout at $dir — set AI_TOOLS_DIR" >&2; exit 1'
+    printf '%s\n' '  fi'
+    printf '%s\n' '  cd "$dir"'
+    printf '%s\n' '  if [ -n "$(git status --porcelain)" ]; then'
+    printf '%s\n' '    echo "ai-refresh: $dir has uncommitted changes — commit or stash first" >&2'
+    printf '%s\n' '    git status --short >&2; exit 1'
+    printf '%s\n' '  fi'
+    printf '%s\n' '  echo "==> ai-tools: pulling $dir"'
+    printf '%s\n' '  git pull --ff-only'
+    printf '%s\n' '  echo "==> ai-tools: re-running install.sh"'
+    printf '%s\n' '  ./install.sh "$@"'
+    printf '%s\n' ')'
+    printf '%s\n' "# <<< ai-tools ai-refresh <<<"
+  } >> "$PROFILE"
+  echo "    defined ai-refresh in $PROFILE (run: exec \$SHELL)"
+fi
+
 echo "==> MCP servers (user scope)"
 if ! command -v claude >/dev/null 2>&1; then
   echo "    'claude' CLI not found — skipping (install Claude Code, then re-run)"
