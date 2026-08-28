@@ -9,8 +9,8 @@ servers — installed once per device so every machine stays in sync.
 
 ## What gets installed
 
-| Repo file | Symlinked / registered to | Purpose |
-|-----------|---------------------------|---------|
+| Repo file | Linked / registered to | Purpose |
+|-----------|------------------------|---------|
 | `AGENTS.md` | `~/.claude/CLAUDE.md` | Your context, preferences, conventions |
 | `commands/*.md` | `~/.claude/commands/` | Slash commands (`/new-tsd`, `/review-pr`, …) |
 | `output-styles/*.md` | `~/.claude/output-styles/` | Switchable personas (`/output-style`) |
@@ -34,7 +34,7 @@ chmod +x ~/.ai-tools/install.sh
 ~/.ai-tools/install.sh             # apply
 ```
 
-**Windows (PowerShell as Administrator, or with Developer Mode on):**
+**Windows (any PowerShell — elevation optional, see below):**
 ```powershell
 git clone https://github.com/brignano/ai-tools $env:USERPROFILE\.ai-tools
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
@@ -49,8 +49,15 @@ exec $SHELL                        # reload so Claude Code sees them
 claude
 ```
 
-The installer is safe to re-run: it refuses to clobber real (non-symlink) files, prunes
-stale symlinks for commands/styles you've deleted, and re-registers MCP servers idempotently.
+The installer is safe to re-run: it refuses to clobber files it didn't install, prunes
+stale links for commands/styles you've deleted, and re-registers MCP servers idempotently.
+
+**Windows link types.** Symlinks need Administrator or Developer Mode (Settings > System >
+For developers). Without either, `install.ps1` uses hard links instead — same result day to
+day, but `git pull` replaces files rather than editing them, which breaks a hard link, so
+re-run `install.ps1` after pulling. It records what it installed in
+`~/.claude/.ai-tools-links.json`, so a re-run refreshes its own files and leaves yours
+alone; anything you edited yourself is saved alongside as `<name>.bak` before being relinked.
 
 ## MCP servers
 
@@ -107,6 +114,7 @@ Equivalent by hand:
 ```bash
 cd ~/.ai-tools && git pull        # symlinks update instantly
 ~/.ai-tools/install.sh            # only needed if commands/styles/MCP changed
+                                  # (on Windows without symlinks, always re-run install.ps1)
 ```
 
 ## What's NOT handled

@@ -49,7 +49,8 @@ Always dry-run first — it touches nothing and prints exactly what it will do.
 ~/.ai-tools/install.sh             # apply
 ```
 
-**Windows** (PowerShell as Administrator, or with Developer Mode on — symlinks need it):
+**Windows** (any PowerShell — elevation or Developer Mode buys symlinks; without them the
+installer falls back to hard links and asks you to re-run it after each `git pull`):
 ```powershell
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 ~\.ai-tools\install.ps1 -DryRun    # preview
@@ -116,10 +117,13 @@ redo step 4). `hl-status` exists precisely so a Tailscale flap doesn't read as a
 
 - **macOS** — primary dev machine; `hl-*` run over SSH to the LXC.
 - **Windows** — no WSL; PowerShell `$PROFILE` gets the `hl-*` functions. Run the installer
-  elevated (symlinks). `hl-*` run over SSH.
+  elevated (or with Developer Mode on) for symlinks; unelevated it uses hard links, which
+  need a re-run after each `git pull`. `hl-*` run over SSH.
 - **Linux homelab server** — run with `HOMELAB_DIR=/root/homelab`; `hl-*` run Docker locally.
 
 ## Updating later
 
 `git pull` in each repo. The shell profile sources the live `hl-*` file, so homelab updates
-need no re-install. Re-run the installer only to pick up new commands / MCP servers / settings.
+need no re-install. Re-run the installer only to pick up new commands / MCP servers / settings
+— except on Windows without symlinks, where every `git pull` needs a re-run (hard links don't
+survive git replacing a file).
