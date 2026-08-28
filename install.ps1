@@ -1,5 +1,7 @@
-# Install ai-tools on Windows (PowerShell, no WSL). Run once per machine as Administrator
-# (symlinks need elevation or Developer Mode). Re-run anytime to update.
+# Install ai-tools on Windows (PowerShell, no WSL). Run once per machine, elevated or
+# not: symlinks need Administrator or Developer Mode, and without either the installer
+# falls back to hard links (re-run after a 'git pull' to refresh them).
+# Re-run anytime to update.
 #   .\install.ps1            apply changes
 #   .\install.ps1 -DryRun    show what would change, touch nothing
 param([switch]$DryRun)
@@ -13,26 +15,90 @@ $McpJson     = Join-Path $RepoDir "claude\mcp-servers.json"
 $Secrets     = Join-Path $RepoDir "secrets.env"
 $ClaudeDir   = Join-Path $env:USERPROFILE ".claude"
 
-function Link-File($src, $dest) {
-    if ((Test-Path $dest) -and -not ((Get-Item $dest -Force).LinkType)) {
-        Write-Host "    SKIP (real file present - back it up and remove, then re-run): $dest"
-        return
+# Creating a symlink on Windows needs Administrator or Developer Mode; a hard link
+# needs neither but only works inside one volume. Probe once (in TEMP, cleaned up)
+# so an unprivileged run links with hard links instead of failing on every file.
+function Test-SymlinkSupport {
+    $dir  = Join-Path $env:TEMP "ai-tools-symlink-probe-$PID"
+    $tgt  = Join-Path $dir "target"
+    $link = Join-Path $dir "link"
+    try {
+        New-Item -ItemType Directory -Force -Path $dir | Out-Null
+        New-Item -ItemType File -Force -Path $tgt | Out-Null
+        New-Item -ItemType SymbolicLink -Path $link -Target $tgt -ErrorAction Stop | Out-Null
+        return $true
+    } catch { return $false }
+    finally { Remove-Item $dir -Recurse -Force -ErrorAction SilentlyContinue }
+}
+$CanSymlink   = Test-SymlinkSupport
+$LinkKind     = if ($CanSymlink) { "SymbolicLink" } else { "HardLink" }
+$LinkFailures = 0
+
+# What this installer put in ~/.claude, and the content it linked (hashtable keys
+# are case-insensitive, so paths match regardless of casing). A hard link doesn't
+# survive 'git pull' - git replaces files rather than editing them - so a re-run has
+# to refresh a plain file it left behind, while still refusing to clobber a config
+# you wrote yourself. The recorded hash tells those two apart.
+$Manifest  = Join-Path $ClaudeDir ".ai-tools-links.json"
+$Installed = @{}
+if (Test-Path $Manifest) {
+    $raw = Get-Content $Manifest -Raw
+    if ($raw -and $raw.Trim()) {
+        try { ($raw | ConvertFrom-Json).PSObject.Properties | ForEach-Object { $Installed[$_.Name] = $_.Value } }
+        catch { Write-Host "    (ignoring unreadable $Manifest)" }
     }
-    if ($DryRun) { Write-Host "    [dry-run] link $dest"; return }
-    New-Item -ItemType Directory -Force -Path (Split-Path $dest) | Out-Null
-    if (Test-Path $dest) { Remove-Item $dest -Force }
-    New-Item -ItemType SymbolicLink -Path $dest -Target $src | Out-Null
-    Write-Host "    $dest"
 }
 
-function Prune-Dir($dir) {
-    if (-not (Test-Path $dir)) { return }
-    Get-ChildItem $dir -Force | Where-Object { $_.LinkType } | ForEach-Object {
-        $tgt = $_.Target | Select-Object -First 1
-        if ($tgt -and $tgt.StartsWith($RepoDir) -and -not (Test-Path $tgt)) {
-            Write-Host "    prune (stale): $($_.FullName)"
-            if (-not $DryRun) { Remove-Item $_.FullName -Force }
+function Link-File($src, $dest) {
+    if (Test-Path $dest) {
+        $item = Get-Item $dest -Force
+        if (-not $item.LinkType) {
+            if (-not $Installed.ContainsKey($dest)) {
+                Write-Host "    SKIP (real file present - back it up and remove, then re-run): $dest"
+                return
+            }
+            # Ours, but no longer a link (git replaced the repo file, or something
+            # rewrote this one). Repo wins; keep local edits next to it.
+            if ((Get-FileHash $dest).Hash -ne $Installed[$dest]) {
+                Write-Host "    relink (edited since install - saving it as $($item.Name).bak): $dest"
+                if (-not $DryRun) { Copy-Item $dest "$dest.bak" -Force }
+            }
         }
+    }
+    # Hard links can't cross volumes, so bail before removing what's already there.
+    if ($LinkKind -eq "HardLink" -and
+        [IO.Path]::GetPathRoot($src) -ne [IO.Path]::GetPathRoot((Split-Path $dest))) {
+        Write-Host "    FAILED (repo and $ClaudeDir are on different drives - needs a symlink): $dest"
+        Write-Host "      fix: turn on Developer Mode (Settings > System > For developers), or run elevated"
+        $script:LinkFailures++
+        return
+    }
+    if ($DryRun) { Write-Host "    [dry-run] link ($LinkKind) $dest"; return }
+    New-Item -ItemType Directory -Force -Path (Split-Path $dest) | Out-Null
+    if (Test-Path $dest) { Remove-Item $dest -Force }
+    try {
+        New-Item -ItemType $LinkKind -Path $dest -Target $src -ErrorAction Stop | Out-Null
+        $script:Installed[$dest] = (Get-FileHash $src).Hash
+        Write-Host "    $dest"
+    } catch {
+        Write-Host "    FAILED: $dest - $($_.Exception.Message)"
+        $script:LinkFailures++
+    }
+}
+
+# Drop what we installed for commands/styles that no longer exist in the repo.
+# Symlinks name their target; hard links don't (and PowerShell 7 reports no target
+# at all for them), so go by the manifest and the name the source dir would provide.
+function Prune-Dir($dir, $srcDir) {
+    if (-not (Test-Path $dir)) { return }
+    Get-ChildItem $dir -Force -File | ForEach-Object {
+        if (-not $Installed.ContainsKey($_.FullName)) {
+            $tgt = $_.Target | Select-Object -First 1                  # pre-manifest symlink
+            if (-not ($_.LinkType -and $tgt -and $tgt.StartsWith($RepoDir))) { return }
+        }
+        if (Test-Path (Join-Path $srcDir $_.Name)) { return }
+        Write-Host "    prune (stale): $($_.FullName)"
+        if (-not $DryRun) { Remove-Item $_.FullName -Force; $Installed.Remove($_.FullName) }
     }
 }
 
@@ -73,6 +139,14 @@ else {
     Write-Host "      install:  winget install Starship.Starship"
 }
 
+# 2c. Link type - how the ~/.claude config gets wired to this repo
+if ($CanSymlink) { Write-Host "    links: symlinks (config follows the repo automatically)" }
+else {
+    Write-Host "    links: hard links - no Administrator or Developer Mode, so symlinks are unavailable"
+    Write-Host "      works the same day to day, but re-run install.ps1 after a 'git pull' to refresh"
+    Write-Host "      for symlinks: turn on Developer Mode (Settings > System > For developers), or run elevated"
+}
+
 # 3. SSH key - generate if missing; can't auto-authorize (needs the server password)
 $SshKey = Join-Path $env:USERPROFILE ".ssh\id_ed25519"
 if (Test-Path $SshKey) { Write-Host "    ssh key: present ($SshKey)" }
@@ -99,19 +173,25 @@ Write-Host "==> Context (~/.claude/CLAUDE.md)"
 Link-File $AgentsMd (Join-Path $ClaudeDir "CLAUDE.md")
 
 Write-Host "==> Commands (~/.claude/commands/)"
-Prune-Dir (Join-Path $ClaudeDir "commands")
+Prune-Dir (Join-Path $ClaudeDir "commands") $CommandsDir
 Get-ChildItem $CommandsDir -Filter "*.md" | ForEach-Object {
     Link-File $_.FullName (Join-Path $ClaudeDir "commands\$($_.Name)")
 }
 
 Write-Host "==> Output styles (~/.claude/output-styles/)"
-Prune-Dir (Join-Path $ClaudeDir "output-styles")
+Prune-Dir (Join-Path $ClaudeDir "output-styles") $StylesDir
 Get-ChildItem $StylesDir -Filter "*.md" | ForEach-Object {
     Link-File $_.FullName (Join-Path $ClaudeDir "output-styles\$($_.Name)")
 }
 
 Write-Host "==> Settings (~/.claude/settings.json)"
 Link-File $Settings (Join-Path $ClaudeDir "settings.json")
+
+# Record what we linked, so the next run can refresh its own files (see $Manifest).
+if (-not $DryRun) {
+    New-Item -ItemType Directory -Force -Path $ClaudeDir | Out-Null
+    Set-Content -Path $Manifest -Encoding UTF8 -Value (ConvertTo-Json -InputObject $Installed)
+}
 
 Write-Host "==> Secrets (secrets.env - gitignored)"
 if (-not (Test-Path $Secrets)) {
@@ -208,5 +288,10 @@ if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
 }
 
 Write-Host ""
-Write-Host "Done. Open a new shell so secrets.env is loaded, then run 'claude'."
+if ($LinkFailures) {
+    Write-Host "Done with $LinkFailures link failure(s) above - fix those and re-run install.ps1."
+} else {
+    Write-Host "Done. Open a new shell so secrets.env is loaded, then run 'claude'."
+}
+if (-not $CanSymlink) { Write-Host "(hard links in use - re-run this after 'git pull' to pick up changes)" }
 if ($DryRun) { Write-Host "(dry-run - nothing was changed)" }
