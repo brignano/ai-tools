@@ -160,6 +160,64 @@ else {
 Write-Host "      authorize on the homelab (one time, Windows has no ssh-copy-id):"
 Write-Host "        type `$env:USERPROFILE\.ssh\id_ed25519.pub | ssh $HlHost `"cat >> .ssh/authorized_keys`""
 
+# 3b. Commit signing - sign every commit with the SSH key from step 3. Turning on
+# commit.gpgsign without a usable key makes EVERY commit fail ("gpg failed to sign
+# the data"), so the key has to be in place before the flag goes on; if it isn't,
+# we say so and leave signing OFF rather than hand back a machine that can't commit.
+# Paths go into git config with forward slashes - backslashes are escape characters
+# in the config file, and a Windows path is written there verbatim.
+$SignKeyPub = "$SshKey.pub"
+$Signers    = Join-Path $env:USERPROFILE ".ssh\allowed_signers"
+if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+    Write-Host "    commit signing: SKIPPED (no git - install it, then re-run)"
+} elseif (-not (Test-Path $SignKeyPub)) {
+    Write-Host "    commit signing: SKIPPED (no public key at $SignKeyPub) - left OFF"
+    Write-Host "      enabling it without a key breaks every commit; make one:  ssh-keygen -t ed25519"
+} else {
+    $SignFmt = (git config --global gpg.format 2>$null)
+    $SignKey = (git config --global user.signingkey 2>$null)
+    if ($SignKey -and $SignFmt -ne 'ssh') {
+        # An OpenPGP/x509 setup is already here; replacing it would break their signing.
+        $Shown = if ($SignFmt) { $SignFmt } else { 'openpgp' }
+        Write-Host "    commit signing: existing $Shown setup - leaving as-is"
+    } else {
+        $KeyPath     = $SignKeyPub.Replace('\', '/')
+        $SignersPath = $Signers.Replace('\', '/')
+        if ($DryRun) {
+            Write-Host "    [dry-run] git config --global gpg.format ssh"
+            Write-Host "    [dry-run] git config --global user.signingkey $KeyPath"
+            Write-Host "    [dry-run] git config --global commit.gpgsign true"
+            Write-Host "    commit signing: would enable (ssh, $KeyPath)"
+        } else {
+            git config --global gpg.format ssh
+            git config --global user.signingkey $KeyPath
+            git config --global commit.gpgsign true
+            Write-Host "    commit signing: on (ssh, $KeyPath)"
+        }
+
+        # Local verification only. Without an allowed-signers file commits still sign
+        # and GitHub still verifies them, but `git log --show-signature` errors out and
+        # %G? reports N - which reads like signing is broken when it isn't.
+        $SignerEmail = (git config --global user.email 2>$null)
+        $KeyData = ((Get-Content $SignKeyPub -Raw).Trim() -split '\s+')[0, 1] -join ' '
+        if (-not $SignerEmail) {
+            Write-Host "      allowed_signers: skipped (no git user.email - set it, then re-run)"
+        } elseif ((Test-Path $Signers) -and (Select-String -Path $Signers -SimpleMatch $KeyData -Quiet)) {
+            if (-not $DryRun) { git config --global gpg.ssh.allowedSignersFile $SignersPath }
+            Write-Host "      allowed_signers: already lists this key"
+        } elseif ($DryRun) {
+            Write-Host "      [dry-run] add '$SignerEmail' to $Signers; set gpg.ssh.allowedSignersFile"
+        } else {
+            New-Item -ItemType Directory -Force -Path (Split-Path $Signers) | Out-Null
+            Add-Content -Path $Signers -Value "$SignerEmail $KeyData"
+            git config --global gpg.ssh.allowedSignersFile $SignersPath
+            Write-Host "      allowed_signers: added $SignerEmail"
+        }
+        Write-Host "      add the key to GitHub as a SIGNING key (one time per account):"
+        Write-Host "        https://github.com/settings/ssh/new  -> Key type: Signing Key"
+    }
+}
+
 # 4. Homelab repo - the hl-* aliases source from it
 if (Test-Path (Join-Path $HomelabDirDefault ".git")) { Write-Host "    homelab repo: present ($HomelabDirDefault)" }
 elseif ($DryRun) { Write-Host "    [dry-run] offer to clone homelab into $HomelabDirDefault" }

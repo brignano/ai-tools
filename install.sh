@@ -96,6 +96,56 @@ else
 fi
 echo "      authorize on the homelab (one time):  ssh-copy-id $HL_HOST"
 
+# 3b. Commit signing — sign every commit with the SSH key from step 3. Turning on
+# commit.gpgsign without a usable key makes EVERY commit fail ("gpg failed to sign
+# the data"), so the key has to be in place before the flag goes on; if it isn't,
+# we say so and leave signing OFF rather than hand back a machine that can't commit.
+SIGN_KEY_PUB="$SSH_KEY.pub"
+SIGNERS="$HOME/.ssh/allowed_signers"
+if ! command -v git >/dev/null 2>&1; then
+  echo "    commit signing: SKIPPED (no git — install it, then re-run)"
+elif [ ! -f "$SIGN_KEY_PUB" ]; then
+  echo "    commit signing: SKIPPED (no public key at $SIGN_KEY_PUB) — left OFF"
+  echo "      enabling it without a key breaks every commit; make one:  ssh-keygen -t ed25519"
+else
+  sign_fmt="$(git config --global gpg.format 2>/dev/null || true)"
+  sign_key="$(git config --global user.signingkey 2>/dev/null || true)"
+  if [ -n "$sign_key" ] && [ "$sign_fmt" != "ssh" ]; then
+    # An OpenPGP/x509 setup is already here; replacing it would break their signing.
+    echo "    commit signing: existing ${sign_fmt:-openpgp} setup — leaving as-is"
+  else
+    run git config --global gpg.format ssh
+    run git config --global user.signingkey "$SIGN_KEY_PUB"
+    run git config --global commit.gpgsign true
+    if [ "$DRY_RUN" = 1 ]; then
+      echo "    commit signing: would enable (ssh, $SIGN_KEY_PUB)"
+    else
+      echo "    commit signing: on (ssh, $SIGN_KEY_PUB)"
+    fi
+
+    # Local verification only. Without an allowed-signers file commits still sign
+    # and GitHub still verifies them, but `git log --show-signature` errors out and
+    # %G? reports N — which reads like signing is broken when it isn't.
+    signer_email="$(git config --global user.email 2>/dev/null || true)"
+    key_data="$(cut -d' ' -f1,2 "$SIGN_KEY_PUB")"
+    if [ -z "$signer_email" ]; then
+      echo "      allowed_signers: skipped (no git user.email — set it, then re-run)"
+    elif [ -f "$SIGNERS" ] && grep -qF "$key_data" "$SIGNERS"; then
+      run git config --global gpg.ssh.allowedSignersFile "$SIGNERS"
+      echo "      allowed_signers: already lists this key"
+    elif [ "$DRY_RUN" = 1 ]; then
+      echo "      [dry-run] add '$signer_email' to $SIGNERS; set gpg.ssh.allowedSignersFile"
+    else
+      mkdir -p "$HOME/.ssh"; chmod 700 "$HOME/.ssh"
+      printf '%s %s\n' "$signer_email" "$key_data" >> "$SIGNERS"
+      git config --global gpg.ssh.allowedSignersFile "$SIGNERS"
+      echo "      allowed_signers: added $signer_email"
+    fi
+    echo "      add the key to GitHub as a SIGNING key (one time per account):"
+    echo "        https://github.com/settings/ssh/new  → Key type: Signing Key"
+  fi
+fi
+
 # 4. Homelab repo — the hl-* aliases source from it
 if [ -d "$HOMELAB_DIR_DEFAULT/.git" ]; then
   echo "    homelab repo: present ($HOMELAB_DIR_DEFAULT)"
