@@ -12,7 +12,7 @@ out as **manual**.
 ## What you end up with
 
 - Claude context, slash commands, output styles, settings, and 3 MCP servers
-  (terraform, aws-mcp, homelab) — see [README](README.md).
+  (github, homelab, terraform) — see [README](README.md).
 - The homelab `hl-*` commands in your shell (`hl-help` for the list) — see
   [homelab/shell/README.md](https://github.com/brignano/homelab/blob/main/shell/README.md).
 - SSH + Tailscale access to the homelab so `hl-ps`, `hl-logs`, `hl-up` work from anywhere.
@@ -105,7 +105,7 @@ Open a **new** terminal (the wiring only applies to fresh shells), then:
 hl-help            # the command list
 hl-status          # client/route/server reachability — should say "all good"
 hl-ps              # containers on the LXC (proves SSH + Tailscale/LAN path)
-claude             # MCP servers connect (terraform, aws-mcp, homelab)
+claude             # MCP servers connect (github, homelab, terraform)
 ```
 
 If `hl-status` flags a layer, fix that one (Tailscale down → `hl-vpn-up`; SSH denied →

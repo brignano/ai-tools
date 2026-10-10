@@ -17,7 +17,7 @@ servers — installed once per device so every machine stays in sync.
 | `skills/<name>/` | `~/.claude/skills/<name>/` | Skills — loaded when a task matches their description |
 | `agents/*.md` | `~/.claude/agents/` | Subagents — run in their own context, report back a conclusion |
 | `claude/settings.json` | `~/.claude/settings.json` | Baseline permission allowlist |
-| `claude/mcp-servers.json` | user-scope MCP (`claude mcp add-json`) | terraform, aws-mcp, homelab |
+| `claude/mcp-servers.json` | user-scope MCP (`claude mcp add-json`) | github, homelab, terraform |
 | `.env.example` → `secrets.env` | sourced by your shell profile | Tokens (gitignored, never committed) |
 | `shell/profile.ps1` | sourced by both PowerShell `$PROFILE`s | oh-my-zsh-style Windows shell: nav + git aliases, PSReadLine, Starship prompt |
 | `shell/aliases.sh` | sourced by `~/.zshrc` / `~/.bashrc` | Same nav + git aliases on Mac/Linux (prompt untouched — omz stays) |
@@ -71,15 +71,13 @@ needs is empty in `secrets.env`. Fill the gap and re-run `ai-refresh`.
 
 | Server | Needs |
 |---|---|
-| notion | OAuth, once per machine: `claude mcp login notion` (or `/mcp`) |
 | github | `GITHUB_MCP_TOKEN` (fine-grained PAT). GitHub's MCP OAuth has no dynamic client registration, so Claude Code can't log in to it itself |
 | homelab | `HOMELAB_MCP_TOKEN`: `Bearer ` + `MCP_BEARER_TOKEN` from the homelab's `docker/proxy/.env` (not a Grafana token); Tailscale up |
 | terraform | Docker; `TFE_TOKEN` (HCP Terraform **user** token) for workspaces |
-| aws-mcp | `uvx`, and AWS credentials (`aws sso login`) |
 
-Servers listed under `_retired` are unregistered on every run. Slack and Vercel are
-there: use their claude.ai connectors instead (Slack's MCP server needs a registered
-Slack app; Vercel's connector is the same server).
+Servers listed under `_retired` are unregistered on every run: Slack, Vercel, Notion
+and aws-mcp. Use their claude.ai connectors instead — no per-machine login, `uvx` or
+AWS credentials, and Slack's MCP server needs a registered Slack app anyway.
 
 ### Why some connectors aren't here
 
@@ -136,8 +134,8 @@ cd ~/.ai-tools && git pull        # symlinks update instantly
 ## What's NOT handled
 
 Installing Claude Code itself, and `claude` login/auth — do those once per machine
-manually. `aws-mcp` uses your ambient AWS credentials, so ensure your AWS profile /
-`aws sso login` is active.
+manually. Sign in with your claude.ai account so its connectors (Gmail, Slack, Notion,
+AWS, ...) load.
 
 ## Structure
 
