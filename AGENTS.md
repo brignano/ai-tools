@@ -249,8 +249,12 @@ implying a gate that is not there.
 - Prefer proven tools over new ones unless there's a clear reason
 - Always consider: what does this cost to run monthly?
 
-## Custom commands & output styles
+## Custom commands, output styles, skills & agents
 Installed globally from the `ai-tools` repo. Slash commands live in `commands/`
 (each self-describes via frontmatter — run `/` to list them); reusable personas live
-in `output-styles/` (`/output-style` to switch). This list is intentionally not
-duplicated here — the directories are the source of truth.
+in `output-styles/` (`/output-style` to switch); skills in `skills/<name>/SKILL.md`;
+subagents in `agents/`. This list is intentionally not duplicated here — the
+directories are the source of truth.
+
+Anything tied to one repo's paths, hosts or services goes in **that repo's**
+`.claude/` instead, not here.

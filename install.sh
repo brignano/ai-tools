@@ -11,6 +11,8 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENTS_MD="$REPO_DIR/AGENTS.md"
 COMMANDS_DIR="$REPO_DIR/commands"
 STYLES_DIR="$REPO_DIR/output-styles"
+SKILLS_DIR="$REPO_DIR/skills"
+AGENT_DEFS_DIR="$REPO_DIR/agents"
 SETTINGS="$REPO_DIR/claude/settings.json"
 MCP_JSON="$REPO_DIR/claude/mcp-servers.json"
 SECRETS="$REPO_DIR/secrets.env"
@@ -18,7 +20,9 @@ CLAUDE_DIR="$HOME/.claude"
 
 run() { if [ "$DRY_RUN" = 1 ]; then echo "    [dry-run] $*"; else "$@"; fi; }
 
-# Symlink src -> dest, but never clobber a real (non-symlink) file.
+# Symlink src -> dest, but never clobber a real (non-symlink) file or directory.
+# -n matters for skills: without it, re-linking a symlink that points at a directory
+# creates a second link INSIDE that directory (i.e. inside this repo) instead.
 link() {
   local src="$1" dest="$2"
   if [ -e "$dest" ] && [ ! -L "$dest" ]; then
@@ -26,12 +30,12 @@ link() {
     return
   fi
   run mkdir -p "$(dirname "$dest")"
-  run ln -sf "$src" "$dest"
+  run ln -sfn "$src" "$dest"
   echo "    $dest"
 }
 
 # Remove symlinks in $1 that point into this repo but whose target no longer exists
-# (a command/style deleted or moved upstream leaves a dangling link otherwise).
+# (a command/style/skill/agent deleted or moved upstream leaves a dangling link otherwise).
 prune() {
   local dir="$1" l tgt
   [ -d "$dir" ] || return 0
@@ -174,6 +178,23 @@ for f in "$COMMANDS_DIR"/*.md; do link "$f" "$CLAUDE_DIR/commands/$(basename "$f
 echo "==> Output styles (~/.claude/output-styles/)"
 prune "$CLAUDE_DIR/output-styles"
 for f in "$STYLES_DIR"/*.md; do link "$f" "$CLAUDE_DIR/output-styles/$(basename "$f")"; done
+
+# A skill is a directory (SKILL.md plus any files it bundles), so link the whole
+# directory: files added to a skill later arrive with a plain `git pull`.
+echo "==> Skills (~/.claude/skills/)"
+prune "$CLAUDE_DIR/skills"
+for d in "$SKILLS_DIR"/*/; do
+  [ -f "$d/SKILL.md" ] || continue
+  d="${d%/}"; link "$d" "$CLAUDE_DIR/skills/$(basename "$d")"
+done
+
+echo "==> Agents (~/.claude/agents/)"
+prune "$CLAUDE_DIR/agents"
+for f in "$AGENT_DEFS_DIR"/*.md; do
+  [ -f "$f" ] || continue                       # no agents yet: the glob stays literal
+  [ "$(basename "$f")" = README.md ] && continue
+  link "$f" "$CLAUDE_DIR/agents/$(basename "$f")"
+done
 
 echo "==> Settings (~/.claude/settings.json)"
 link "$SETTINGS" "$CLAUDE_DIR/settings.json"
