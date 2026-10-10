@@ -73,7 +73,7 @@ needs is empty in `secrets.env`. Fill the gap and re-run `ai-refresh`.
 |---|---|
 | notion | OAuth, once per machine: `claude mcp login notion` (or `/mcp`) |
 | github | `GITHUB_MCP_TOKEN` (fine-grained PAT). GitHub's MCP OAuth has no dynamic client registration, so Claude Code can't log in to it itself |
-| homelab | `HOMELAB_MCP_TOKEN` (Grafana service-account token, `Bearer ` prefix) |
+| homelab | `HOMELAB_MCP_TOKEN`: `Bearer ` + `MCP_BEARER_TOKEN` from the homelab's `docker/proxy/.env` (not a Grafana token); Tailscale up |
 | terraform | Docker; `TFE_TOKEN` (HCP Terraform **user** token) for workspaces |
 | aws-mcp | `uvx`, and AWS credentials (`aws sso login`) |
 
