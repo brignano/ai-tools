@@ -14,6 +14,8 @@ servers — installed once per device so every machine stays in sync.
 | `AGENTS.md` | `~/.claude/CLAUDE.md` | Your context, preferences, conventions |
 | `commands/*.md` | `~/.claude/commands/` | Slash commands (`/new-tsd`, `/review-pr`, …) |
 | `output-styles/*.md` | `~/.claude/output-styles/` | Switchable personas (`/output-style`) |
+| `skills/<name>/` | `~/.claude/skills/<name>/` | Skills — loaded when a task matches their description |
+| `agents/*.md` | `~/.claude/agents/` | Subagents — run in their own context, report back a conclusion |
 | `claude/settings.json` | `~/.claude/settings.json` | Baseline permission allowlist |
 | `claude/mcp-servers.json` | user-scope MCP (`claude mcp add-json`) | terraform, aws-mcp, homelab |
 | `.env.example` → `secrets.env` | sourced by your shell profile | Tokens (gitignored, never committed) |
@@ -50,7 +52,7 @@ claude
 ```
 
 The installer is safe to re-run: it refuses to clobber files it didn't install, prunes
-stale links for commands/styles you've deleted, and re-registers MCP servers idempotently.
+stale links for commands, styles, skills and agents you've deleted, and re-registers MCP servers idempotently.
 
 **Windows link types.** Symlinks need Administrator or Developer Mode (Settings > System >
 For developers). Without either, `install.ps1` uses hard links instead — same result day to
@@ -113,7 +115,8 @@ Equivalent by hand:
 
 ```bash
 cd ~/.ai-tools && git pull        # symlinks update instantly
-~/.ai-tools/install.sh            # only needed if commands/styles/MCP changed
+~/.ai-tools/install.sh            # only needed if you added/removed a command, style,
+                                  # skill or agent, or changed MCP
                                   # (on Windows without symlinks, always re-run install.ps1)
 ```
 
@@ -130,6 +133,8 @@ ai-tools/
 ├── AGENTS.md              # Source of truth — context, preferences, conventions
 ├── commands/             # Slash commands
 ├── output-styles/        # Switchable personas / system instructions
+├── skills/               # One directory per skill (SKILL.md + bundled files)
+├── agents/               # Subagent definitions, one .md each
 ├── claude/
 │   ├── settings.json     # Baseline permission allowlist (no secrets)
 │   └── mcp-servers.json  # MCP server defs with ${VAR} secret placeholders
@@ -147,6 +152,8 @@ ai-tools/
 
 - **Command:** drop a `.md` (with `description` / `argument-hint` frontmatter) in `commands/`, `git push`, then `git pull` + re-run install elsewhere.
 - **Output style:** same, in `output-styles/` (frontmatter: `name`, `description`).
+- **Skill:** add `skills/<name>/SKILL.md` (frontmatter: `name`, `description`) plus any files it uses, then re-run install. See [`skills/README.md`](skills/README.md) for what belongs here versus a repo's own `.claude/skills/`.
+- **Agent:** drop a `.md` (frontmatter: `name`, `description`, optional `tools`) in `agents/`, then re-run install. See [`agents/README.md`](agents/README.md).
 - **MCP server:** add it to `claude/mcp-servers.json` (use `${VAR}` for any secret, add the var to `.env.example`), then re-run install.
 - **Permission:** add a pattern to `claude/settings.json` `permissions.allow`.
 - **Shell alias:** add it to both `shell/profile.ps1` (PowerShell) and `shell/aliases.sh` (zsh/bash), `git push` — no re-install needed, profiles source the repo files directly.

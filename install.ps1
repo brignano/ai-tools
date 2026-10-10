@@ -10,6 +10,8 @@ $RepoDir     = Split-Path -Parent $MyInvocation.MyCommand.Path
 $AgentsMd    = Join-Path $RepoDir "AGENTS.md"
 $CommandsDir = Join-Path $RepoDir "commands"
 $StylesDir   = Join-Path $RepoDir "output-styles"
+$SkillsDir   = Join-Path $RepoDir "skills"
+$AgentDefsDir = Join-Path $RepoDir "agents"
 $Settings    = Join-Path $RepoDir "claude\settings.json"
 $McpJson     = Join-Path $RepoDir "claude\mcp-servers.json"
 $Secrets     = Join-Path $RepoDir "secrets.env"
@@ -86,7 +88,7 @@ function Link-File($src, $dest) {
     }
 }
 
-# Drop what we installed for commands/styles that no longer exist in the repo.
+# Drop what we installed for commands/styles/agents that no longer exist in the repo.
 # Symlinks name their target; hard links don't (and PowerShell 7 reports no target
 # at all for them), so go by the manifest and the name the source dir would provide.
 function Prune-Dir($dir, $srcDir) {
@@ -99,6 +101,49 @@ function Prune-Dir($dir, $srcDir) {
         if (Test-Path (Join-Path $srcDir $_.Name)) { return }
         Write-Host "    prune (stale): $($_.FullName)"
         if (-not $DryRun) { Remove-Item $_.FullName -Force; $Installed.Remove($_.FullName) }
+    }
+}
+
+# A skill is a directory, and a hard link cannot point at one. Without symlink rights
+# use a junction instead: it needs no privilege, and because it names the directory
+# rather than its files, a 'git pull' that replaces files inside it keeps it valid.
+# Remove a directory link with Remove-Link, never Remove-Item: on Windows PowerShell
+# 5.1, Remove-Item on a junction can delete the contents of the directory it points
+# at, which here is the repo. The item's own non-recursive Delete() removes only the
+# link, live or dangling (a dangling one is a FileInfo on macOS/Linux, where
+# [IO.Directory]::Delete would throw).
+function Remove-Link($path) { (Get-Item $path -Force).Delete() }
+
+function Link-Dir($src, $dest) {
+    $item = Get-Item $dest -Force -ErrorAction SilentlyContinue
+    if ($item -and -not $item.LinkType) {
+        Write-Host "    SKIP (real directory present - back it up and remove, then re-run): $dest"
+        return
+    }
+    $kind = if ($CanSymlink) { "SymbolicLink" } else { "Junction" }
+    if ($DryRun) { Write-Host "    [dry-run] link ($kind) $dest"; return }
+    New-Item -ItemType Directory -Force -Path (Split-Path $dest) | Out-Null
+    if ($item) { Remove-Link $dest }
+    try {
+        New-Item -ItemType $kind -Path $dest -Target $src -ErrorAction Stop | Out-Null
+        Write-Host "    $dest"
+    } catch {
+        Write-Host "    FAILED: $dest - $($_.Exception.Message)"
+        $script:LinkFailures++
+    }
+}
+
+# Drop directory links into this repo whose skill no longer exists. No -Directory
+# filter: once its target is gone, a dangling symlink is no longer a directory and
+# -Directory would skip exactly the links this is here to remove.
+function Prune-DirLinks($dir, $srcDir) {
+    if (-not (Test-Path $dir)) { return }
+    Get-ChildItem $dir -Force | Where-Object { $_.LinkType } | ForEach-Object {
+        $tgt = $_.Target | Select-Object -First 1
+        if (-not ($_.LinkType -and $tgt -and $tgt.StartsWith($RepoDir))) { return }
+        if (Test-Path (Join-Path $srcDir $_.Name)) { return }
+        Write-Host "    prune (stale): $($_.FullName)"
+        if (-not $DryRun) { Remove-Link $_.FullName }
     }
 }
 
@@ -240,6 +285,18 @@ Write-Host "==> Output styles (~/.claude/output-styles/)"
 Prune-Dir (Join-Path $ClaudeDir "output-styles") $StylesDir
 Get-ChildItem $StylesDir -Filter "*.md" | ForEach-Object {
     Link-File $_.FullName (Join-Path $ClaudeDir "output-styles\$($_.Name)")
+}
+
+Write-Host "==> Skills (~/.claude/skills/)"
+Prune-DirLinks (Join-Path $ClaudeDir "skills") $SkillsDir
+Get-ChildItem $SkillsDir -Directory |
+    Where-Object { Test-Path (Join-Path $_.FullName "SKILL.md") } |
+    ForEach-Object { Link-Dir $_.FullName (Join-Path $ClaudeDir "skills\$($_.Name)") }
+
+Write-Host "==> Agents (~/.claude/agents/)"
+Prune-Dir (Join-Path $ClaudeDir "agents") $AgentDefsDir
+Get-ChildItem $AgentDefsDir -Filter "*.md" | Where-Object { $_.Name -ne "README.md" } | ForEach-Object {
+    Link-File $_.FullName (Join-Path $ClaudeDir "agents\$($_.Name)")
 }
 
 Write-Host "==> Settings (~/.claude/settings.json)"
