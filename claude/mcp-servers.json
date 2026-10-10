@@ -44,7 +44,7 @@
     },
     "homelab": {
       "type": "http",
-      "url": "http://mcp.home/mcp",
+      "url": "https://mcp.home.brignano.io/mcp",
       "headers": {
         "Authorization": "${HOMELAB_MCP_TOKEN}"
       }
