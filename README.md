@@ -97,9 +97,10 @@ ai-refresh              # pull + re-run the installer
 ai-refresh --dry-run    # show what would change, touch nothing
 ```
 
-`ai-refresh` is defined in your shell profile by `install.sh`, so it exists on
-every machine after the first install (open a new shell, or `exec $SHELL`, to
-pick it up). It refuses to run if the checkout has uncommitted changes, so it
+`ai-refresh` is defined in your shell profile by `install.sh`, and on Windows by
+`shell/profile.ps1` (which `install.ps1` wires into `$PROFILE`; `-DryRun` works too),
+so it exists on every machine after the first install (open a new shell, or
+`exec $SHELL`, to pick it up). It refuses to run if the checkout has uncommitted changes, so it
 can never clobber local edits, and it leaves your working directory unchanged.
 
 It's a shell **function**, not an alias — an alias can't take `--dry-run`,
@@ -109,6 +110,10 @@ If the repo isn't at the path baked in at install time, point it somewhere else:
 
 ```bash
 AI_TOOLS_DIR=/path/to/ai-tools ai-refresh
+```
+
+```powershell
+$env:AI_TOOLS_DIR = "C:\path\to\ai-tools"; ai-refresh
 ```
 
 Equivalent by hand:
