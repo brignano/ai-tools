@@ -313,79 +313,79 @@ if (-not (Test-Path $Secrets)) {
     if (-not $DryRun) { Copy-Item (Join-Path $RepoDir ".env.example") $Secrets }
     Write-Host "    created from template - FILL IN TOKENS, then open a new shell"
 } else { Write-Host "    exists (leaving as-is)" }
-# Load secrets.env into each new PowerShell session.
-$marker = "# ai-tools secrets"
-$block = @"
-$marker
-`$__sec = "$Secrets"
-if (Test-Path `$__sec) {
-  Get-Content `$__sec | Where-Object { `$_ -match '^\s*[^#].*=' } | ForEach-Object {
-    `$k, `$v = `$_ -split '=', 2
-    [Environment]::SetEnvironmentVariable(`$k.Trim(), `$v.Trim().Trim('"'), "Process")
-  }
-}
-"@
-if (-not (Test-Path $PROFILE) -or -not (Select-String -Path $PROFILE -SimpleMatch $marker -Quiet)) {
-    if ($DryRun) { Write-Host "    [dry-run] append secrets loader to $PROFILE" }
-    else {
-        New-Item -ItemType Directory -Force -Path (Split-Path $PROFILE) | Out-Null
-        Add-Content -Path $PROFILE -Value $block
-        Write-Host "    added secrets loader to $PROFILE"
+# The profile wiring below bakes this checkout's path into $PROFILE. Each block sits
+# between sentinel lines so a re-run can find it again: appended if missing,
+# rewritten in place if it differs (install.ps1 ran from another checkout, or the
+# repo moved), left alone if it already matches. $legacy matches an older form of
+# a block that had no closing sentinel, so it gets replaced rather than duplicated.
+function Set-ProfileBlock($path, $label, $block, $legacy) {
+    $lines = $block -split "`r`n"
+    $text  = if (Test-Path $path) { Get-Content $path -Raw } else { $null }
+    if ($null -eq $text) { $text = "" }
+    $m = [regex]::Match($text, "(?s)" + [regex]::Escape($lines[0]) + ".*?" + [regex]::Escape($lines[-1]))
+    if (-not $m.Success -and $legacy) { $m = [regex]::Match($text, $legacy) }
+    if ($m.Success -and ($m.Value -replace "`r", "") -eq ($block -replace "`r", "")) {
+        Write-Host "    $label already wired: $path"; return
     }
-} else { Write-Host "    $PROFILE already loads secrets.env" }
+    $verb = if ($m.Success) { "updated" } else { "added" }
+    if ($DryRun) { Write-Host "    [dry-run] $verb $label in $path"; return }
+    New-Item -ItemType Directory -Force -Path (Split-Path $path) | Out-Null
+    if ($m.Success) {
+        $text = $text.Substring(0, $m.Index) + $block + $text.Substring($m.Index + $m.Length)
+        Set-Content -Path $path -Value $text -NoNewline
+    } else {
+        Add-Content -Path $path -Value "`r`n$block"
+    }
+    Write-Host "    $verb $label in $path"
+}
+
+# Load secrets.env into each new PowerShell session.
+$SecBlock = @(
+    "# >>> ai-tools secrets >>>"
+    "`$__sec = `"$Secrets`""
+    "if (Test-Path `$__sec) {"
+    "  Get-Content `$__sec | Where-Object { `$_ -match '^\s*[^#].*=' } | ForEach-Object {"
+    "    `$k, `$v = `$_ -split '=', 2"
+    "    [Environment]::SetEnvironmentVariable(`$k.Trim(), `$v.Trim().Trim('`"'), `"Process`")"
+    "  }"
+    "}"
+    "# <<< ai-tools secrets <<<"
+) -join "`r`n"
+# Pre-sentinel form: a "# ai-tools secrets" line, then the loader up to its closing
+# brace (the only unindented one).
+$SecLegacy = '(?s)# ai-tools secrets\r?\n\$__sec = .*?\r?\n\}(?=\r?\n|$)'
+Set-ProfileBlock $PROFILE "secrets loader" $SecBlock $SecLegacy
 
 # Wire the homelab hl-* commands into $PROFILE. Guarded (no error if the homelab
-# repo isn't cloned here) and idempotent (a sentinel marker stops re-runs from
-# duplicating it). Override the checkout path with $env:HOMELAB_DIR.
+# repo isn't cloned here). Override the checkout path with $env:HOMELAB_DIR.
 Write-Host "==> Homelab hl-* commands ($PROFILE)"
-$HlBegin = "# >>> homelab hl-* >>>"
 if ($env:HOMELAB_DIR) {
     $HlDirLine = "`$HomelabDir = `"$env:HOMELAB_DIR`""           # bake the explicit path
 } else {
     $HlDirLine = "`$HomelabDir = if (`$env:HOMELAB_DIR) { `$env:HOMELAB_DIR } else { `"`$HOME\Projects\homelab`" }"
 }
 $HlBlock = @(
-    $HlBegin
+    "# >>> homelab hl-* >>>"
     $HlDirLine
     "if (Test-Path `"`$HomelabDir\shell\aliases.ps1`") { . `"`$HomelabDir\shell\aliases.ps1`" }"
     "# <<< homelab hl-* <<<"
 ) -join "`r`n"
-if ((Test-Path $PROFILE) -and (Select-String -Path $PROFILE -SimpleMatch $HlBegin -Quiet)) {
-    Write-Host "    $PROFILE already wires hl-*"
-} elseif ($DryRun) {
-    Write-Host "    [dry-run] append hl-* wiring to $PROFILE"
-} else {
-    New-Item -ItemType Directory -Force -Path (Split-Path $PROFILE) | Out-Null
-    Add-Content -Path $PROFILE -Value "`r`n$HlBlock"
-    Write-Host "    wired hl-* into $PROFILE"
-}
+Set-ProfileBlock $PROFILE "hl-*" $HlBlock
 
-# Wire the shell profile (nav + git aliases, PSReadLine, Starship) into BOTH
-# PowerShell profiles - Windows PowerShell 5.1 and PowerShell 7 keep separate
+# Wire the shell profile (nav + git aliases, ai-refresh, PSReadLine, Starship) into
+# BOTH PowerShell profiles - Windows PowerShell 5.1 and PowerShell 7 keep separate
 # $PROFILE paths, and either may be the one a terminal opens.
-Write-Host "==> Shell profile (aliases, PSReadLine, Starship)"
-$ShBegin = "# >>> ai-tools shell >>>"
+Write-Host "==> Shell profile (aliases, ai-refresh, PSReadLine, Starship)"
 $ShBlock = @(
-    $ShBegin
+    "# >>> ai-tools shell >>>"
     ". `"$RepoDir\shell\profile.ps1`""
     "# <<< ai-tools shell <<<"
 ) -join "`r`n"
 $MyDocs = [Environment]::GetFolderPath('MyDocuments')
-$ProfilePaths = @(
+foreach ($pf in @(
     (Join-Path $MyDocs "WindowsPowerShell\Microsoft.PowerShell_profile.ps1")
     (Join-Path $MyDocs "PowerShell\Microsoft.PowerShell_profile.ps1")
-)
-foreach ($pf in $ProfilePaths) {
-    if ((Test-Path $pf) -and (Select-String -Path $pf -SimpleMatch $ShBegin -Quiet)) {
-        Write-Host "    already wired: $pf"
-    } elseif ($DryRun) {
-        Write-Host "    [dry-run] append shell wiring to $pf"
-    } else {
-        New-Item -ItemType Directory -Force -Path (Split-Path $pf) | Out-Null
-        Add-Content -Path $pf -Value "`r`n$ShBlock"
-        Write-Host "    wired: $pf"
-    }
-}
+)) { Set-ProfileBlock $pf "shell profile" $ShBlock }
 
 Write-Host "==> MCP servers (user scope)"
 if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
