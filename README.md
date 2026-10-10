@@ -46,8 +46,9 @@ Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 Then fill in tokens and reload your shell:
 ```bash
-$EDITOR ~/.ai-tools/secrets.env    # paste HOMELAB_MCP_TOKEN, TFE_TOKEN
+$EDITOR ~/.ai-tools/secrets.env    # paste HOMELAB_MCP_TOKEN, TFE_TOKEN, GITHUB_MCP_TOKEN
 exec $SHELL                        # reload so Claude Code sees them
+ai-refresh                         # re-register MCP servers that were waiting on a token
 claude
 ```
 
@@ -63,15 +64,22 @@ alone; anything you edited yourself is saved alongside as `<name>.bak` before be
 
 ## MCP servers
 
-`claude/mcp-servers.json` is the source of truth; `install.sh` registers each one
-at user scope. Two kinds live there:
+`claude/mcp-servers.json` is the source of truth; the installers register each one
+at user scope, and **skip** (and unregister) a server this machine can't run yet,
+saying why: its stdio command isn't installed (`docker`, `uvx`) or a `${VAR}` it
+needs is empty in `secrets.env`. Fill the gap and re-run `ai-refresh`.
 
-- **Remote (`type: http`)** — GitHub, Notion, Slack, Vercel. These authenticate
-  with OAuth from Claude Code itself, so they carry **no token**. Run
-  `claude mcp login <name>` once per machine, or open `/mcp` and sign in.
-- **Local (`stdio`) or private** — terraform, aws-mcp, homelab. These need
-  per-machine wiring (Docker, `uvx`, a private URL) and read their secrets from
-  `secrets.env`.
+| Server | Needs |
+|---|---|
+| notion | OAuth, once per machine: `claude mcp login notion` (or `/mcp`) |
+| github | `GITHUB_MCP_TOKEN` (fine-grained PAT). GitHub's MCP OAuth has no dynamic client registration, so Claude Code can't log in to it itself |
+| homelab | `HOMELAB_MCP_TOKEN` (Grafana service-account token, `Bearer ` prefix) |
+| terraform | Docker; `TFE_TOKEN` (HCP Terraform **user** token) for workspaces |
+| aws-mcp | `uvx`, and AWS credentials (`aws sso login`) |
+
+Servers listed under `_retired` are unregistered on every run. Slack and Vercel are
+there: use their claude.ai connectors instead (Slack's MCP server needs a registered
+Slack app; Vercel's connector is the same server).
 
 ### Why some connectors aren't here
 

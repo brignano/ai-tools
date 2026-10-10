@@ -315,20 +315,56 @@ if ! command -v claude >/dev/null 2>&1; then
 elif ! command -v python3 >/dev/null 2>&1; then
   echo "    python3 not found — skipping MCP registration"
 else
-  while IFS= read -r name; do
+  # Decide per server: register it, or skip it (and unregister any earlier copy)
+  # because its stdio command isn't installed here or a ${VAR} it needs is empty
+  # in secrets.env. Retired servers are unregistered outright.
+  plan="$(python3 - "$MCP_JSON" "$SECRETS" <<'PY'
+import json, re, shutil, sys
+cfg = json.load(open(sys.argv[1]))
+secrets = {}
+try:
+    for line in open(sys.argv[2]):
+        m = re.match(r'\s*([A-Za-z_]\w*)\s*=\s*"?(.*?)"?\s*$', line)
+        if m and not line.lstrip().startswith('#'):
+            secrets[m.group(1)] = m.group(2)
+except OSError:
+    pass
+for name in cfg.get('_retired', []):
+    print(f"{name}\tretire\t")
+for name, srv in cfg['mcpServers'].items():
+    blob = json.dumps(srv)
+    cmd = srv.get('command')
+    empty = [v for v in re.findall(r'\$\{(\w+)\}', blob) if not secrets.get(v)]
+    if cmd and not shutil.which(cmd):
+        print(f"{name}\tskip\t'{cmd}' not installed")
+    elif empty:
+        print(f"{name}\tskip\tset {', '.join(empty)} in secrets.env")
+    else:
+        print(f"{name}\tadd\t{blob}")
+PY
+)"
+  while IFS="$(printf '\t')" read -r name action arg; do
     [ -z "$name" ] && continue
-    json="$(python3 -c "import json,sys; print(json.dumps(json.load(open('$MCP_JSON'))['mcpServers'][sys.argv[1]]))" "$name")"
     if [ "$DRY_RUN" = 1 ]; then
-      echo "    [dry-run] claude mcp add-json $name -s user '<json>'"
-    else
-      claude mcp remove "$name" -s user >/dev/null 2>&1 || true
-      if claude mcp add-json "$name" "$json" -s user >/dev/null 2>&1; then
-        echo "    registered: $name"
-      else
-        echo "    FAILED: $name — register manually with 'claude mcp add-json'"
-      fi
+      case "$action" in
+        add)    echo "    [dry-run] register: $name" ;;
+        skip)   echo "    [dry-run] skip: $name ($arg)" ;;
+        retire) echo "    [dry-run] unregister (retired): $name" ;;
+      esac
+      continue
     fi
-  done < <(python3 -c "import json; print('\n'.join(json.load(open('$MCP_JSON'))['mcpServers']))")
+    claude mcp remove "$name" -s user >/dev/null 2>&1 || true
+    case "$action" in
+      add)
+        if claude mcp add-json "$name" "$arg" -s user >/dev/null 2>&1; then
+          echo "    registered: $name"
+        else
+          echo "    FAILED: $name — register manually with 'claude mcp add-json'"
+        fi ;;
+      skip)   echo "    skipped: $name ($arg)" ;;
+      retire) echo "    unregistered (retired): $name" ;;
+    esac
+  done <<< "$plan"
 fi
 
 echo ""
