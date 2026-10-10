@@ -211,99 +211,103 @@ case "$(basename "${SHELL:-/bin/bash}")" in
   zsh) PROFILE="$HOME/.zshrc" ;;
   *)   PROFILE="$HOME/.bashrc" ;;
 esac
-SRC_LINE="[ -f \"$SECRETS\" ] && set -a && . \"$SECRETS\" && set +a  # ai-tools secrets"
-if ! grep -qF "ai-tools secrets" "$PROFILE" 2>/dev/null; then
-  if [ "$DRY_RUN" = 1 ]; then
-    echo "    [dry-run] append secrets-sourcing line to $PROFILE"
-  else
-    printf '%s\n' "$SRC_LINE" >> "$PROFILE"
-    echo "    added sourcing line to $PROFILE"
+
+# The profile wiring below bakes this checkout's path into $PROFILE. Each block sits
+# between sentinel lines so a re-run can find it again: appended if missing,
+# rewritten in place if it differs (install.sh ran from another checkout, or the
+# repo moved), left alone if it already matches. $3 is a fixed string marking an
+# older one-line form of the block, replaced rather than duplicated.
+profile_block() {
+  local label="$1" block="$2" legacy="${3:-}" begin end mode=0 tmp
+  begin="$(printf '%s\n' "$block" | head -n1)"
+  end="$(printf '%s\n' "$block" | tail -n1)"
+  if grep -qxF "$begin" "$PROFILE" 2>/dev/null && grep -qxF "$end" "$PROFILE" 2>/dev/null; then
+    mode=1
+    if [ "$(awk -v b="$begin" -v e="$end" '$0==b{f=1} f{print} f&&$0==e{exit}' "$PROFILE")" = "$block" ]; then
+      echo "    $PROFILE already wires $label"; return
+    fi
+  elif [ -n "$legacy" ] && grep -qF "$legacy" "$PROFILE" 2>/dev/null; then
+    mode=2
   fi
-else
-  echo "    $PROFILE already sources secrets.env"
-fi
+  local verb=added; [ "$mode" = 0 ] || verb=updated
+  if [ "$DRY_RUN" = 1 ]; then echo "    [dry-run] $verb $label in $PROFILE"; return; fi
+  if [ "$mode" = 0 ]; then
+    printf '%s\n' "$block" >> "$PROFILE"
+  else
+    # Block goes through ENVIRON, not -v: awk -v would expand its backslashes.
+    # Write back with cat so a symlinked profile (dotfile manager) stays a symlink.
+    tmp="$(mktemp)"
+    BLOCK="$block" awk -v b="$begin" -v e="$end" -v l="$legacy" -v mode="$mode" '
+      mode == 1 && $0 == b       { print ENVIRON["BLOCK"]; skip = 1; next }
+      skip                       { if ($0 == e) skip = 0; next }
+      mode == 2 && !done && index($0, l) { print ENVIRON["BLOCK"]; done = 1; next }
+                                 { print }' "$PROFILE" > "$tmp"
+    cat "$tmp" > "$PROFILE"; rm -f "$tmp"
+  fi
+  echo "    $verb $label in $PROFILE"
+}
+
+profile_block "secrets.env" "$(
+  printf '%s\n' "# >>> ai-tools secrets >>>"
+  printf '%s\n' "[ -f \"$SECRETS\" ] && set -a && . \"$SECRETS\" && set +a"
+  printf '%s\n' "# <<< ai-tools secrets <<<"
+)" "# ai-tools secrets"
 
 # Wire the homelab `hl-*` shell commands into the same profile. Guarded (no error
-# if the homelab repo isn't cloned on this machine) and idempotent (a sentinel
-# marker stops re-runs from duplicating it). Override the checkout path with
-# HOMELAB_DIR, e.g. on the server: HOMELAB_DIR=/root/homelab ./install.sh
+# if the homelab repo isn't cloned on this machine). Override the checkout path
+# with HOMELAB_DIR, e.g. on the server: HOMELAB_DIR=/root/homelab ./install.sh
 echo "==> Homelab hl-* commands ($PROFILE)"
-HL_BEGIN="# >>> homelab hl-* >>>"
 if [ -n "${HOMELAB_DIR:-}" ]; then
   HL_DIR_LINE="HOMELAB_DIR=\"$HOMELAB_DIR\""                       # bake the explicit path
 else
   HL_DIR_LINE="HOMELAB_DIR=\"\${HOMELAB_DIR:-\$HOME/Projects/homelab}\""
 fi
-if grep -qF "$HL_BEGIN" "$PROFILE" 2>/dev/null; then
-  echo "    $PROFILE already wires hl-*"
-elif [ "$DRY_RUN" = 1 ]; then
-  echo "    [dry-run] append hl-* wiring to $PROFILE"
-else
-  {
-    printf '%s\n' "$HL_BEGIN"
-    printf '%s\n' "$HL_DIR_LINE"
-    printf '%s\n' 'if [ -f "$HOMELAB_DIR/shell/aliases.sh" ]; then . "$HOMELAB_DIR/shell/aliases.sh"; fi'
-    printf '%s\n' "# <<< homelab hl-* <<<"
-  } >> "$PROFILE"
-  echo "    wired hl-* into $PROFILE"
-fi
+profile_block "hl-*" "$(
+  printf '%s\n' "# >>> homelab hl-* >>>"
+  printf '%s\n' "$HL_DIR_LINE"
+  printf '%s\n' 'if [ -f "$HOMELAB_DIR/shell/aliases.sh" ]; then . "$HOMELAB_DIR/shell/aliases.sh"; fi'
+  printf '%s\n' "# <<< homelab hl-* <<<"
+)"
 
 # Define `ai-refresh` — pull this repo and re-run the installer in one step, so a
-# machine can be brought fully up to date without remembering two commands. Same
-# sentinel + idempotency approach as the hl-* block above.
+# machine can be brought fully up to date without remembering two commands.
 #
 # It is a FUNCTION, not an alias: it needs a guard clause, an argument pass-through
 # (so `ai-refresh --dry-run` works), and a non-zero exit on failure — none of which
 # an alias can express. The subshell body keeps the `cd` from leaking into the
 # caller's shell.
 echo "==> ai-refresh command ($PROFILE)"
-AR_BEGIN="# >>> ai-tools ai-refresh >>>"
-if grep -qF "$AR_BEGIN" "$PROFILE" 2>/dev/null; then
-  echo "    $PROFILE already defines ai-refresh"
-elif [ "$DRY_RUN" = 1 ]; then
-  echo "    [dry-run] append ai-refresh to $PROFILE"
-else
-  {
-    printf '%s\n' "$AR_BEGIN"
-    printf '%s\n' "AI_TOOLS_DIR=\"\${AI_TOOLS_DIR:-$REPO_DIR}\""
-    printf '%s\n' 'ai-refresh() ('
-    printf '%s\n' '  set -e'
-    printf '%s\n' '  dir="${AI_TOOLS_DIR:-$HOME/.ai-tools}"'
-    printf '%s\n' '  if [ ! -d "$dir/.git" ]; then'
-    printf '%s\n' '    echo "ai-refresh: no git checkout at $dir — set AI_TOOLS_DIR" >&2; exit 1'
-    printf '%s\n' '  fi'
-    printf '%s\n' '  cd "$dir"'
-    printf '%s\n' '  if [ -n "$(git status --porcelain)" ]; then'
-    printf '%s\n' '    echo "ai-refresh: $dir has uncommitted changes — commit or stash first" >&2'
-    printf '%s\n' '    git status --short >&2; exit 1'
-    printf '%s\n' '  fi'
-    printf '%s\n' '  echo "==> ai-tools: pulling $dir"'
-    printf '%s\n' '  git pull --ff-only'
-    printf '%s\n' '  echo "==> ai-tools: re-running install.sh"'
-    printf '%s\n' '  ./install.sh "$@"'
-    printf '%s\n' ')'
-    printf '%s\n' "# <<< ai-tools ai-refresh <<<"
-  } >> "$PROFILE"
-  echo "    defined ai-refresh in $PROFILE (run: exec \$SHELL)"
-fi
+profile_block "ai-refresh" "$(
+  printf '%s\n' "# >>> ai-tools ai-refresh >>>"
+  printf '%s\n' "AI_TOOLS_DIR=\"\${AI_TOOLS_DIR:-$REPO_DIR}\""
+  printf '%s\n' 'ai-refresh() ('
+  printf '%s\n' '  set -e'
+  printf '%s\n' '  dir="${AI_TOOLS_DIR:-$HOME/.ai-tools}"'
+  printf '%s\n' '  if [ ! -d "$dir/.git" ]; then'
+  printf '%s\n' '    echo "ai-refresh: no git checkout at $dir — set AI_TOOLS_DIR" >&2; exit 1'
+  printf '%s\n' '  fi'
+  printf '%s\n' '  cd "$dir"'
+  printf '%s\n' '  if [ -n "$(git status --porcelain)" ]; then'
+  printf '%s\n' '    echo "ai-refresh: $dir has uncommitted changes — commit or stash first" >&2'
+  printf '%s\n' '    git status --short >&2; exit 1'
+  printf '%s\n' '  fi'
+  printf '%s\n' '  echo "==> ai-tools: pulling $dir"'
+  printf '%s\n' '  git pull --ff-only'
+  printf '%s\n' '  echo "==> ai-tools: re-running install.sh"'
+  printf '%s\n' '  ./install.sh "$@"'
+  printf '%s\n' ')'
+  printf '%s\n' "# <<< ai-tools ai-refresh <<<"
+)"
 
 # Wire the shared shell aliases (proj/desk/docs, .., git shorthands) into the same
 # profile. Prompt is untouched here — oh-my-zsh (Mac) / the existing prompt stays;
 # shell/profile.ps1 recreates the omz feel on Windows.
 echo "==> Shell aliases ($PROFILE)"
-SH_BEGIN="# >>> ai-tools shell >>>"
-if grep -qF "$SH_BEGIN" "$PROFILE" 2>/dev/null; then
-  echo "    $PROFILE already wires shell aliases"
-elif [ "$DRY_RUN" = 1 ]; then
-  echo "    [dry-run] append shell-aliases wiring to $PROFILE"
-else
-  {
-    printf '%s\n' "$SH_BEGIN"
-    printf '%s\n' ". \"$REPO_DIR/shell/aliases.sh\""
-    printf '%s\n' "# <<< ai-tools shell <<<"
-  } >> "$PROFILE"
-  echo "    wired shell aliases into $PROFILE"
-fi
+profile_block "shell aliases" "$(
+  printf '%s\n' "# >>> ai-tools shell >>>"
+  printf '%s\n' ". \"$REPO_DIR/shell/aliases.sh\""
+  printf '%s\n' "# <<< ai-tools shell <<<"
+)"
 
 echo "==> MCP servers (user scope)"
 if ! command -v claude >/dev/null 2>&1; then
