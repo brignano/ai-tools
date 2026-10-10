@@ -247,9 +247,11 @@ profile_block() {
   echo "    $verb $label in $PROFILE"
 }
 
+# tr strips CRs: a secrets.env copied from Windows has CRLF line endings, and
+# sourcing it as-is leaves a \r on the end of every value (and prints ^M errors).
 profile_block "secrets.env" "$(
   printf '%s\n' "# >>> ai-tools secrets >>>"
-  printf '%s\n' "[ -f \"$SECRETS\" ] && set -a && . \"$SECRETS\" && set +a"
+  printf '%s\n' "[ -f \"$SECRETS\" ] && { set -a; eval \"\$(tr -d '\\r' < \"$SECRETS\")\"; set +a; }"
   printf '%s\n' "# <<< ai-tools secrets <<<"
 )" "# ai-tools secrets"
 
