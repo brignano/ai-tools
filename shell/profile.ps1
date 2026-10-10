@@ -55,6 +55,33 @@ function gstp  { git stash pop @args }
 function grhh  { git reset --hard @args }
 function gclean { git clean -fd @args }
 
+# --- ai-tools ---------------------------------------------------------------------
+# ai-refresh: pull this repo and re-run install.ps1 - the PowerShell twin of the
+# function install.sh writes into the bash/zsh profile. Lives here rather than in
+# $PROFILE so it updates with the repo. Accepts -DryRun or --dry-run.
+# Override the checkout with $env:AI_TOOLS_DIR.
+function ai-refresh {
+    $dir = if ($env:AI_TOOLS_DIR) { $env:AI_TOOLS_DIR } else { Split-Path -Parent $PSScriptRoot }
+    if (-not (Test-Path (Join-Path $dir ".git"))) {
+        Write-Error "ai-refresh: no git checkout at $dir - set `$env:AI_TOOLS_DIR"; return
+    }
+    $dry = $args | Where-Object { $_ -in '-DryRun', '--dry-run' }
+    Push-Location $dir
+    try {
+        $dirty = git status --porcelain
+        if ($dirty) {
+            Write-Error "ai-refresh: $dir has uncommitted changes - commit or stash first"
+            git status --short; return
+        }
+        Write-Host "==> ai-tools: pulling $dir"
+        git pull --ff-only
+        if ($LASTEXITCODE -ne 0) { Write-Error "ai-refresh: git pull failed"; return }
+        Write-Host "==> ai-tools: re-running install.ps1"
+        if ($dry) { & (Join-Path $dir "install.ps1") -DryRun }
+        else      { & (Join-Path $dir "install.ps1") }
+    } finally { Pop-Location }
+}
+
 # --- zsh-like line editing (PSReadLine) ------------------------------------------
 if (Get-Module -ListAvailable PSReadLine) {
     Set-PSReadLineOption -HistorySearchCursorMovesToEnd
