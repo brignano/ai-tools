@@ -391,11 +391,36 @@ Write-Host "==> MCP servers (user scope)"
 if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
     Write-Host "    'claude' CLI not found - skipping (install Claude Code, then re-run)"
 } else {
-    $servers = (Get-Content $McpJson -Raw | ConvertFrom-Json).mcpServers
-    foreach ($name in $servers.PSObject.Properties.Name) {
-        $json = $servers.$name | ConvertTo-Json -Depth 20 -Compress
-        if ($DryRun) { Write-Host "    [dry-run] claude mcp add-json $name -s user '<json>'"; continue }
+    # Register each server, or skip it (and unregister any earlier copy) because its
+    # stdio command isn't installed here or a ${VAR} it needs is empty in
+    # secrets.env. Retired servers are unregistered outright.
+    $cfg = Get-Content $McpJson -Raw | ConvertFrom-Json
+    $sec = @{}
+    if (Test-Path $Secrets) {
+        Get-Content $Secrets | Where-Object { $_ -match '^\s*[^#].*=' } | ForEach-Object {
+            $k, $v = $_ -split '=', 2
+            $sec[$k.Trim()] = $v.Trim().Trim('"')
+        }
+    }
+    foreach ($name in $cfg._retired) {
+        if ($DryRun) { Write-Host "    [dry-run] unregister (retired): $name"; continue }
         claude mcp remove $name -s user 2>$null | Out-Null
+        Write-Host "    unregistered (retired): $name"
+    }
+    foreach ($name in $cfg.mcpServers.PSObject.Properties.Name) {
+        $srv  = $cfg.mcpServers.$name
+        $json = $srv | ConvertTo-Json -Depth 20 -Compress
+        $empty = @([regex]::Matches($json, '\$\{(\w+)\}') | ForEach-Object { $_.Groups[1].Value } |
+                   Where-Object { -not $sec[$_] } | Select-Object -Unique)
+        $why = if ($srv.command -and -not (Get-Command $srv.command -ErrorAction SilentlyContinue)) {
+            "'$($srv.command)' not installed"
+        } elseif ($empty) { "set $($empty -join ', ') in secrets.env" }
+        if ($DryRun) {
+            if ($why) { Write-Host "    [dry-run] skip: $name ($why)" } else { Write-Host "    [dry-run] register: $name" }
+            continue
+        }
+        claude mcp remove $name -s user 2>$null | Out-Null
+        if ($why) { Write-Host "    skipped: $name ($why)"; continue }
         claude mcp add-json $name $json -s user 2>$null | Out-Null
         if ($LASTEXITCODE -eq 0) { Write-Host "    registered: $name" }
         else { Write-Host "    FAILED: $name - register manually with 'claude mcp add-json'" }
