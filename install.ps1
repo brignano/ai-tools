@@ -415,6 +415,11 @@ if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
         $why = if ($srv.command -and -not (Get-Command $srv.command -ErrorAction SilentlyContinue)) {
             "'$($srv.command)' not installed"
         } elseif ($empty) { "set $($empty -join ', ') in secrets.env" }
+        # npx is a .cmd shim on Windows, which Claude Code can't spawn directly; run it through cmd /c.
+        if ($srv.command -eq 'npx') {
+            $srv = [pscustomobject]@{ type = $srv.type; command = 'cmd'; args = @('/c', 'npx') + $srv.args; env = $srv.env }
+            $json = $srv | ConvertTo-Json -Depth 20 -Compress
+        }
         if ($DryRun) {
             if ($why) { Write-Host "    [dry-run] skip: $name ($why)" } else { Write-Host "    [dry-run] register: $name" }
             continue

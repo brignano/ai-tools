@@ -7,6 +7,7 @@
     "aws-mcp"
   ],
   "_retired_comment": "Unregistered by the installers; each comes from its claude.ai connector instead. Slack's MCP needs a registered Slack app; Vercel and Notion are the same servers as their connectors, minus a per-machine login; aws-mcp needed uvx and AWS credentials on every machine.",
+  "_rea_comment": "REA (github.com/morluto/rea): reverse-engineering MCP for binaries, Electron/JS apps, APKs, websites and HAR/pcap captures. Pinned so a release can't change tools under a running session; bump the version here and in skills/reverse-engineer-anything/. Needs Node 22.19+/24.11+; native analysis also needs Ghidra, Hopper or IDA (rea doctor).",
   "mcpServers": {
     "github": {
       "type": "http",
@@ -43,6 +44,16 @@
       "headers": {
         "Authorization": "${HOMELAB_MCP_TOKEN}"
       }
+    },
+    "rea": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "rea-agents@6.4.0",
+        "mcp"
+      ],
+      "env": {}
     }
   }
 }
