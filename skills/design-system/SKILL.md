@@ -1,6 +1,6 @@
 ---
 name: design-system
-description: How to style anything with brignano/design — installing tokens.css (npm pin or jsDelivr), what each colour token means, surface vs ink steps, the two tiers, Tailwind dark mode, and chart colours. Use before writing any UI, CSS, Tailwind classes, colour, theme, chart colours or component styling, in any repo.
+description: How to style anything with brignano/design — installing tokens.css (npm or jsDelivr), what each colour token means, surface vs ink steps, the two tiers, Tailwind dark mode, chart colours, and diagram/diff colours. Use before writing any UI, CSS, Tailwind classes, colour, theme, chart or diagram colours or component styling, in any repo.
 ---
 
 # Styling — always use the design system
@@ -8,12 +8,13 @@ description: How to style anything with brignano/design — installing tokens.cs
 **Before writing any UI, styling, or colour, read
 [`brignano/design`](https://github.com/brignano/design) — `DESIGN.md` for the
 rules, `tokens.css` for the values.** It is public, versioned, and already the
-single source of truth for `brignano.io` and `life`.
+single source of truth for `brignano.io`, `life`, `julia`, `hoststats`,
+`homelab` and `driftwood`.
 
 Install it rather than copying values:
 
 ```jsonc
-"@brignano/design": "github:brignano/design#v0.1.0"
+"@brignano/design": "^0.2.0"
 ```
 
 ```css
@@ -21,7 +22,10 @@ Install it rather than copying values:
 ```
 
 No build step? Use jsDelivr:
-`https://cdn.jsdelivr.net/gh/brignano/design@v0.1.0/tokens.css`
+`https://cdn.jsdelivr.net/npm/@brignano/design@0.2.0/tokens.css`
+
+A caret on `0.x` pins the minor, so a new minor release needs an explicit bump
+in every consumer.
 
 The rules that matter most, so you can apply them without reading everything:
 
@@ -38,9 +42,14 @@ The rules that matter most, so you can apply them without reading everything:
 - **Two tiers.** Tool tier is the default; a marketing surface opts in with
   `class="tier-marketing"`. Colour is identical across both.
 - **Tailwind consumers must set `data-theme` alongside `.dark`** — Tailwind
-  keys off the class, the tokens key off the attribute. See `DESIGN.md` §10.
+  keys off the class, the tokens key off the attribute. See `DESIGN.md` §11.
 - **Charts** are the one place restraint does not apply: use `--chart-1..8` in
   fixed order, never cycled, assigned per entity and **per chart**.
+- **Diagrams are not charts** (`DESIGN.md` §9). Nodes stay neutral; type is an
+  icon and a label, never a hue. Colour is only for health (`--danger` down,
+  `--attention` degraded, healthy is worded but uncoloured) and for what a
+  change did: `--diff-added`, `--diff-changed`, `--diff-removed`, always with
+  `+ added` / `~ changed` / `− removed`.
 
 If a project genuinely needs something the system lacks, add it to
 `brignano/design` and bump the pin — do not invent a local value.
