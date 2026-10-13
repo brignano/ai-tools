@@ -207,18 +207,23 @@ else
   echo "    exists (leaving as-is)"
 fi
 # Source secrets.env from the shell profile so Claude Code sees the tokens at launch.
+# Under zsh the tokens go in ~/.zshenv, not ~/.zshrc: the desktop app (and anything
+# else started from the Dock) builds its environment from a login, non-interactive
+# zsh, which never reads ~/.zshrc. From there every MCP server sends an empty
+# Authorization header.
 case "$(basename "${SHELL:-/bin/bash}")" in
-  zsh) PROFILE="$HOME/.zshrc" ;;
-  *)   PROFILE="$HOME/.bashrc" ;;
+  zsh) PROFILE="$HOME/.zshrc"; SECRETS_PROFILE="$HOME/.zshenv" ;;
+  *)   PROFILE="$HOME/.bashrc"; SECRETS_PROFILE="$PROFILE" ;;
 esac
 
 # The profile wiring below bakes this checkout's path into $PROFILE. Each block sits
 # between sentinel lines so a re-run can find it again: appended if missing,
 # rewritten in place if it differs (install.sh ran from another checkout, or the
 # repo moved), left alone if it already matches. $3 is a fixed string marking an
-# older one-line form of the block, replaced rather than duplicated.
+# older one-line form of the block, replaced rather than duplicated. $4 is the file,
+# default $PROFILE.
 profile_block() {
-  local label="$1" block="$2" legacy="${3:-}" begin end mode=0 tmp
+  local label="$1" block="$2" legacy="${3:-}" PROFILE="${4:-$PROFILE}" begin end mode=0 tmp
   begin="$(printf '%s\n' "$block" | head -n1)"
   end="$(printf '%s\n' "$block" | tail -n1)"
   if grep -qxF "$begin" "$PROFILE" 2>/dev/null && grep -qxF "$end" "$PROFILE" 2>/dev/null; then
@@ -253,7 +258,20 @@ profile_block "secrets.env" "$(
   printf '%s\n' "# >>> ai-tools secrets >>>"
   printf '%s\n' "[ -f \"$SECRETS\" ] && { set -a; eval \"\$(tr -d '\\r' < \"$SECRETS\")\"; set +a; }"
   printf '%s\n' "# <<< ai-tools secrets <<<"
-)" "# ai-tools secrets"
+)" "# ai-tools secrets" "$SECRETS_PROFILE"
+
+# Machines installed before the move above still carry the block in $PROFILE.
+# Take it out, so there is one copy to keep current, not two.
+if [ "$SECRETS_PROFILE" != "$PROFILE" ] && grep -qxF "# >>> ai-tools secrets >>>" "$PROFILE" 2>/dev/null; then
+  if [ "$DRY_RUN" = 1 ]; then
+    echo "    [dry-run] removed secrets.env from $PROFILE"
+  else
+    tmp="$(mktemp)"
+    awk '$0=="# >>> ai-tools secrets >>>"{skip=1} !skip{print} skip&&$0=="# <<< ai-tools secrets <<<"{skip=0}' "$PROFILE" > "$tmp"
+    cat "$tmp" > "$PROFILE"; rm -f "$tmp"
+    echo "    removed secrets.env from $PROFILE (now in $SECRETS_PROFILE)"
+  fi
+fi
 
 # Wire the homelab `hl-*` shell commands into the same profile. Guarded (no error
 # if the homelab repo isn't cloned on this machine). Override the checkout path
@@ -370,7 +388,7 @@ PY
 fi
 
 echo ""
-echo "Done. Open a new shell so secrets.env is loaded, then run 'claude'."
+echo "Done. Open a new shell so secrets.env is loaded, then run 'claude' (quit and reopen the desktop app)."
 # if-form, not `[ ... ] && echo`: the latter returns 1 on a real run (DRY_RUN=0),
 # making the whole script exit non-zero even though everything succeeded.
 if [ "$DRY_RUN" = 1 ]; then echo "(dry-run — nothing was changed)"; fi
