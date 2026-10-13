@@ -36,6 +36,13 @@
       "headers": {
         "Authorization": "${HOMELAB_MCP_TOKEN}"
       }
+    },
+    "homelab-calendar": {
+      "type": "http",
+      "url": "https://mcp.home.brignano.io/calendar/mcp",
+      "headers": {
+        "Authorization": "${HOMELAB_MCP_TOKEN}"
+      }
     }
   }
 }
