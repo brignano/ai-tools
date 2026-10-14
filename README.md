@@ -17,7 +17,7 @@ servers — installed once per device so every machine stays in sync.
 | `skills/<name>/` | `~/.claude/skills/<name>/` | Skills — loaded when a task matches their description |
 | `agents/*.md` | `~/.claude/agents/` | Subagents — run in their own context, report back a conclusion |
 | `claude/settings.json` | `~/.claude/settings.json` | Baseline permission allowlist |
-| `claude/mcp-servers.json` | user-scope MCP (`claude mcp add-json`) | github, homelab, homelab-calendar, terraform |
+| `claude/mcp-servers.json` | user-scope MCP (`claude mcp add-json`) | github, homelab, homelab-calendar, terraform, rea |
 | `.env.example` → `secrets.env` | sourced by `~/.zshenv` (zsh) / `~/.bashrc` — `.zshenv` so the desktop app sees it too | Tokens (gitignored, never committed) |
 | `shell/profile.ps1` | sourced by both PowerShell `$PROFILE`s | oh-my-zsh-style Windows shell: nav + git aliases, PSReadLine, Starship prompt |
 | `shell/aliases.sh` | sourced by `~/.zshrc` / `~/.bashrc` | Same nav + git aliases on Mac/Linux (prompt untouched — omz stays) |
@@ -75,6 +75,7 @@ needs is empty in `secrets.env`. Fill the gap and re-run `ai-refresh`.
 | homelab | `HOMELAB_MCP_TOKEN`: `Bearer ` + `MCP_BEARER_TOKEN` from the homelab's `docker/proxy/.env` (not a Grafana token); Tailscale up |
 | homelab-calendar | Same `HOMELAB_MCP_TOKEN`, nothing new. Read-only iCloud calendars via Home Assistant (homelab `docker/mcp-calendar/`); Tailscale up |
 | terraform | Docker; `TFE_TOKEN` (HCP Terraform **user** token) for workspaces |
+| rea | Node.js 22.19+ / 24.11+ (`npx`). [REA](https://github.com/morluto/rea): reverse engineer apps you don't have source for (Electron/JS, APKs, .NET, websites, HAR/pcap captures) with no extra installs; native binaries also need Ghidra, Hopper or IDA (`npx -y rea-agents@6.4.0 doctor`). Pinned; bump it together with `skills/reverse-engineer-anything/` |
 
 Servers listed under `_retired` are unregistered on every run: Slack, Vercel, Notion
 and aws-mcp. Use their claude.ai connectors instead — no per-machine login, `uvx` or
