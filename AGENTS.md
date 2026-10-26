@@ -18,6 +18,17 @@
 - I value clean UX and performance over feature count
 - Ideas can come from anywhere — a sentence is enough to start a TSD
 
+## Planning & delegation
+
+The main session plans; cheaper subagents implement. Without being asked:
+- **Multi-file or multi-step work:** write a short plan first (files, steps, how
+  each is verified) and get my OK, unless an approved TSD or plan already covers it.
+- **Then delegate:** hand each concrete step to the `implementer` agent (Sonnet)
+  rather than writing it here. Independent steps can run in parallel.
+- **Searches** go to `Explore` (Haiku), **long test/lint runs** to `test-runner`.
+- **Keep here:** design decisions, debugging an unknown cause, reviewing what the
+  agents return, and anything small enough that a handoff costs more than doing it.
+
 ## Styling — always use the design system
 
 Every UI styles from [`brignano/design`](https://github.com/brignano/design):
