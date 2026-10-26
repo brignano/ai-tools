@@ -24,3 +24,19 @@ tools than the main session (a read-only reviewer).
 
 Same rule as `skills/`: an agent that knows one repo's paths and rules belongs in
 that repo's `.claude/agents/`.
+
+## Model routing
+
+Each agent can set `model:` (`haiku`, `sonnet`, `opus`, `inherit`) and `effort:`.
+The main session stays on the strongest model and does the planning; these agents
+take the cheap, well-defined work:
+
+| Agent | Model | Job |
+|-------|-------|-----|
+| `implementer` | Sonnet | One concrete step of an approved plan, then its tests |
+| `Explore` | Haiku | Overrides the built-in search agent so routine searches run cheap |
+| `test-runner` | Haiku | Runs checks, returns only the failures |
+
+Keep this list short. Every agent's `description` is loaded into every session,
+and overlapping agents make delegation worse, not better. Reviews and debugging
+stay on the main model.

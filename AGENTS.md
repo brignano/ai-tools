@@ -18,6 +18,22 @@
 - I value clean UX and performance over feature count
 - Ideas can come from anywhere — a sentence is enough to start a TSD
 
+## Planning & delegation
+
+The main session plans; cheaper subagents implement — but only for real features.
+- **Small changes stay fast:** feedback tweaks, copy, styling, a bug in a known
+  spot, follow-ups in the same session. Just make the edit here: no plan, no
+  delegation, even if it touches a couple of files.
+- **New features or changes spanning several components:** write a short plan
+  first (files, steps, how each is verified) and get my OK, unless an approved
+  TSD or plan already covers it.
+- **I can override either way:** "just do it" skips the plan; "plan this" forces one.
+- **Then delegate:** hand each concrete step to the `implementer` agent (Sonnet)
+  rather than writing it here. Independent steps can run in parallel.
+- **Searches** go to `Explore` (Haiku), **long test/lint runs** to `test-runner`.
+- **Keep here:** design decisions, debugging an unknown cause, reviewing what the
+  agents return, and anything small enough that a handoff costs more than doing it.
+
 ## Styling — always use the design system
 
 Every UI styles from [`brignano/design`](https://github.com/brignano/design):
