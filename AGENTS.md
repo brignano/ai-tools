@@ -10,6 +10,9 @@
 - `ideas` — TSDs, proposals, and captured ideas across all domains
 - `ai-tools` — this tooling, installed globally on every device
 - `design` — **the design system**. Every UI I build styles from this. See below.
+- `driftwood` — architecture as code, reconciled with live infrastructure (npm package)
+- `guidebook` — guided walkthroughs on any website (private, proof of concept)
+- `life`, `people` — personal; never referenced from issues or PRs in other repos
 
 ## How I work
 - Spec-driven development: always draft and approve a TSD before implementing anything
@@ -33,6 +36,13 @@ The main session plans; cheaper subagents implement — but only for real featur
 - **Searches** go to `Explore` (Haiku), **long test/lint runs** to `test-runner`.
 - **Keep here:** design decisions, debugging an unknown cause, reviewing what the
   agents return, and anything small enough that a handoff costs more than doing it.
+
+## Agent fleet
+
+Backlogs are GitHub Issues on one **Fleet** project board; agents plan, build and
+review, and I approve what is built and what merges. **Before planning, building
+or reviewing an issue, read [`fleet/README.md`](fleet/README.md)**: labels, the
+spec shape every issue uses, definition of ready, and the hard rules.
 
 ## Styling — always use the design system
 
