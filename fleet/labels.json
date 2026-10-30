@@ -7,5 +7,5 @@
   {"name": "risk:low", "color": "c2e0c6", "description": "Docs, tests, small isolated fixes"},
   {"name": "risk:high", "color": "e99695", "description": "Touches data, auth, releases or infra"},
   {"name": "size:s", "color": "ededed", "description": "Under ~2 hours of agent work"},
-  {"name": "size:m", "color": "bfdadc", "description": "Needs a short TSD in docs/"}
+  {"name": "size:m", "color": "bfdadc", "description": "Needs a short proposal in proposals/"}
 ]
