@@ -11,9 +11,11 @@ Plan and reasoning: the "Agent fleet plan" doc in the AI Assistant project.
 - **Ideas** start in `brignano/ideas` (`inbox/` → `proposals/` → `building/`).
   A brief reaching `building/` is the signal to break it into issues.
 - **Work items** are GitHub Issues in the repo that owns the code.
-- **The board** is one GitHub Project, **Fleet**, across every fleet repo.
-  Fields: Status (Inbox, Ready, In progress, In review, Done), Priority (P0 now,
-  P1 next, P2 someday), Size (S, M), Repo.
+- **The board** is one GitHub Project, [**Fleet**](https://github.com/users/brignano/projects/1),
+  across every fleet repo. Status columns: Proposed, Ready, Building, In review,
+  Done. Priority: P1, P2, P3. It is my view. Agents can't read or write it
+  (cloud sessions only reach repo-scoped APIs), so **labels are what agents act
+  on**, and GitHub's built-in project workflows move the cards.
 
 ## Labels
 
