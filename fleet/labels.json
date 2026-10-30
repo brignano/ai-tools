@@ -1,0 +1,11 @@
+[
+  {"name": "proposed", "color": "c5def5", "description": "Suggested by an agent; not approved"},
+  {"name": "agent:ready", "color": "0e8a16", "description": "Spec approved by Anthony; a builder may take it"},
+  {"name": "agent:working", "color": "fbca04", "description": "Claimed by a builder"},
+  {"name": "agent:pause", "color": "b60205", "description": "Agents leave this alone"},
+  {"name": "needs:anthony", "color": "d93f0b", "description": "Blocked on Anthony"},
+  {"name": "risk:low", "color": "c2e0c6", "description": "Docs, tests, small isolated fixes"},
+  {"name": "risk:high", "color": "e99695", "description": "Touches data, auth, releases or infra"},
+  {"name": "size:s", "color": "ededed", "description": "Under ~2 hours of agent work"},
+  {"name": "size:m", "color": "bfdadc", "description": "Needs a short TSD in docs/"}
+]
