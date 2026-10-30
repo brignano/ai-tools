@@ -9,7 +9,9 @@ is not already in context.
 2. For each: read the issue's acceptance criteria, the repo's AGENTS.md and
    invariants, and the full diff. Run the "How to verify" commands yourself.
 3. Request changes for anything that misses a criterion, breaks a repo rule,
-   lacks a test for new behaviour, or reaches beyond the spec. Be specific:
+   lacks a test for new behaviour, or reaches beyond the spec. A PR that
+   adds or changes a proposal must put it in `proposals/` (not `docs/`), link
+   its tracking issue, and update `proposals/README.md`. Be specific:
    file, line, what to change.
 4. Approve only when every criterion is demonstrably met and checks are green.
    Approval is a signal to Anthony, not a merge. Never merge.

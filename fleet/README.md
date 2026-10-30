@@ -54,8 +54,39 @@ What this deliberately does not do.
 Files likely involved, links to the brief or TSD, risks.
 ```
 
-Size S: the issue body is the spec. Size M: also a short TSD in the repo's
-`docs/`, linked from the issue. Anything bigger is split before it is Ready.
+Size S: the issue body is the spec. Size M: also a short proposal in the
+repo's `proposals/`, linked from the issue. Anything bigger is split before it
+is Ready.
+
+## Proposals
+
+Design work lives in `proposals/` at the repo root, never in `docs/`. `docs/`
+is for documentation a user reads (and a future doc site), and a proposal is a
+decision record that may never ship. Keeping them apart means a doc site can be
+built from `docs/` without dragging in rejected designs.
+
+- **One file per proposal**, `proposals/<slug>.md`, starting with a status
+  line: `Status: proposed | accepted | building | done | rejected`, and the
+  issue that tracks it.
+- **Every proposal has an issue.** The issue is the work item and the source
+  of truth for whether it is Ready; the proposal is the reasoning behind it.
+  A proposal with no issue is an orphan, and the reviewer rejects the PR that
+  adds one.
+- **`proposals/README.md` is the index**: one row per proposal with its
+  status, tracking issue and the issues it was split into. Any PR that adds a
+  proposal or changes its status updates the index in the same PR.
+- A proposal that writes "proposed issues" at the end gets them filed by the
+  planner as `proposed` once the proposal merges, and the index links them.
+
+Index shape:
+
+```markdown
+# Proposals
+
+| Proposal | Status | Issue | Split into |
+|---|---|---|---|
+| [AWS provider](aws-provider.md) | proposed | #41 | |
+```
 
 **Definition of ready:** problem, acceptance criteria, how to verify, size and
 risk labels, and my `agent:ready`. Missing any one, a builder skips it.
