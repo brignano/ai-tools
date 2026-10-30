@@ -70,9 +70,14 @@ AGENTS.md "Planning & delegation".
 
 | Role | Model | Runs | Prompt |
 |---|---|---|---|
-| Planner | Opus | Weekly per repo | [`roles/planner.md`](roles/planner.md) |
-| Builder | Sonnet; Haiku for searches and test runs | Twice a day | [`roles/builder.md`](roles/builder.md) |
-| Reviewer | Opus, fresh context | Twice a day, after the builder | [`roles/reviewer.md`](roles/reviewer.md) |
+| Planner | Opus | When I ask, in the repo's project | [`roles/planner.md`](roles/planner.md) |
+| Builder | Sonnet; Haiku for searches and test runs | When I ask, in the repo's project | [`roles/builder.md`](roles/builder.md) |
+| Reviewer | Opus, fresh context | When I ask, after the builder | [`roles/reviewer.md`](roles/reviewer.md) |
+
+Nothing runs on a schedule. I start a role from the repo's own Claude project
+("build the next ready issue", "review the open PR", "plan driftwood") and say
+which role; that thread reads its prompt from `roles/`. New ideas are planned in
+the Life project, and an idea that starts being built gets its own project.
 
 The builder takes the Ready item with the highest priority, then the smallest,
 then the oldest. One open builder PR per repo at a time.
