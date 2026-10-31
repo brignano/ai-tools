@@ -17,8 +17,9 @@ that is changed in one place.
   caller pinned to `@main`. Tradeoff: a bad edit reaches every repo at once; a
   moving `v1` tag is the alternative if that bites.
 - **Agents**: builder and planner skip `lead` issues; only Anthony closes them.
-- **Token**: one fine-grained `LEAD_GITHUB_TOKEN`, Issues read/write, only
-  lead-taking repos, yearly expiry.
+- **Token**: one fine-grained token, named `GITHUB_TOKEN` in each host (as sites
+  already does), Issues read/write, only lead-taking repos, yearly expiry.
+  Never an Actions secret: the name is reserved there.
 
 ## Not now
 A central config / lead-funnel service (see the config API issue). Step 1 is

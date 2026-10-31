@@ -329,10 +329,14 @@ Changing the nudge here changes it for every project, because callers point at
 
 - Sending domain verified in Resend (DNS records) before the feature ships, and
   `RESEND_API_KEY` in the platform's secret store.
-- `LEAD_GITHUB_TOKEN`: **one** fine-grained token with Issues read/write on only
-  the repos that take leads, stored in each project's host. It expires yearly.
-  A new lead-taking repo is **added to that token's repo list**; never mint a
-  second token. The nudge workflow needs no secret.
+- `GITHUB_TOKEN`: the variable name every project's host uses (sites already
+  does), holding a fine-grained token with Issues read/write on the repos that
+  take leads. It expires yearly. A new lead-taking repo is **added to the
+  token's repo list**; don't mint a token per project. A project that also
+  needs Contents write (sites commits editor changes) keeps its own token under
+  the same name. Set it in the host (Cloudflare Worker, Vercel), never as a
+  GitHub Actions secret: Actions reserves the name for its own token, and the
+  nudge workflow needs no secret.
 - The `lead` label arrives from `labels.yml` like any other. Do not invent one.
 
 **Agents leave leads alone.** `lead` issues are not work: nobody sets
