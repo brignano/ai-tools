@@ -17,7 +17,7 @@ Plan and reasoning: the "Agent fleet plan" doc in the AI Assistant project.
   (cloud sessions only reach repo-scoped APIs), so **labels are what agents act
   on**, and GitHub's built-in project workflows move the cards.
 - **What's on the board** is listed in [`board.yml`](board.yml): driftwood,
-  guidebook, sites, brignano.io, homelab, design and ai-tools. The
+  guidebook, sites, brignano.io, homelab, design, ai-tools and breakeven. The
   [`fleet-board`](../.github/workflows/fleet-board.yml) workflow adds every
   open issue and PR in those repos hourly (it only adds, never edits a card),
   using the `FLEET_PROJECT_TOKEN` secret: a classic token with `project` and

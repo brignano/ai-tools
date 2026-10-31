@@ -15,6 +15,7 @@ repos:
   - homelab
   - design
   - ai-tools
+  - breakeven
 never:
   - life
   - people
