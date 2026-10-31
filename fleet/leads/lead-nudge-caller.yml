@@ -1,0 +1,13 @@
+# Copy to .github/workflows/lead-nudge.yml in a repo that takes leads.
+name: lead-nudge
+on:
+  schedule:
+    - cron: "0 15 * * *" # daily, 15:00 UTC
+  workflow_dispatch:
+permissions:
+  issues: write
+jobs:
+  nudge:
+    uses: brignano/ai-tools/.github/workflows/lead-nudge.yml@main
+    with:
+      promise_hours: 48 # the window your auto-reply promises; 0 if none

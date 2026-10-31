@@ -403,6 +403,60 @@ Claude session, it just works. That ask is my approval for that PR, whatever
 A merge I asked for still never skips a gate, and never covers a release,
 tag or publish (those need "publish X").
 
+## Leads
+
+Any project that takes in leads (contact, signup, pilot or preview-request
+forms) follows this one standard. Edit it here and every project's agents pick
+it up on their next session; the `leads` skill is the checklist they work from.
+Reference implementation: `brignano/sites` (PRs #31 to #33).
+
+**Store the lead first. Every later step is best-effort: wrap each in its own
+try/catch, log the failure, and never let one block, slow or fail the form or
+the saved lead.** The stored record is the source of truth.
+
+1. **Store the lead** (KV, DB or file) with the full details. Keep this behind
+   one small function so the store can move to a central service later.
+2. **Email me** via Resend, from `<project>@<domain>`, with a link to the
+   stored record. This is the fast ping.
+3. **Auto-reply to the lead** from `hello@<domain>`: designed HTML plus a
+   plain-text part, dark-mode aware, a fixed template (no per-lead generated
+   text), at most one per address per week. I approve the wording before it
+   ships. The reply window it promises (say "within two days") is the window
+   the nudge enforces.
+4. **Track it in GitHub**: one issue per lead, label `lead`, assigned to me,
+   closed when replied to. Title is `Lead: <company or name>` only. The body
+   links to the stored record and holds **no email, phone number or message
+   text**: issues are not private enough and a repo may be public. Write the
+   promised window in the body (for example "Reply within 2 days") so the nudge
+   matches it.
+
+A daily Action calls the reusable
+[`lead-nudge`](../.github/workflows/lead-nudge.yml) workflow
+(caller to copy: [`leads/lead-nudge-caller.yml`](leads/lead-nudge-caller.yml)).
+It `@mentions` the assignee on `lead` issues open more than 24 hours, and again
+with stronger wording once the promised window (`promise_hours`) has passed.
+Changing the nudge here changes it for every project, because callers point at
+`@main`.
+
+**Needs, per project** (a new form without these is incomplete):
+
+- Sending domain verified in Resend (DNS records) before the feature ships, and
+  `RESEND_API_KEY` in the platform's secret store.
+- `GITHUB_TOKEN`: the variable name every project's host uses (sites already
+  does), holding a fine-grained token with Issues read/write on the repos that
+  take leads. It expires yearly. A new lead-taking repo is **added to the
+  token's repo list**; don't mint a token per project. A project that also
+  needs Contents write (sites commits editor changes) keeps its own token under
+  the same name. Set it in the host (Cloudflare Worker, Vercel), never as a
+  GitHub Actions secret: Actions reserves the name for its own token, and the
+  nudge workflow needs no secret.
+- The `lead` label arrives from `labels.yml` like any other. Do not invent one.
+
+**Agents leave leads alone.** `lead` issues are not work: nobody sets
+`agent:ready` on them, a builder never takes one, and a planner never proposes
+or re-labels them. They can sit on the Fleet board so I see them, but they are
+only ever handled by me replying and closing.
+
 ## Hard rules for every agent
 
 - Never push to the default branch. Work on a branch, open a PR.
@@ -410,7 +464,7 @@ tag or publish (those need "publish X").
 - Never add a repo to `merge.yml`, and never skip, disable or weaken a check or test to get a PR through the gates.
 - Never bump a version outside a release I agreed to cut (see "Releases are planned").
 - Never touch secrets or `.env` files, and never widen your own permissions.
-- Never set `agent:ready` yourself.
+- Never set `agent:ready` yourself, and never work on, label or close a `lead` issue.
 - Never re-plan a Ready issue. If the spec is wrong, comment the question, add
   `needs:anthony`, remove `agent:working`, and stop.
 - Respect `agent:pause` on an issue and any repo rule in its own AGENTS.md;
