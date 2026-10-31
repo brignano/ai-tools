@@ -1,0 +1,38 @@
+name: Task (agent-ready spec)
+description: Work for the agent fleet. Fill every section; a builder skips an issue that lacks one.
+labels: [proposed]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is wrong or missing, and who it hurts. One paragraph.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Observable outcomes, checkable from the diff or a command.
+      value: |
+        - [ ] 
+    validations:
+      required: true
+  - type: textarea
+    id: verify
+    attributes:
+      label: How to verify
+      description: The exact commands or checks that prove it (the repo's own, e.g. `npm test`).
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: What this deliberately does not do.
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Files likely involved, links to the brief or proposal, risks.

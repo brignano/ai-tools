@@ -1,0 +1,111 @@
+# The one list of labels every repo I own carries. Edit here; the
+# `fleet-labels` workflow syncs it to every non-archived, non-fork repo on push
+# to this file and every Monday.
+#
+# Colours come from brignano/design (light-theme values), never picked by hand.
+# One colour family per group, so a group reads at a glance on the board.
+#
+# aliases: existing labels that become this one. The sync renames an alias in
+#   place (issues keep it), or, where both already exist, moves open issues and
+#   PRs onto this label and then deletes the alias.
+# retire: labels the sync deletes, but only from a repo where no open issue or
+#   PR carries them. Labels not listed anywhere here are left alone, so a repo
+#   can keep its own (homelab's `dns`, for example).
+
+labels:
+  # Workflow: blue (--i family). The board's columns follow these.
+  - name: proposed
+    color: c6dcfb # --seq-1
+    description: Suggested by an agent; not approved
+  - name: agent:ready
+    color: 076bd3 # --i
+    description: Spec approved by Anthony; a builder may take it
+  - name: agent:working
+    color: 87b5f3 # --seq-2
+    description: Claimed by a builder
+  - name: agent:pause
+    color: 003e82 # --i-pressed
+    description: Agents leave this alone until Anthony removes it
+
+  # Blocked on me: orange (--chart-2). Alone in its group so it stands out.
+  - name: needs:anthony
+    color: eb6834 # --chart-2
+    description: Blocked on a decision, account or hardware from Anthony
+    aliases: [needs-you]
+
+  # Priority: amber (--attention family). Mirrors the board's Priority field,
+  # because agents can read labels but not the board.
+  - name: priority:p1
+    color: 8a5714 # --attention-ink
+    description: Do first
+    aliases: [now]
+  - name: priority:p2
+    color: b4741f # --attention
+    description: Do next
+    aliases: [next]
+  - name: priority:p3
+    color: f0bd74 # --larch-deep (dark)
+    description: Later
+    aliases: [later]
+
+  # Risk: red (--danger family). Decides merge rules.
+  - name: risk:low
+    color: ec9880 # --danger-ink (dark)
+    description: Docs, tests, small isolated fixes
+  - name: risk:high
+    color: a4442c # --danger
+    description: Touches data, auth, releases or infra
+
+  # Size: violet (--chart-7). Agents take S and M only.
+  - name: size:s
+    color: 9085e9 # --chart-7 (dark)
+    description: Under ~2 hours of agent work
+  - name: size:m
+    color: 4a3aa7 # --chart-7
+    description: Needs a short proposal in proposals/
+
+  # Type: green (--success family).
+  - name: type:bug
+    color: 245740 # --success-ink
+    description: Something is broken
+    aliases: [bug]
+  - name: type:feature
+    color: 2f6b4f # --success
+    description: New behaviour or capability
+    aliases: [enhancement]
+  - name: type:chore
+    color: 6fbf95 # --success (dark)
+    description: Maintenance, refactor, CI, dependencies
+  - name: type:docs
+    color: 8fd4ae # --success-ink (dark)
+    description: Documentation only
+    aliases: [documentation]
+
+  # Dependabot: neutral (--n-200). Dependabot creates these by name on its
+  # PRs, so they keep their names and just get one quiet colour. The language
+  # ones are only recoloured where they already exist (only_if_present).
+  - name: dependencies
+    color: e1e1e4 # --n-200
+    description: Updates a dependency file (Dependabot)
+  - name: javascript
+    color: e1e1e4
+    description: Updates JavaScript dependencies (Dependabot)
+    only_if_present: true
+  - name: python
+    color: e1e1e4
+    description: Updates Python dependencies (Dependabot)
+    only_if_present: true
+  - name: github_actions
+    color: e1e1e4
+    description: Updates GitHub Actions (Dependabot)
+    only_if_present: true
+
+retire:
+  # GitHub's defaults that nothing in the fleet uses.
+  - duplicate
+  - good first issue
+  - help wanted
+  - invalid
+  - question
+  - wontfix
+  - accessibility
