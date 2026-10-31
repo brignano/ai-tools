@@ -1,0 +1,92 @@
+name: ui-check
+
+# Reusable fleet UX gate (skills/ux-review). A repo with a UI calls it:
+#   jobs:
+#     ui:
+#       uses: brignano/ai-tools/.github/workflows/ui-check.yml@main
+#       with: { serve: "npx --yes serve -l 4173 dist", pages: "/\n/about" }
+# Builds and serves the site, then runs fleet/ui-check/check.mjs: axe-core
+# (WCAG 2.2 AA) at mobile and desktop, light and dark. Fails on serious or
+# critical violations and console errors; screenshots are uploaded.
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        type: string
+        default: "22"
+      working-directory:
+        type: string
+        default: "."
+      install:
+        type: string
+        default: npm ci
+      build:
+        type: string
+        default: npm run build
+      serve:
+        description: Command that serves the built site on `url`; runs in the background.
+        type: string
+        required: true
+      url:
+        type: string
+        default: http://localhost:4173
+      pages:
+        description: Newline-separated paths to check.
+        type: string
+        default: /
+
+permissions:
+  contents: read
+
+jobs:
+  ui-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: brignano/ai-tools
+          path: .fleet-ai-tools
+          sparse-checkout: fleet/ui-check
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+      - name: Install
+        run: ${{ inputs.install }}
+      - name: Build
+        if: inputs.build != ''
+        run: ${{ inputs.build }}
+      - name: Install checker
+        working-directory: ${{ github.workspace }}/.fleet-ai-tools/fleet/ui-check
+        run: |
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund playwright @axe-core/playwright
+          npx playwright install --with-deps chromium
+      - name: Serve
+        env:
+          SERVE: ${{ inputs.serve }}
+          URL: ${{ inputs.url }}
+        run: |
+          nohup bash -c "$SERVE" > "$RUNNER_TEMP/serve.log" 2>&1 &
+          for i in $(seq 1 60); do curl -fsS -o /dev/null "$URL" && exit 0; sleep 1; done
+          echo "Nothing answered at $URL after 60s"; cat "$RUNNER_TEMP/serve.log"; exit 1
+      - name: Check pages
+        working-directory: ${{ github.workspace }}/.fleet-ai-tools/fleet/ui-check
+        env:
+          URL: ${{ inputs.url }}
+          PAGES: ${{ inputs.pages }}
+          UI_CHECK_OUT: ${{ github.workspace }}/ui-check
+        run: |
+          mapfile -t paths < <(printf '%s\n' "$PAGES" | sed '/^[[:space:]]*$/d')
+          node check.mjs "$URL" "${paths[@]}"
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-check
+          path: ${{ github.workspace }}/ui-check
+          if-no-files-found: ignore

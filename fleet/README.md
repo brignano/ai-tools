@@ -138,7 +138,8 @@ Index shape:
 risk labels, and my `agent:ready`. Missing any one, a builder skips it.
 
 **Definition of done:** every acceptance box ticked in the PR body, the repo's
-checks green, the reviewer approved, I merged.
+checks green, the review gates passed (see "Review and merge"), and the PR
+merged, by me or, where the merge rules allow it, by the builder.
 
 ## Roles and models
 
@@ -149,9 +150,10 @@ AGENTS.md "Planning & delegation".
 |---|---|---|---|
 | Planner | Opus | When I ask, in the repo's project | [`roles/planner.md`](roles/planner.md) |
 | Builder | Sonnet; Haiku for searches and test runs | When I ask, in the repo's project | [`roles/builder.md`](roles/builder.md) |
-| Reviewer | Opus, fresh context | When I ask, after the builder | [`roles/reviewer.md`](roles/reviewer.md) |
+| Reviewer | Opus, fresh context | **Automatically**, started by the builder once CI is green | [`roles/reviewer.md`](roles/reviewer.md), as the [`reviewer`](../agents/reviewer.md) subagent |
 
-Nothing runs on a schedule. I start a role from the repo's own Claude project
+Nothing runs on a schedule. The reviewer is the exception to "when I ask":
+no PR waits for me to request a review (see "Review and merge"). I start a role from the repo's own Claude project
 ("build the next ready issue", "review the open PR", "plan driftwood") and say
 which role; the thread doing the work reads its prompt from `roles/`. New ideas
 are planned in the Life project, and an idea that starts being built gets its
@@ -290,10 +292,122 @@ breakeven shipped eight versions in one; nobody reading a release page wants tha
   homelab) don't version: no bumps, no plan, and the `## Release` section can
   be left out.
 
+## Review and merge
+
+Every PR an agent opens goes through the same gates, in the same order, in the
+thread that built it, whether or not it came from a builder run. **No PR waits on me to ask for a review**: the builder runs the
+whole pipeline and only comes to me with a PR that is either merged (where the
+merge rules allow it) or ready for my merge with the review already done, so
+that "merge it" from me is a one-line ask that works first time.
+
+```mermaid
+flowchart LR
+  A[Builder: checks + self-review] --> B[CI green]
+  B --> C[Reviewer subagent, fresh context]
+  C -- changes --> A
+  C -- approve --> D{UI change?}
+  D -- yes --> E[UX gate]
+  D -- no --> F{Merge rules}
+  E --> F
+  F -- auto --> G[Builder merges]
+  F -- needs me --> H[needs:anthony + summary]
+```
+
+1. **Self-review** (builder). Run the repo's checks and the issue's "How to
+   verify", then the `code-review` skill on your own diff at `medium` and
+   `simplify` on what you changed. Fix what they find before opening the PR.
+2. **CI green.** The repo's required checks pass on the PR's head. A repo with
+   no CI gets a `proposed` issue to add one; until then, paste the local check
+   output in the PR body.
+3. **Reviewer pass** (independent). Once CI is green, the builder starts the
+   [`reviewer`](../agents/reviewer.md) subagent with only the PR number and
+   the issue: no summary of what it did, so the review isn't anchored on the
+   builder's view. It reviews spec, correctness, security, tests, scope and
+   simplicity (checklist in [`roles/reviewer.md`](roles/reviewer.md)) and
+   returns `APPROVE` or `CHANGES` with file, line and fix.
+   - The builder posts the verdict as a PR comment headed
+     `Reviewer: APPROVE` or `Reviewer: CHANGES` with the head SHA. (Every
+     agent posts as me on GitHub, and GitHub won't let me approve my own PR,
+     so this comment is the approval.)
+   - On `CHANGES`, the builder fixes and runs the reviewer again on the new
+     head. After two rounds still not approved: `needs:anthony`, stop.
+   - Review comments from people or bots on the PR are answered or fixed
+     before the reviewer runs again.
+4. **UX gate**, only for PRs that change what a user sees (pages, components,
+   styles, copy, emails). Follow the [`ux-review`](../skills/ux-review/SKILL.md)
+   skill: the repo's `ui-check` job (the reusable
+   [`ui-check`](../.github/workflows/ui-check.yml) workflow) must pass with no
+   serious or critical accessibility violations, and the PR body carries
+   mobile and desktop screenshots, light and dark. The reviewer checks the
+   skill's list against the diff.
+5. **Merge**, by the rules below.
+
+### Who merges
+
+A PR **may be merged by the builder** only when every one of these holds:
+
+- The repo is listed under `auto` in [`merge.yml`](merge.yml). I add repos
+  there; agents never do.
+- Its issue carries `agent:ready` (I approved the spec), `risk:low`, and
+  `size:s` or `size:m`.
+- CI is green and the latest `Reviewer: APPROVE` comment names the current
+  head SHA. No unresolved review threads, no `agent:pause` or `needs:anthony`.
+- The UX gate passed, if it applies.
+- The diff touches none of the protected areas: CI workflows; secrets, `.env`
+  or credentials; auth, access or hosting config; infrastructure or deploy
+  config; dependency manifests or lockfiles (Dependabot and Renovate PRs
+  included); data migrations or anything that deletes data; versions,
+  changelogs or release notes; agent rules (`AGENTS.md`, `CLAUDE.md`,
+  `.claude/`); and anything the repo's own AGENTS.md lists as protected.
+
+Then the builder squash-merges, deletes the branch, and tells me in one line
+in the thread: what merged and the PR link.
+
+**Everything else waits for me**, already reviewed. The builder adds
+`needs:anthony` and posts a **Ready to merge** comment on the PR, kept current
+on every new head:
+
+```markdown
+## Ready to merge
+Head: <sha> · CI green · Reviewer: APPROVE · UX gate: passed | n/a
+Up to date with <base>: yes · Conflicts: none
+What changed: <one or two lines>
+Why it needs Anthony: <the "Who merges" rule it misses>
+After merge: <what deploys or runs, and how it will be checked>
+```
+
+A PR is only "ready" when every line is true for its current head. A new
+push, a base branch that moved, or a new review comment makes it not ready
+until the gates run again on the new head.
+
+### Merging when I ask
+
+The point of the gates is that when I say "merge it" (or "merge #N") in any
+Claude session, it just works. That ask is my approval for that PR, whatever
+`merge.yml` says. The session then:
+
+1. Reads the PR at its current head. If the Ready to merge comment doesn't
+   match the head, or anything else changed since (new commits, base moved,
+   new comments, CI not green), it runs the missing gates first: bring the
+   branch up to date with the base, wait for CI, re-run the reviewer on the
+   new head. It does not ask me to wait or to re-confirm unless a gate fails.
+2. Merges with the repo's merge method (squash by default) and deletes the
+   branch.
+3. Checks the result: CI on the default branch after the merge, and the
+   deploy if the repo deploys on merge (homelab: its `/deploy` rule). It
+   tells me in one line that it merged and that main is green, or what broke.
+4. If a gate fails, it doesn't merge. It says in one line what failed and
+   what it's doing about it, fixes what it can in the PR, and merges once
+   green without asking again.
+
+A merge I asked for still never skips a gate, and never covers a release,
+tag or publish (those need "publish X").
+
 ## Hard rules for every agent
 
 - Never push to the default branch. Work on a branch, open a PR.
-- Never merge, release, tag or publish without my explicit "publish X" for that version. Drafting the notes PR is fine (see the `releases` skill).
+- Never merge a PR unless I asked for that PR to be merged or "Who merges" allows it, and never release, tag or publish without my explicit "publish X" for that version. Drafting the notes PR is fine (see the `releases` skill).
+- Never add a repo to `merge.yml`, and never skip, disable or weaken a check or test to get a PR through the gates.
 - Never bump a version outside a release I agreed to cut (see "Releases are planned").
 - Never touch secrets or `.env` files, and never widen your own permissions.
 - Never set `agent:ready` yourself.

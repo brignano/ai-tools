@@ -16,11 +16,18 @@ else
   git clone -q --depth 1 https://github.com/brignano/ai-tools "$DIR" 2>/dev/null || exit 0
 fi
 
-# Subagents (implementer, Explore, test-runner) so the builder can delegate.
+# Subagents (implementer, Explore, test-runner, reviewer) so the builder can delegate.
 mkdir -p "$HOME/.claude/agents"
 for f in "$DIR"/agents/*.md; do
   [ "$(basename "$f")" = README.md ] && continue
   ln -sfn "$f" "$HOME/.claude/agents/$(basename "$f")"
+done
+
+# Skills (ux-review, design-system, releases, ...) so fleet rules can name them.
+mkdir -p "$HOME/.claude/skills"
+for d in "$DIR"/skills/*/; do
+  [ -f "$d/SKILL.md" ] || continue
+  ln -sfn "${d%/}" "$HOME/.claude/skills/$(basename "$d")"
 done
 
 echo "# Global context (brignano/ai-tools AGENTS.md)"
