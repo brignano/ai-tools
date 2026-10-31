@@ -17,12 +17,16 @@ board and the labels are kept in step in two places:
     `priority:p1/p2/p3` label. A card with no priority label keeps its value.
   - Ready: when I move a card to Status "Ready", its issue gets `agent:ready`
     and loses `proposed`. That is the signal builders act on.
+  - Claims: an issue labelled `agent:working` moves to Status "Building". A
+    claim older than CLAIM_HOURS with no open PR linked to the issue gets
+    `needs:anthony` and one comment, so a stuck session can't hold it.
 Every other field is left to GitHub's built-in project workflows and to me.
 """
 import argparse
 import json
 import subprocess
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import yaml
@@ -77,6 +81,7 @@ def project_items(owner, number):
                 }
               }
               content {
+                __typename
                 ... on Issue { id number state repository { name } labels(first: 30) { nodes { name } } }
                 ... on PullRequest { id number state repository { name } labels(first: 30) { nodes { name } } }
               }
@@ -212,7 +217,7 @@ def sync_ready(owner, number, apply, repo_node_ids):
             continue
         c = node["content"]
         names = {n["name"] for n in c["labels"]["nodes"]}
-        if "agent:ready" in names:
+        if "agent:ready" in names or "agent:working" in names:
             continue
         repo, num = c["repository"]["name"], c["number"]
         print(f"  ~ {repo}#{num}: Status is Ready -> label agent:ready")
@@ -223,6 +228,83 @@ def sync_ready(owner, number, apply, repo_node_ids):
         changed += 1
     verb = "Labelled" if apply else "Would label"
     print(f"{verb} {changed} Ready card(s) agent:ready.")
+
+
+BUILDING = "Building"
+CLAIM_HOURS = 24
+STALE_NOTE = "<!-- fleet-board:stale-claim -->"
+
+
+def status_field(owner, number):
+    """Return (field id, {lower-case option name: option id}) for Status."""
+    fields = graphql(FIELD, owner=owner, number=number)["user"]["projectV2"]["fields"]["nodes"]
+    field = next((f for f in fields if f and f.get("name") == "Status"), None)
+    if not field:
+        return None, {}
+    return field["id"], {o["name"].lower(): o["id"] for o in field.get("options") or []}
+
+
+def claim_state(owner, repo, num):
+    """When agent:working was last added, and whether an open PR links the issue."""
+    pages = gh(f"repos/{owner}/{repo}/issues/{num}/timeline?per_page=100", "--paginate", "--slurp")
+    claimed, has_pr = None, False
+    for event in (e for page in pages for e in page):
+        kind = event.get("event")
+        if kind == "labeled" and (event.get("label") or {}).get("name") == "agent:working":
+            claimed = event["created_at"]
+        elif kind == "cross-referenced":
+            src = (event.get("source") or {}).get("issue") or {}
+            if "pull_request" in src and src.get("state") == "open":
+                has_pr = True
+    if claimed:
+        claimed = datetime.fromisoformat(claimed.replace("Z", "+00:00"))
+    return claimed, has_pr
+
+
+def sync_working(owner, number, apply, repo_node_ids):
+    """Claimed issues move to Building; stale claims get needs:anthony."""
+    project_id, cards = project_items(owner, number)
+    field_id, options = status_field(owner, number)
+    building = options.get(BUILDING.lower())
+    if not building:
+        print(f"Status field has no '{BUILDING}' option; claimed cards stay where they are.")
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=CLAIM_HOURS)
+    moved = flagged = 0
+    for content_id, node in cards.items():
+        if content_id not in repo_node_ids:
+            continue
+        c = node["content"]
+        names = {n["name"] for n in c["labels"]["nodes"]}
+        if "agent:working" not in names:
+            continue
+        repo, num = c["repository"]["name"], c["number"]
+        status = (node.get("status") or {}).get("name") or ""
+        if building and status.lower() not in (BUILDING.lower(), "in review", "done"):
+            print(f"  ~ {repo}#{num}: claimed -> Status {BUILDING}")
+            if apply:
+                graphql(SET_FIELD, project=project_id, item=node["id"], field=field_id, option=building)
+            moved += 1
+        if c.get("__typename") == "PullRequest" or "needs:anthony" in names:
+            continue
+        claimed, has_pr = claim_state(owner, repo, num)
+        if not claimed or claimed > cutoff or has_pr:
+            continue
+        hours = int((datetime.now(timezone.utc) - claimed).total_seconds() // 3600)
+        print(f"  ! {repo}#{num}: claimed {hours}h ago, no open PR -> needs:anthony")
+        if apply:
+            gh(f"repos/{owner}/{repo}/issues/{num}/labels", "-X", "POST", "-f", "labels[]=needs:anthony")
+            gh(
+                f"repos/{owner}/{repo}/issues/{num}/comments", "-X", "POST", "-f",
+                f"body={STALE_NOTE}\nThis issue was claimed (`agent:working`) {hours} hours ago "
+                "and no open PR links to it, so the session may be stuck. Check the claim "
+                "comment above for its session. To release it, remove `agent:working` and "
+                "`needs:anthony` and add `agent:ready` back.",
+            )
+        flagged += 1
+    verb = "Moved" if apply else "Would move"
+    print(f"{verb} {moved} claimed card(s) to {BUILDING}.")
+    verb = "Flagged" if apply else "Would flag"
+    print(f"{verb} {flagged} stale claim(s) needs:anthony.")
 
 
 def main():
@@ -259,6 +341,8 @@ def main():
     verb = "Added" if args.apply else "Would add"
     print(f"\n{verb} {total} item(s) to {owner}'s project {number}.\n")
     sync_priority(owner, number, args.apply, repo_node_ids)
+    print()
+    sync_working(owner, number, args.apply, repo_node_ids)
     print()
     sync_ready(owner, number, args.apply, repo_node_ids)
     if failed:
