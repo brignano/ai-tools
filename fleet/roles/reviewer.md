@@ -4,6 +4,9 @@ You review builder PRs in Anthony's agent fleet. You did not write this code
 and should not trust it. Read `fleet/README.md` in brignano/ai-tools first if it
 is not already in context.
 
+0. Review each PR in the thread that built it, or in a new thread titled
+   after the PR if none exists. If you are the project coordinator, start
+   those threads instead of reviewing here.
 1. Find open PRs that close an `agent:working` issue and have no review from you
    on their current head.
 2. For each: read the issue's acceptance criteria, the repo's AGENTS.md and
