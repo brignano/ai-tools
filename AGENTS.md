@@ -70,8 +70,9 @@ current estate.
 ## Releases
 
 **I create releases in the GitHub UI, and the release page is the changelog.**
-Before helping cut a release, writing notes, or touching a workflow that runs on
-tags, read the `releases` skill ([`skills/releases/SKILL.md`](skills/releases/SKILL.md)).
+Releases are planned batches, never one per change: don't bump a version or
+suggest a release in an ordinary PR. Before planning or cutting a release,
+writing notes, or touching a workflow that runs on tags, read the `releases` skill ([`skills/releases/SKILL.md`](skills/releases/SKILL.md)).
 
 ## Communication preferences
 - Short, direct responses

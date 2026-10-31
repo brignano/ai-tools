@@ -1,6 +1,6 @@
 ---
 name: releases
-description: How Anthony cuts releases — in the GitHub UI, with hand-written notes as the changelog — and how release automation on v* tags must behave. Use when preparing or cutting a release, writing release notes, bumping a version, or writing or changing a workflow that runs on tags.
+description: How Anthony plans and cuts releases — in the GitHub UI, with hand-written notes as the changelog — and how release automation on v* tags must behave. Use when planning, preparing or cutting a release, deciding a version, writing release notes, bumping a version, or writing or changing a workflow that runs on tags.
 ---
 
 # Releases — the GitHub release page is the changelog
@@ -10,6 +10,12 @@ Anyone following a project reads that page to find new capabilities as they
 ship. So it gets written for that reader, by hand. There is no `CHANGELOG.md`
 duplicating it, and npm is distribution only — never where changes are
 documented.
+
+**When** to release is planned, not decided per change: merged work collects
+in the repo's release plan issue and I cut it when its theme is done. Never
+propose a release or a version bump for a single PR. The rules (the `## Release`
+section every PR carries, the plan issue, how the batch picks the version) are
+in `fleet/README.md` → "Releases are planned, not per change".
 
 What this means when you are helping me cut one:
 
