@@ -68,11 +68,13 @@ def project_items(owner, number):
             pageInfo { hasNextPage endCursor }
             nodes {
               id
-              priority: fieldValueByName(name: "Priority") {
-                ... on ProjectV2ItemFieldSingleSelectValue { name }
-              }
-              status: fieldValueByName(name: "Status") {
-                ... on ProjectV2ItemFieldSingleSelectValue { name }
+              fieldValues(first: 30) {
+                nodes {
+                  ... on ProjectV2ItemFieldSingleSelectValue {
+                    name
+                    field { ... on ProjectV2SingleSelectField { name } }
+                  }
+                }
               }
               content {
                 ... on Issue { id number state repository { name } labels(first: 30) { nodes { name } } }
@@ -92,6 +94,15 @@ def project_items(owner, number):
         project_id = proj["id"]
         for node in proj["items"]["nodes"]:
             if (node.get("content") or {}).get("id"):
+                # Looked up by name here because fieldValueByName errors when
+                # the board has no field of that name (e.g. Priority, at first).
+                values = {
+                    v["field"]["name"]: v["name"]
+                    for v in node["fieldValues"]["nodes"]
+                    if v and (v.get("field") or {}).get("name")
+                }
+                node["priority"] = {"name": values["Priority"]} if "Priority" in values else None
+                node["status"] = {"name": values["Status"]} if "Status" in values else None
                 seen[node["content"]["id"]] = node
         page = proj["items"]["pageInfo"]
         if not page["hasNextPage"]:
@@ -117,8 +128,8 @@ FIELD = """
 query($owner: String!, $number: Int!) {
   user(login: $owner) {
     projectV2(number: $number) {
-      field(name: "Priority") {
-        ... on ProjectV2SingleSelectField { id options { id name } }
+      fields(first: 50) {
+        nodes { ... on ProjectV2SingleSelectField { id name options { id name } } }
       }
     }
   }
@@ -149,7 +160,8 @@ mutation($project: ID!, $item: ID!, $field: ID!, $option: String!) {
 
 def priority_field(owner, number, project_id, apply):
     """Return (field id, {option name: option id}), creating the field if needed."""
-    field = graphql(FIELD, owner=owner, number=number)["user"]["projectV2"]["field"]
+    fields = graphql(FIELD, owner=owner, number=number)["user"]["projectV2"]["fields"]["nodes"]
+    field = next((f for f in fields if f and f.get("name") == "Priority"), None)
     if not field:
         print("Priority field: missing, " + ("creating it" if apply else "would create it"))
         if not apply:
