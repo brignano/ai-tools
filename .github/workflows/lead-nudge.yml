@@ -1,0 +1,67 @@
+name: lead-nudge
+
+# Reusable. Nudges the assignee on open `lead` issues that have waited too
+# long. A project adds the ten-line caller in fleet/leads/lead-nudge-caller.yml;
+# the standard is "Leads" in fleet/README.md.
+#
+# Runs with the caller's own GITHUB_TOKEN (issues: write), so no secret is
+# needed here. At most one nudge per issue per ~20 hours, so a daily schedule
+# never double-posts.
+on:
+  workflow_call:
+    inputs:
+      nudge_after_hours:
+        description: Hours a lead may stay open before the first nudge
+        type: number
+        default: 24
+      promise_hours:
+        description: Reply window promised to the lead; 0 = none promised
+        type: number
+        default: 0
+      label:
+        type: string
+        default: lead
+
+permissions:
+  issues: write
+
+jobs:
+  nudge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Nudge open leads
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          LABEL: ${{ inputs.label }}
+          AFTER: ${{ inputs.nudge_after_hours }}
+          PROMISE: ${{ inputs.promise_hours }}
+        run: |
+          set -euo pipefail
+          now=$(date +%s)
+          gh issue list -R "$REPO" -l "$LABEL" -s open -L 100 \
+            --json number,createdAt,assignees,comments > leads.json
+          jq -c '.[]' leads.json | while read -r issue; do
+            n=$(jq -r .number <<<"$issue")
+            created=$(date -d "$(jq -r .createdAt <<<"$issue")" +%s)
+            age_h=$(( (now - created) / 3600 ))
+            [ "$age_h" -ge "$AFTER" ] || continue
+
+            # Skip if we nudged in the last ~20 hours.
+            last=$(jq -r '[.comments[] | select(.body | contains("<!-- lead-nudge -->")) | .createdAt] | last // empty' <<<"$issue")
+            if [ -n "$last" ]; then
+              [ $(( (now - $(date -d "$last" +%s)) / 3600 )) -ge 20 ] || continue
+            fi
+
+            who=$(jq -r '[.assignees[].login | "@" + .] | join(" ")' <<<"$issue")
+            [ -n "$who" ] || who="@${REPO%%/*}"
+            if [ "$PROMISE" -gt 0 ] && [ "$age_h" -ge "$PROMISE" ]; then
+              msg="$who this lead is **overdue**: it has waited ${age_h}h and we promised a reply within ${PROMISE}h. Reply now, then close this issue."
+            else
+              msg="$who this lead has waited ${age_h}h. Reply, then close this issue."
+            fi
+            gh issue comment "$n" -R "$REPO" --body "$msg
+          <!-- lead-nudge -->"
+            echo "nudged #$n (${age_h}h)"
+          done
