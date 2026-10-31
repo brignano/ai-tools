@@ -157,10 +157,77 @@ by side.
 - Short questions that change no code (a status check, "what does X do") can
   be answered in the project chat without a thread.
 
+## Releases are planned, not per change
+
+A merged PR is not a release, and a version number is not a progress counter.
+Agents batch merged work into **planned releases**, and I cut them (the
+`releases` skill covers how). Driftwood went 0.4.0, 0.5.0, 0.6.0 in two days and
+breakeven shipped eight versions in one; nobody reading a release page wants that.
+
+- **No PR bumps a version.** Builders never touch `version` in `package.json`
+  or a manifest, run `npm version` / `release:version`, add a CHANGELOG, or end
+  a PR by suggesting a release. The version moves only in the PR that prepares
+  a release I have agreed to cut, and only where the repo needs one (driftwood
+  takes it from the tag, so there it never moves).
+- **Every PR says what it means for the next release**, at the end of its body:
+
+  ```markdown
+  ## Release
+  Impact: none | patch | minor | major
+  Note: One line for someone reading the release page, or "none".
+  ```
+
+  This is raw material, not a decision. `none` is for CI, refactors, tests and
+  docs a user never sees.
+- **One open release plan per repo**: an issue titled
+  `Release plan: vX.Y.Z — <theme>`, labelled `proposed` and `type:chore`,
+  pinned. The planner keeps it current. It never gets `agent:ready`, so no
+  builder takes it. Its body:
+
+  ```markdown
+  ## Theme
+  What this release lets someone do that they couldn't before. One sentence.
+
+  ## Scope
+  - [ ] #12 Plan preview for CloudFormation (in progress)
+  - [x] #15 Fix module key resolution (merged #18)
+
+  ## Already merged since vX.Y.Z
+  PRs whose Release impact is not none, grouped by impact.
+
+  ## Version
+  vX.Y.Z, because <the highest impact in scope>.
+
+  ## Draft notes
+  The release page body, written per the `releases` skill.
+  ```
+
+- **The version follows the batch.** Take the highest impact in the release:
+  breaking → major, new capability → minor, fixes only → patch. Below 1.0 a
+  breaking change is a minor, not a major. A repo's own rule wins (design: the minor is for tokens that look
+  different, not plumbing).
+- **I approve the scope.** The planner proposes the theme and scope; I edit the
+  issue or answer it. Work I add mid-way joins the plan; work that doesn't fit
+  the theme waits for the next one.
+- **Propose a cut when the theme is done**: every scope box ticked, checks
+  green on the default branch. Then the planner finalises the notes, adds
+  `needs:anthony`, and says "ready to cut vX.Y.Z" in its run summary. Two
+  exceptions cut sooner as a patch with only what is needed: a security fix,
+  and a fix for something the last release broke.
+- **Nothing ready, nothing cut.** If two weeks of user-facing work has merged
+  with no theme finished, the planner says so and offers to cut what is there,
+  but does not push.
+- After I publish, the next planner run closes the plan (the tag exists) and
+  opens the next one, carrying over unfinished scope.
+- Repos that deploy on merge and have no release page (brignano.io, sites,
+  homelab) don't version: no bumps, no plan, and the `## Release` section can
+  be left out.
+
 ## Hard rules for every agent
 
 - Never push to the default branch. Work on a branch, open a PR.
 - Never merge, release, tag or publish. Releases are mine (see the `releases` skill).
+- Never bump a version outside a release I agreed to cut (see "Releases are planned").
 - Never touch secrets or `.env` files, and never widen your own permissions.
 - Never set `agent:ready` yourself.
 - Never re-plan a Ready issue. If the spec is wrong, comment the question, add
