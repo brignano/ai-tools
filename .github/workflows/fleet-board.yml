@@ -10,7 +10,7 @@ on:
   pull_request:
     paths: [fleet/board.yml, fleet/sync-board.py, .github/workflows/fleet-board.yml]
   schedule:
-    - cron: "23 * * * *" # hourly
+    - cron: "*/15 * * * *" # every 15 minutes
   workflow_dispatch:
     inputs:
       apply:
@@ -48,6 +48,7 @@ jobs:
           GH_TOKEN: ${{ secrets.FLEET_PROJECT_TOKEN }}
           APPLY: ${{ github.event_name == 'push' || github.event_name == 'schedule' || inputs.apply == true }}
         run: |
+          set -o pipefail
           pip install --quiet pyyaml
           if [ "$APPLY" = "true" ]; then
             python3 fleet/sync-board.py --apply | tee summary.txt
