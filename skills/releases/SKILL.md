@@ -1,11 +1,11 @@
 ---
 name: releases
-description: How Anthony plans and cuts releases — in the GitHub UI, with hand-written notes as the changelog — and how release automation on v* tags must behave. Use when planning, preparing or cutting a release, deciding a version, writing release notes, bumping a version, or writing or changing a workflow that runs on tags.
+description: How Anthony plans and cuts releases — hand-written notes as the changelog, cut by a Release workflow (or the GitHub UI) — and how release automation must behave. Use when planning, preparing or cutting a release, deciding a version, writing release notes, bumping a version, or writing or changing a workflow that runs on tags.
 ---
 
 # Releases — the GitHub release page is the changelog
 
-**I create releases in the GitHub UI, and the release notes are the record.**
+**The release notes are the record.**
 Anyone following a project reads that page to find new capabilities as they
 ship. So it gets written for that reader, by hand. There is no `CHANGELOG.md`
 duplicating it, and npm is distribution only — never where changes are
@@ -16,6 +16,42 @@ in the repo's release plan issue and I cut it when its theme is done. Never
 propose a release or a version bump for a single PR. The rules (the `## Release`
 section every PR carries, the plan issue, how the batch picks the version) are
 in `fleet/README.md` → "Releases are planned, not per change".
+
+## Cutting it: two paths
+
+**Workflow release (default for repos that publish a package).** Notes live in
+the repo as `releases/v<version>.md`, and a `workflow_dispatch` **Release**
+workflow turns them into the tag and GitHub release, then publishes. Template:
+[`templates/release.yml`](templates/release.yml). Proven on driftwood (v0.8.0).
+
+1. **Agent drafts the notes** to `releases/v<version>.md` (written per the rules
+   above, body verbatim) and opens a PR. I review and merge it to `main` first.
+   No version bump commit: the tag is the version.
+2. **I say "publish X" explicitly**, per release. Agents never run the Release
+   workflow on their own, and approval for one version is not approval for the
+   next (this is the "never release or publish" rule in `fleet/README.md`).
+3. **Release workflow** (dispatched from the Actions tab or `gh workflow run`)
+   checks the version, the notes file and that nothing already exists, then runs
+   `gh release create --notes-file` against `main`'s HEAD.
+4. **It then dispatches the repo's own `publish.yml`** (`gh workflow run`).
+   Releases created with `GITHUB_TOKEN` do not fire `release` events, so a
+   `release: published` trigger alone would silently never publish.
+5. **Verify after:** clean install of the published version from the registry
+   (not the repo) and run the thing, then report the result.
+
+Rules for the pieces:
+- **Each repo keeps its own small `publish.yml`.** npm trusted publishing (OIDC)
+  checks the workflow filename, so publishing cannot move into a shared or
+  reusable workflow. It takes `tag` and `prerelease` as dispatch inputs and keeps
+  its `release: published` trigger so the UI path still works.
+- **Optional floating major tag** (`v0`, `v1`, for repos used as `uses: owner/repo@v1`):
+  `publish.yml` moves it as a last job, only after a successful non-prerelease
+  publish, never from the Release workflow.
+- Prereleases publish to the `next` dist-tag and never move the major tag.
+
+**GitHub UI release.** Still fine for repos with no package to publish, or when I
+choose it. Then the rules below apply: don't hand me `git tag` commands, and
+always attach the notes as a copy-pasteable fenced markdown block.
 
 What this means when you are helping me cut one:
 
@@ -32,7 +68,9 @@ What this means when you are helping me cut one:
   message; a release page reader needs "MIT licensed".
 
 ## Release automation, where a repo has any
-A workflow on `v*` tags must **verify, never create**. Publishing from the UI is
+There is exactly one creator of a release: me in the UI, or the Release workflow
+above. Nothing else creates one. A workflow on `v*` tags must **verify, never
+create**. Publishing from the UI is
 what creates the tag, so by the time the workflow runs the release already
 exists and there is nothing left for it to make. Have it re-run the checks
 against the tagged tree and fail loudly when the tag disagrees with the version

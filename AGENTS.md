@@ -69,7 +69,8 @@ current estate.
 
 ## Releases
 
-**I create releases in the GitHub UI, and the release page is the changelog.**
+**The release page is the changelog.** I cut a release by telling you "publish X"
+(a Release workflow creates it from `releases/v<version>.md`) or in the GitHub UI.
 Releases are planned batches, never one per change: don't bump a version or
 suggest a release in an ordinary PR. Before planning or cutting a release,
 writing notes, or touching a workflow that runs on tags, read the `releases` skill ([`skills/releases/SKILL.md`](skills/releases/SKILL.md)).

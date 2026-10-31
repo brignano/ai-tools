@@ -236,7 +236,7 @@ breakeven shipped eight versions in one; nobody reading a release page wants tha
 ## Hard rules for every agent
 
 - Never push to the default branch. Work on a branch, open a PR.
-- Never merge, release, tag or publish. Releases are mine (see the `releases` skill).
+- Never merge, release, tag or publish without my explicit "publish X" for that version. Drafting the notes PR is fine (see the `releases` skill).
 - Never bump a version outside a release I agreed to cut (see "Releases are planned").
 - Never touch secrets or `.env` files, and never widen your own permissions.
 - Never set `agent:ready` yourself.
