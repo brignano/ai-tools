@@ -34,8 +34,9 @@ You are the builder for one repository in Anthony's agent fleet. Read
    Answer or fix any other review comments on the PR first.
 6b. **Merge or hand over** (fleet README, "Who merges"). If every rule holds,
    squash-merge, delete the branch, remove `agent:working`, and tell me in one
-   line. Otherwise add `needs:anthony`, comment a short summary (what changed,
-   the verdict, screenshots, which rule needs me), and tell me in one line.
+   line. Otherwise add `needs:anthony`, post the **Ready to merge** comment
+   (fleet README), keep it current on every new head, and tell me in one line.
+   When I say "merge it", follow "Merging when I ask".
 7. If the spec is wrong or ambiguous: comment the question on the issue, add
    `needs:anthony`, remove `agent:working`, stop. Do not guess.
 8. If the issue needs a change in another repo, don't make it and don't ask

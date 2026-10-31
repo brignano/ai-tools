@@ -297,7 +297,8 @@ breakeven shipped eight versions in one; nobody reading a release page wants tha
 Every PR an agent opens goes through the same gates, in the same order, in the
 thread that built it, whether or not it came from a builder run. **No PR waits on me to ask for a review**: the builder runs the
 whole pipeline and only comes to me with a PR that is either merged (where the
-merge rules allow it) or ready for my merge with the review already done.
+merge rules allow it) or ready for my merge with the review already done, so
+that "merge it" from me is a one-line ask that works first time.
 
 ```mermaid
 flowchart LR
@@ -362,15 +363,50 @@ A PR **may be merged by the builder** only when every one of these holds:
 Then the builder squash-merges, deletes the branch, and tells me in one line
 in the thread: what merged and the PR link.
 
-**Everything else waits for me.** The builder adds `needs:anthony` and posts a
-short summary on the PR: what changed, the reviewer's verdict, the UX
-screenshots if any, and why it needs me (which rule above it misses). My merge
-is then a read, not a review.
+**Everything else waits for me**, already reviewed. The builder adds
+`needs:anthony` and posts a **Ready to merge** comment on the PR, kept current
+on every new head:
+
+```markdown
+## Ready to merge
+Head: <sha> · CI green · Reviewer: APPROVE · UX gate: passed | n/a
+Up to date with <base>: yes · Conflicts: none
+What changed: <one or two lines>
+Why it needs Anthony: <the "Who merges" rule it misses>
+After merge: <what deploys or runs, and how it will be checked>
+```
+
+A PR is only "ready" when every line is true for its current head. A new
+push, a base branch that moved, or a new review comment makes it not ready
+until the gates run again on the new head.
+
+### Merging when I ask
+
+The point of the gates is that when I say "merge it" (or "merge #N") in any
+Claude session, it just works. That ask is my approval for that PR, whatever
+`merge.yml` says. The session then:
+
+1. Reads the PR at its current head. If the Ready to merge comment doesn't
+   match the head, or anything else changed since (new commits, base moved,
+   new comments, CI not green), it runs the missing gates first: bring the
+   branch up to date with the base, wait for CI, re-run the reviewer on the
+   new head. It does not ask me to wait or to re-confirm unless a gate fails.
+2. Merges with the repo's merge method (squash by default) and deletes the
+   branch.
+3. Checks the result: CI on the default branch after the merge, and the
+   deploy if the repo deploys on merge (homelab: its `/deploy` rule). It
+   tells me in one line that it merged and that main is green, or what broke.
+4. If a gate fails, it doesn't merge. It says in one line what failed and
+   what it's doing about it, fixes what it can in the PR, and merges once
+   green without asking again.
+
+A merge I asked for still never skips a gate, and never covers a release,
+tag or publish (those need "publish X").
 
 ## Hard rules for every agent
 
 - Never push to the default branch. Work on a branch, open a PR.
-- Never merge a PR unless "Who merges" allows it, and never release, tag or publish without my explicit "publish X" for that version. Drafting the notes PR is fine (see the `releases` skill).
+- Never merge a PR unless I asked for that PR to be merged or "Who merges" allows it, and never release, tag or publish without my explicit "publish X" for that version. Drafting the notes PR is fine (see the `releases` skill).
 - Never add a repo to `merge.yml`, and never skip, disable or weaken a check or test to get a PR through the gates.
 - Never bump a version outside a release I agreed to cut (see "Releases are planned").
 - Never touch secrets or `.env` files, and never widen your own permissions.
