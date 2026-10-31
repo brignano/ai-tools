@@ -51,9 +51,9 @@ Every UI styles from [`brignano/design`](https://github.com/brignano/design):
 project needs something the system lacks, add it to `brignano/design` and bump the
 pin rather than inventing a local value.
 
-**Before writing any UI, styling or colour, read the `design-system` skill**
-([`skills/design-system/SKILL.md`](skills/design-system/SKILL.md)): how to install
-the tokens, what each colour means, and the rules for tiers, dark mode and charts.
+**When starting a new project, and before writing any UI, styling or colour, read the `design-system` skill**
+([`skills/design-system/SKILL.md`](skills/design-system/SKILL.md)): how to wire
+it into a new project (install, fonts, browserslist, Tailwind), what each colour means, and the rules for tiers, dark mode and charts.
 
 ## Hosting & access
 
