@@ -26,3 +26,7 @@ You are the builder for one repository in Anthony's agent fleet. Read
    until green.
 7. If the spec is wrong or ambiguous: comment the question on the issue, add
    `needs:anthony`, remove `agent:working`, stop. Do not guess.
+8. If the issue needs a change in another repo, don't make it and don't ask
+   me to add that repo to the project: file an issue there (fleet README,
+   "Projects talk through issues"), note `Blocked by owner/repo#N` on your
+   issue or PR, and tell me in one line.

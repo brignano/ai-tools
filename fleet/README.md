@@ -155,8 +155,8 @@ by side.
   item yet ("plan driftwood", "review open PRs") gets its own thread too, and
   any issue it turns into a build gets a thread of its own.
 - **One item per thread.** If a thread uncovers new work, it files an issue
-  (`proposed`) and tells the coordinator; it does not start the new work
-  itself. Follow-ups on the same issue or its PR (review fixes, CI, my
+  (`proposed`) in the repo that owns that work (see "Projects talk through
+  issues") and tells the coordinator; it does not start the new work itself. Follow-ups on the same issue or its PR (review fixes, CI, my
   comments) stay in that thread.
 - **A thread ends when its item does**: the PR merges, or the issue closes or
   is dropped. Then the thread is resolved. It stays open while it is waiting
@@ -166,6 +166,39 @@ by side.
   from its threads and the labels, without pulling their work into the chat.
 - Short questions that change no code (a status check, "what does X do") can
   be answered in the project chat without a thread.
+
+## Projects talk through issues
+
+Projects can't see each other: a session in one project has no way to reach
+another project's chat or threads. **GitHub issues are how projects hand each
+other work.** Each project already picks up its own repo's issues, so an issue
+in the right repo is the message.
+
+- **Work that belongs to another repo goes in an issue there.** When a thread
+  finds that a fix, feature or decision lives in another repo (driftwood needs
+  a token in `design`, `sites` needs a route in `homelab`), it opens an issue
+  in *that* repo instead of doing the work here.
+- **Don't ask me to add the other repo to this project** so you can work in it,
+  and don't tell me you can't reach the other project. Attach the repo to the
+  session only as far as filing the issue needs; never save it to the project
+  and never push to it.
+- **The issue is a normal spec**: the spec shape above, `proposed` plus one
+  `type:`, `size:` and `risk:` label from `labels.yml`. Say which repo and
+  issue or PR it came from (`From brignano/driftwood#42`), so the other side
+  has the why. Add `needs:anthony` only when a person must act first: an
+  account, a secret, hardware, or a decision between options.
+- **If your work waits on it**, say so where your work lives: a line on your
+  issue or PR, `Blocked by brignano/design#12`, and leave your thread open.
+  Don't build a workaround that the other repo's fix will undo.
+- **Tell me in one line**, in the thread: "Filed brignano/design#12 for the
+  design project." That's all. The other project's planner picks it up like
+  any `proposed` issue, and I mark it `agent:ready` when I want it built.
+- **Only when it's urgent** (it blocks something I asked for today, or
+  something is broken in production) add: "Start a session in the **design**
+  project for #12." Otherwise don't send me to another project.
+- **Never for personal topics.** Nothing from `life` or `people` goes into an
+  issue, and no project files issues in `life`, `people` or `ideas`. A new
+  product idea goes to me in the Life project, not into an issue.
 
 ## Releases are planned, not per change
 
