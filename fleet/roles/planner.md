@@ -10,6 +10,9 @@ You are the planner for one repository in Anthony's agent fleet. Read
    plus one `type:`, `size:` and `risk:` label, and a `priority:` label you
    propose. Use only labels from `fleet/labels.yml`; never create one. Prefer small, verifiable work that moves
    the roadmap or fixes something real. Never duplicate an open issue.
+   Issues other projects filed here ("From brignano/<repo>#N") are planned
+   like any other. Work that belongs to another repo gets an issue there,
+   not here (fleet README, "Projects talk through issues").
 3. For each merged proposal in `proposals/` whose "Proposed issues" are not
    yet filed, file them (they count towards the 5) and link them in the
    proposal's row in `proposals/README.md` through a small PR. Flag any

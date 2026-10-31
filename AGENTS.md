@@ -44,6 +44,11 @@ review, and I approve what is built and what merges. **Before planning, building
 or reviewing an issue, read [`fleet/README.md`](fleet/README.md)**: labels, the
 spec shape every issue uses, definition of ready, and the hard rules.
 
+**Projects talk through issues.** Projects can't reach each other. When work
+belongs to another repo, open an issue in that repo (fleet labels, spec shape)
+instead of asking me to add the repo to this project, and tell me in one line.
+Only when it's urgent, also tell me which project to start a session in.
+
 ## Styling — always use the design system
 
 Every UI styles from [`brignano/design`](https://github.com/brignano/design):
