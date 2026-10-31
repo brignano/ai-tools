@@ -27,6 +27,30 @@ Plan and reasoning: the "Agent fleet plan" doc in the AI Assistant project.
   real backlog. **life, people and ideas never go on the board.** The
   "By repo" view groups cards by Repository.
 
+## Every repo loads this file
+
+Project instructions are set by hand per project and drift; this file doesn't.
+So **every repo I own runs the fleet hook**, which loads this README and the
+global AGENTS.md into each cloud session. One edit here then reaches every
+project.
+
+- The hook is [`hook/session-start.sh`](hook/session-start.sh), wired by
+  [`hook/settings.json`](hook/settings.json). Copy both into the repo as
+  `.claude/hooks/session-start.sh` and `.claude/settings.json`. If the repo
+  already has a SessionStart hook, add the fleet block to the end of it and
+  keep one hook.
+- Repos with it today: driftwood, guidebook, homelab, life. Any other repo
+  gets a `proposed` issue to add it.
+
+**New repo checklist** (the planner's first run does this):
+
+1. Add the fleet hook (above).
+2. Labels arrive on their own: the `fleet-labels` workflow syncs every repo I
+   own on Mondays. Run it by hand to get them sooner.
+3. If it will have a real backlog, add it to [`board.yml`](board.yml).
+4. Nothing to paste into the project's instructions: the hook carries the
+   rules.
+
 ## Labels
 
 One set in every repo, defined in [`labels.yml`](labels.yml). **Use only labels
