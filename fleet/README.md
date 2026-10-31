@@ -16,6 +16,14 @@ Plan and reasoning: the "Agent fleet plan" doc in the AI Assistant project.
   Done. Priority: P1, P2, P3. It is my view. Agents can't read or write it
   (cloud sessions only reach repo-scoped APIs), so **labels are what agents act
   on**, and GitHub's built-in project workflows move the cards.
+- **What's on the board** is listed in [`board.yml`](board.yml): driftwood,
+  guidebook, sites, brignano.io, homelab, design and ai-tools. The
+  [`fleet-board`](../.github/workflows/fleet-board.yml) workflow adds every
+  open issue and PR in those repos hourly (it only adds, never edits a card),
+  using the `FLEET_PROJECT_TOKEN` secret: a classic token with `project` and
+  `repo` scopes. A repo earns a spot when agents ship work there and it has a
+  real backlog. **life, people and ideas never go on the board.** The
+  "By repo" view groups cards by Repository.
 
 ## Labels
 

@@ -1,0 +1,21 @@
+# Repos whose open issues and PRs belong on the Fleet board
+# (https://github.com/users/brignano/projects/1). The fleet-board workflow
+# adds anything open in these repos that isn't on the board yet.
+#
+# A repo earns a spot when agents ship work there and it has a real backlog.
+# Never add life, people or ideas: personal notes stay out of GitHub issues,
+# and ideas has its own inbox/ -> proposals/ -> building/ flow.
+owner: brignano
+project: 1
+repos:
+  - driftwood
+  - guidebook
+  - sites
+  - brignano.io
+  - homelab
+  - design
+  - ai-tools
+never:
+  - life
+  - people
+  - ideas

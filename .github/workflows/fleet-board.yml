@@ -1,0 +1,57 @@
+name: fleet-board
+
+# Adds every open issue and PR in the repos listed in fleet/board.yml to the
+# Fleet project board. It only adds; the board's built-in workflows move cards.
+# A pull request that changes the list gets a dry run in its checks.
+on:
+  push:
+    branches: [main]
+    paths: [fleet/board.yml, fleet/sync-board.py, .github/workflows/fleet-board.yml]
+  pull_request:
+    paths: [fleet/board.yml, fleet/sync-board.py, .github/workflows/fleet-board.yml]
+  schedule:
+    - cron: "23 * * * *" # hourly
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: Add the items (unchecked = dry run)
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fleet-board
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the token is set
+        id: token
+        env:
+          TOKEN: ${{ secrets.FLEET_PROJECT_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::warning::FLEET_PROJECT_TOKEN is not set; skipping. See fleet/README.md#the-board."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Sync
+        if: steps.token.outputs.ok == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.FLEET_PROJECT_TOKEN }}
+          APPLY: ${{ github.event_name == 'push' || github.event_name == 'schedule' || inputs.apply == true }}
+        run: |
+          pip install --quiet pyyaml
+          if [ "$APPLY" = "true" ]; then
+            python3 fleet/sync-board.py --apply | tee summary.txt
+          else
+            python3 fleet/sync-board.py | tee summary.txt
+          fi
+          { echo '```'; cat summary.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
