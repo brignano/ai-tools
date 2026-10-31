@@ -11,11 +11,13 @@ token with the `project` scope (plus `repo` to see private repos).
   python3 fleet/sync-board.py --repo guidebook   # dry run, one repo
   python3 fleet/sync-board.py --apply            # what the workflow runs
 
-It never removes or archives a card. The one field it writes is Priority,
-which it creates if missing (P1, P2, P3) and fills from each card's
-`priority:p1/p2/p3` label, because labels are what agents can see. A card with
-no priority label keeps whatever Priority it has. Status and every other field
-are left to GitHub's built-in project workflows and to me.
+It never removes or archives a card. Labels are what agents can see, so the
+board and the labels are kept in step in two places:
+  - Priority: created if missing (P1, P2, P3) and filled from each card's
+    `priority:p1/p2/p3` label. A card with no priority label keeps its value.
+  - Ready: when I move a card to Status "Ready", its issue gets `agent:ready`
+    and loses `proposed`. That is the signal builders act on.
+Every other field is left to GitHub's built-in project workflows and to me.
 """
 import argparse
 import json
@@ -69,9 +71,12 @@ def project_items(owner, number):
               priority: fieldValueByName(name: "Priority") {
                 ... on ProjectV2ItemFieldSingleSelectValue { name }
               }
+              status: fieldValueByName(name: "Status") {
+                ... on ProjectV2ItemFieldSingleSelectValue { name }
+              }
               content {
-                ... on Issue { id labels(first: 30) { nodes { name } } }
-                ... on PullRequest { id labels(first: 30) { nodes { name } } }
+                ... on Issue { id number state repository { name } labels(first: 30) { nodes { name } } }
+                ... on PullRequest { id number state repository { name } labels(first: 30) { nodes { name } } }
               }
             }
           }
@@ -86,7 +91,7 @@ def project_items(owner, number):
         proj = graphql(query, **vars_)["user"]["projectV2"]
         project_id = proj["id"]
         for node in proj["items"]["nodes"]:
-            if node.get("content"):
+            if (node.get("content") or {}).get("id"):
                 seen[node["content"]["id"]] = node
         page = proj["items"]["pageInfo"]
         if not page["hasNextPage"]:
@@ -184,6 +189,30 @@ def sync_priority(owner, number, apply, repo_node_ids):
     print(f"{verb} Priority on {changed} card(s).")
 
 
+def sync_ready(owner, number, apply, repo_node_ids):
+    """Cards I moved to Ready get agent:ready (and lose proposed)."""
+    _, cards = project_items(owner, number)
+    changed = 0
+    for content_id, node in cards.items():
+        if content_id not in repo_node_ids:
+            continue
+        if ((node.get("status") or {}).get("name") or "").lower() != "ready":
+            continue
+        c = node["content"]
+        names = {n["name"] for n in c["labels"]["nodes"]}
+        if "agent:ready" in names:
+            continue
+        repo, num = c["repository"]["name"], c["number"]
+        print(f"  ~ {repo}#{num}: Status is Ready -> label agent:ready")
+        if apply:
+            gh(f"repos/{owner}/{repo}/issues/{num}/labels", "-X", "POST", "-f", "labels[]=agent:ready")
+            if "proposed" in names:
+                gh(f"repos/{owner}/{repo}/issues/{num}/labels/proposed", "-X", "DELETE")
+        changed += 1
+    verb = "Labelled" if apply else "Would label"
+    print(f"{verb} {changed} Ready card(s) agent:ready.")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--apply", action="store_true", help="add the items (default: dry run)")
@@ -218,9 +247,16 @@ def main():
     verb = "Added" if args.apply else "Would add"
     print(f"\n{verb} {total} item(s) to {owner}'s project {number}.\n")
     sync_priority(owner, number, args.apply, repo_node_ids)
+    print()
+    sync_ready(owner, number, args.apply, repo_node_ids)
     if failed:
         sys.exit(1)
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except RuntimeError as e:
+        # Annotations show on the run page, so failures are visible without logs.
+        print(f"::error title=fleet-board::{str(e)[:900]}")
+        sys.exit(1)

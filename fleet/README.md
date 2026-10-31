@@ -19,8 +19,9 @@ Plan and reasoning: the "Agent fleet plan" doc in the AI Assistant project.
 - **What's on the board** is listed in [`board.yml`](board.yml): driftwood,
   guidebook, sites, brignano.io, homelab, design, ai-tools and breakeven. The
   [`fleet-board`](../.github/workflows/fleet-board.yml) workflow adds every
-  open issue and PR in those repos hourly and fills the board's Priority field
-  from each card's `priority:` label (it never removes a card or touches Status),
+  open issue and PR in those repos every 15 minutes, fills the board's Priority
+  field from each card's `priority:` label, and gives `agent:ready` (dropping
+  `proposed`) to any card I move to **Ready**. It never removes a card,
   using the `FLEET_PROJECT_TOKEN` secret: a classic token with `project` and
   `repo` scopes. A repo earns a spot when agents ship work there and it has a
   real backlog. **life, people and ideas never go on the board.** The
@@ -37,11 +38,11 @@ workflow syncs the file to every repo I own on merge and every Monday
 | Label | Meaning | Who sets it |
 |---|---|---|
 | `proposed` | An agent suggested it. Nobody works on it. | Planner |
-| `agent:ready` | Spec approved. A builder may take it. | **Only me** |
+| `agent:ready` | Spec approved. A builder may take it. | **Only me** (or I move the card to Ready) |
 | `agent:working` | A builder claimed it. | Builder |
 | `agent:pause` | Leave it alone until I remove this. | Me |
 | `needs:anthony` | Blocked on a decision, account or hardware. | Any agent |
-| `priority:p1` / `p2` / `p3` | Source of truth for priority; `fleet-board` copies it to the board's Priority field hourly. | Planner proposes, I confirm |
+| `priority:p1` / `p2` / `p3` | Source of truth for priority; `fleet-board` copies it to the board's Priority field. | Planner proposes, I confirm |
 | `risk:low` / `risk:high` | Decides merge rules. | Planner proposes, I confirm |
 | `size:s` / `size:m` | Agents take S and M only. Bigger gets split. | Planner |
 | `type:bug` / `feature` / `chore` / `docs` | What kind of work it is. | Whoever files it |
