@@ -11,9 +11,11 @@ token with the `project` scope (plus `repo` to see private repos).
   python3 fleet/sync-board.py --repo guidebook   # dry run, one repo
   python3 fleet/sync-board.py --apply            # what the workflow runs
 
-It only adds. It never removes, archives or edits a card, so Status,
-Priority and anything else set on the board is left alone. New cards get the
-board's default Status; GitHub's built-in project workflows take it from there.
+It never removes or archives a card. The one field it writes is Priority,
+which it creates if missing (P1, P2, P3) and fills from each card's
+`priority:p1/p2/p3` label, because labels are what agents can see. A card with
+no priority label keeps whatever Priority it has. Status and every other field
+are left to GitHub's built-in project workflows and to me.
 """
 import argparse
 import json
@@ -54,7 +56,7 @@ def load_config():
 
 
 def project_items(owner, number):
-    """Return the project's node id and the content ids already on it."""
+    """Return the project's node id and {content id: item} for every card."""
     query = """
     query($owner: String!, $number: Int!, $after: String) {
       user(login: $owner) {
@@ -62,12 +64,21 @@ def project_items(owner, number):
           id
           items(first: 100, after: $after) {
             pageInfo { hasNextPage endCursor }
-            nodes { content { ... on Issue { id } ... on PullRequest { id } } }
+            nodes {
+              id
+              priority: fieldValueByName(name: "Priority") {
+                ... on ProjectV2ItemFieldSingleSelectValue { name }
+              }
+              content {
+                ... on Issue { id labels(first: 30) { nodes { name } } }
+                ... on PullRequest { id labels(first: 30) { nodes { name } } }
+              }
+            }
           }
         }
       }
     }"""
-    seen, after, project_id = set(), None, None
+    seen, after, project_id = {}, None, None
     while True:
         vars_ = {"owner": owner, "number": number}
         if after:
@@ -76,7 +87,7 @@ def project_items(owner, number):
         project_id = proj["id"]
         for node in proj["items"]["nodes"]:
             if node.get("content"):
-                seen.add(node["content"]["id"])
+                seen[node["content"]["id"]] = node
         page = proj["items"]["pageInfo"]
         if not page["hasNextPage"]:
             return project_id, seen
@@ -95,6 +106,84 @@ mutation($project: ID!, $content: ID!) {
 }"""
 
 
+PRIORITIES = ["P1", "P2", "P3"]
+
+FIELD = """
+query($owner: String!, $number: Int!) {
+  user(login: $owner) {
+    projectV2(number: $number) {
+      field(name: "Priority") {
+        ... on ProjectV2SingleSelectField { id options { id name } }
+      }
+    }
+  }
+}"""
+
+CREATE_FIELD = """
+mutation($project: ID!) {
+  createProjectV2Field(input: {
+    projectId: $project, dataType: SINGLE_SELECT, name: "Priority",
+    singleSelectOptions: [
+      {name: "P1", color: RED, description: "Do next"},
+      {name: "P2", color: YELLOW, description: "Soon"},
+      {name: "P3", color: GRAY, description: "Someday"}
+    ]
+  }) {
+    projectV2Field { ... on ProjectV2SingleSelectField { id options { id name } } }
+  }
+}"""
+
+SET_FIELD = """
+mutation($project: ID!, $item: ID!, $field: ID!, $option: String!) {
+  updateProjectV2ItemFieldValue(input: {
+    projectId: $project, itemId: $item, fieldId: $field,
+    value: {singleSelectOptionId: $option}
+  }) { projectV2Item { id } }
+}"""
+
+
+def priority_field(owner, number, project_id, apply):
+    """Return (field id, {option name: option id}), creating the field if needed."""
+    field = graphql(FIELD, owner=owner, number=number)["user"]["projectV2"]["field"]
+    if not field:
+        print("Priority field: missing, " + ("creating it" if apply else "would create it"))
+        if not apply:
+            return None, {p: None for p in PRIORITIES}
+        field = graphql(CREATE_FIELD, project=project_id)["createProjectV2Field"]["projectV2Field"]
+    options = {o["name"]: o["id"] for o in field.get("options") or []}
+    missing = [p for p in PRIORITIES if p not in options]
+    if missing:
+        sys.exit(f"Priority field has no option(s) {', '.join(missing)}; add them on the board")
+    return field["id"], options
+
+
+def label_priority(node):
+    names = {n["name"].lower() for n in node["content"]["labels"]["nodes"]}
+    for p in PRIORITIES:
+        if f"priority:{p.lower()}" in names:
+            return p
+    return None
+
+
+def sync_priority(owner, number, apply, repo_node_ids):
+    """Set Priority from priority:pN labels on cards from the listed repos."""
+    project_id, cards = project_items(owner, number)
+    field_id, options = priority_field(owner, number, project_id, apply)
+    changed = 0
+    for content_id, node in cards.items():
+        if content_id not in repo_node_ids:
+            continue
+        want = label_priority(node)
+        have = (node.get("priority") or {}).get("name")
+        if want and want != have:
+            print(f"  ~ {repo_node_ids[content_id]}: Priority {have or '-'} -> {want}")
+            if apply:
+                graphql(SET_FIELD, project=project_id, item=node["id"], field=field_id, option=options[want])
+            changed += 1
+    verb = "Set" if apply else "Would set"
+    print(f"{verb} Priority on {changed} card(s).")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--apply", action="store_true", help="add the items (default: dry run)")
@@ -108,7 +197,7 @@ def main():
         repos = [args.repo]
 
     project_id, on_board = project_items(owner, number)
-    total, failed = 0, False
+    total, failed, repo_node_ids = 0, False, {}
     for repo in repos:
         try:
             items = open_items(owner, repo)
@@ -116,6 +205,8 @@ def main():
             print(f"{repo}: could not list issues: {e}")
             failed = True
             continue
+        for i in items:
+            repo_node_ids[i["node_id"]] = f"{repo}#{i['number']}"
         missing = [i for i in items if i["node_id"] not in on_board]
         print(f"{repo}: {len(items)} open, {len(missing)} to add")
         for i in missing:
@@ -125,7 +216,8 @@ def main():
                 graphql(ADD, project=project_id, content=i["node_id"])
         total += len(missing)
     verb = "Added" if args.apply else "Would add"
-    print(f"\n{verb} {total} item(s) to {owner}'s project {number}.")
+    print(f"\n{verb} {total} item(s) to {owner}'s project {number}.\n")
+    sync_priority(owner, number, args.apply, repo_node_ids)
     if failed:
         sys.exit(1)
 
