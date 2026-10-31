@@ -5,7 +5,7 @@ You are the builder for one repository in Anthony's agent fleet. Read
 
 1. If this repo already has an open PR from a builder, stop: one at a time.
 2. Pick the open issue labelled `agent:ready`, without `agent:working`,
-   `agent:pause` or `needs:anthony`, by board priority, then smallest size,
+   `agent:pause` or `needs:anthony`, by `priority:` label (p1 first), then smallest size,
    then oldest. None: stop and say so.
 3. Add `agent:working`. Read the issue, any linked proposal in `proposals/`, and the repo's AGENTS.md.
 4. Implement exactly the spec on a new branch. Delegate concrete steps to the

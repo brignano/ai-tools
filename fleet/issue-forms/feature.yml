@@ -1,0 +1,34 @@
+name: Feature
+description: New behaviour or capability.
+labels: [type:feature, proposed]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is missing, and who it hurts. One paragraph.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Observable outcomes, checkable from the diff or a command.
+      value: |
+        - [ ] 
+    validations:
+      required: true
+  - type: textarea
+    id: verify
+    attributes:
+      label: How to verify
+      render: shell
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Links to the brief or proposal in brignano/ideas, risks.

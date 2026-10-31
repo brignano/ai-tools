@@ -19,7 +19,11 @@ Plan and reasoning: the "Agent fleet plan" doc in the AI Assistant project.
 
 ## Labels
 
-Same set in every repo ([`labels.json`](labels.json)):
+One set in every repo, defined in [`labels.yml`](labels.yml). **Use only labels
+from that file.** Never create a label from an issue or PR; if one is missing,
+add it to `labels.yml` in a PR. The [`fleet-labels`](../.github/workflows/fleet-labels.yml)
+workflow syncs the file to every repo I own on merge and every Monday
+(`python3 fleet/sync-labels.py` previews it locally).
 
 | Label | Meaning | Who sets it |
 |---|---|---|
@@ -28,8 +32,16 @@ Same set in every repo ([`labels.json`](labels.json)):
 | `agent:working` | A builder claimed it. | Builder |
 | `agent:pause` | Leave it alone until I remove this. | Me |
 | `needs:anthony` | Blocked on a decision, account or hardware. | Any agent |
+| `priority:p1` / `p2` / `p3` | Mirrors the board's Priority, which agents can't read. | Planner proposes, I confirm |
 | `risk:low` / `risk:high` | Decides merge rules. | Planner proposes, I confirm |
 | `size:s` / `size:m` | Agents take S and M only. Bigger gets split. | Planner |
+| `type:bug` / `feature` / `chore` / `docs` | What kind of work it is. | Whoever files it |
+
+Every issue an agent files carries `proposed`, one `type:`, one `size:` and
+one `risk:` label. Dependabot keeps its own (`dependencies`, `javascript`, …).
+
+Default issue forms (task, bug, feature) are in [`issue-forms/`](issue-forms/)
+and published to `brignano/.github` by [`bootstrap-dotgithub.sh`](bootstrap-dotgithub.sh).
 
 ## An issue is a spec
 
@@ -110,8 +122,8 @@ Nothing runs on a schedule. I start a role from the repo's own Claude project
 which role; that thread reads its prompt from `roles/`. New ideas are planned in
 the Life project, and an idea that starts being built gets its own project.
 
-The builder takes the Ready item with the highest priority, then the smallest,
-then the oldest. One open builder PR per repo at a time.
+The builder takes the Ready item with the highest `priority:` label, then the
+smallest, then the oldest. One open builder PR per repo at a time.
 
 ## Hard rules for every agent
 
