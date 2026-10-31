@@ -4,3 +4,4 @@
 # Real secrets — only .env.example is committed
 secrets.env
 .env
+__pycache__/
