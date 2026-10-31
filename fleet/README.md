@@ -119,11 +119,43 @@ AGENTS.md "Planning & delegation".
 
 Nothing runs on a schedule. I start a role from the repo's own Claude project
 ("build the next ready issue", "review the open PR", "plan driftwood") and say
-which role; that thread reads its prompt from `roles/`. New ideas are planned in
-the Life project, and an idea that starts being built gets its own project.
+which role; the thread doing the work reads its prompt from `roles/`. New ideas
+are planned in the Life project, and an idea that starts being built gets its
+own project.
 
 The builder takes the Ready item with the highest `priority:` label, then the
-smallest, then the oldest. One open builder PR per repo at a time.
+smallest, then the oldest. When I just say "build the next ready issue", one
+open builder PR per repo at a time. When I name specific issues, each gets its
+own thread and they may run in parallel.
+
+## Projects orchestrate, threads do one thing
+
+Each repo's Claude project is run by its coordinator (the project chat). The
+coordinator is the **orchestrator**: it plans, routes and keeps track, but it
+does not do the work itself. Work happens in threads, **one thread per issue or
+PR**, so every thread's context is about one thing and I can run several side
+by side.
+
+- **Start a fresh thread for each issue or PR.** When I ask for work on an
+  issue, a PR, a role run on one item, or anything that will end in a PR, the
+  coordinator starts a new thread for it instead of doing it in the project
+  chat or in an existing thread. Several issues means several threads.
+- **Title the thread after the item**, in plain words plus the number, for
+  example "Fix login redirect loop (#42)". A role run that is not about one
+  item yet ("plan driftwood", "review open PRs") gets its own thread too, and
+  any issue it turns into a build gets a thread of its own.
+- **One item per thread.** If a thread uncovers new work, it files an issue
+  (`proposed`) and tells the coordinator; it does not start the new work
+  itself. Follow-ups on the same issue or its PR (review fixes, CI, my
+  comments) stay in that thread.
+- **A thread ends when its item does**: the PR merges, or the issue closes or
+  is dropped. Then the thread is resolved. It stays open while it is waiting
+  on me, a review or CI.
+- **The coordinator keeps the overview**: which threads are running, which are
+  waiting on me, and what is next. When I ask "what's going on", it answers
+  from its threads and the labels, without pulling their work into the chat.
+- Short questions that change no code (a status check, "what does X do") can
+  be answered in the project chat without a thread.
 
 ## Hard rules for every agent
 
