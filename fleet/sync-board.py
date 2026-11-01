@@ -17,9 +17,11 @@ board and the labels are kept in step in two places:
     `priority:p1/p2/p3` label. A card with no priority label keeps its value.
   - Ready: when I move a card to Status "Ready", its issue gets `agent:ready`
     and loses `proposed`. That is the signal builders act on.
+  - Ready by default: every open issue that isn't held (HOLD_LABELS, a
+    release plan, a bot's or an outsider's) gets `agent:ready` and loses `proposed`. I
+    label only the exceptions.
   - Status: every open card's Status follows its labels, so nothing sits in
-    "No status" (see STATUS below). An open issue with no workflow label gets
-    `proposed`, so untriaged work shows up in Proposed instead of nowhere.
+    "No status" (see wanted_status).
   - Claims: a claim older than CLAIM_HOURS with no open PR linked to the
     issue gets `needs:anthony` and one comment, so a stuck session can't hold
     it.
@@ -235,7 +237,21 @@ def sync_ready(owner, number, apply, repo_node_ids):
 
 CLAIM_HOURS = 24
 STALE_NOTE = "<!-- fleet-board:stale-claim -->"
-WORKFLOW_LABELS = {"proposed", "agent:ready", "agent:working", "agent:pause", "needs:anthony", "blocked"}
+# Any of these keeps an open issue from becoming agent:ready.
+HOLD_LABELS = {"agent:ready", "agent:working", "agent:pause", "needs:anthony", "blocked", "lead"}
+
+
+# Issues opened by anyone else are held: a builder treats the body as its spec.
+TRUSTED_AUTHORS = {"OWNER", "MEMBER", "COLLABORATOR"}
+
+
+def is_held(item, names):
+    return bool(
+        names & HOLD_LABELS
+        or (item.get("user") or {}).get("type") == "Bot"
+        or item.get("author_association") not in TRUSTED_AUTHORS
+        or (item.get("title") or "").lower().startswith("release plan:")
+    )
 
 
 def status_field(owner, number):
@@ -289,13 +305,13 @@ def wanted_status(names, is_pr, has_pr):
 
 
 def sync_status(owner, number, apply, repo_items):
-    """Status follows labels; untriaged issues get `proposed`; stale claims get flagged."""
+    """Unheld issues get agent:ready; Status follows labels; stale claims get flagged."""
     project_id, cards = project_items(owner, number)
     field_id, options = status_field(owner, number)
     if not field_id:
         print("Board has no Status field; leaving Status alone.")
     cutoff = datetime.now(timezone.utc) - timedelta(hours=CLAIM_HOURS)
-    moved = triaged = flagged = 0
+    moved = readied = flagged = 0
     missing_options = set()
     for content_id, node in cards.items():
         item = repo_items.get(content_id)
@@ -305,16 +321,16 @@ def sync_status(owner, number, apply, repo_items):
         repo, num = c["repository"]["name"], c["number"]
         names = {n["name"] for n in c["labels"]["nodes"]}
         is_pr = c.get("__typename") == "PullRequest"
-        is_bot = (item.get("user") or {}).get("type") == "Bot"
 
-        # Untriaged: an open issue nobody labelled. Give it `proposed` so it
-        # lands in Proposed and in the planner's and my queue.
-        if not is_pr and not is_bot and not names & (WORKFLOW_LABELS | {"lead"}):
-            print(f"  + {repo}#{num}: no workflow label -> proposed")
+        # Ready by default: anything not held is open for a builder.
+        if not is_pr and c.get("state") == "OPEN" and not is_held(item, names):
+            print(f"  + {repo}#{num}: not held -> agent:ready")
             if apply:
-                gh(f"repos/{owner}/{repo}/issues/{num}/labels", "-X", "POST", "-f", "labels[]=proposed")
-            names.add("proposed")
-            triaged += 1
+                gh(f"repos/{owner}/{repo}/issues/{num}/labels", "-X", "POST", "-f", "labels[]=agent:ready")
+                if "proposed" in names:
+                    gh(f"repos/{owner}/{repo}/issues/{num}/labels/proposed", "-X", "DELETE")
+            names = (names - {"proposed"}) | {"agent:ready"}
+            readied += 1
 
         has_pr = False
         if not is_pr and "agent:working" in names:
@@ -353,7 +369,7 @@ def sync_status(owner, number, apply, repo_items):
     for name in sorted(missing_options):
         print(f"::warning title=fleet-board::Status field has no '{name}' option; add it on the board")
     verb = "Labelled" if apply else "Would label"
-    print(f"{verb} {triaged} untriaged issue(s) proposed.")
+    print(f"{verb} {readied} unheld issue(s) agent:ready.")
     verb = "Flagged" if apply else "Would flag"
     print(f"{verb} {flagged} stale claim(s) needs:anthony.")
     verb = "Moved" if apply else "Would move"

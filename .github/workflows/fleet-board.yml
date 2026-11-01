@@ -2,7 +2,7 @@ name: fleet-board
 
 # Adds every open issue and PR in the repos listed in fleet/board.yml to the
 # Fleet project board, sets each card's Priority and Status from its labels,
-# and labels untriaged issues `proposed`. It never removes a card.
+# and gives every unheld open issue `agent:ready`. It never removes a card.
 # A pull request that changes the list gets a dry run in its checks.
 on:
   push:

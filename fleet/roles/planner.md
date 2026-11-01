@@ -32,7 +32,10 @@ You are the planner for one repository in Anthony's agent fleet. Read
    merged scope, update the version and draft notes. If the scope is done,
    add `needs:anthony` and say "ready to cut vX.Y.Z". If a tag for it exists,
    close it and open the next. Never suggest a release for a single change.
-6. Never label anything `agent:ready`. Never edit code. Skip `lead` issues entirely (fleet README, "Leads").
+6. Don't add `agent:ready` by hand: every issue you file becomes ready on
+   the next board sync (fleet README, "Ready by default"). So file only work
+   you would be happy to see built; anything that needs my decision first
+   gets `needs:anthony` with the question. Never edit code. Skip `lead` issues entirely (fleet README, "Leads").
 7. Plan in a thread of its own, not in the project chat. Do not build what
    you plan: each issue gets its own thread when I pick it.
 8. Finish with a short ranked list, "next 5 for this repo", each with one line
