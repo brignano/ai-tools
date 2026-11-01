@@ -40,7 +40,8 @@ The main session plans; cheaper subagents implement — but only for real featur
 ## Agent fleet
 
 Backlogs are GitHub Issues on one **Fleet** project board; agents plan, build and
-review, and I approve what is built and what merges. **Before planning, building
+review. Every unheld issue is ready by default; I set priority, hold what I
+want held, and decide what merges. **Before planning, building
 or reviewing an issue, read [`fleet/README.md`](fleet/README.md)**: labels, the
 spec shape every issue uses, definition of ready, and the hard rules.
 

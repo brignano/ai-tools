@@ -160,7 +160,10 @@ otherwise. I don't label issues to approve them; I only label the exceptions.
   - `blocked`: waiting on other work;
   - `agent:pause`: I said leave it;
   - `agent:working`: already claimed;
-  - `lead`, a `Release plan:` issue, or one opened by a bot.
+  - `lead`, a `Release plan:` issue, or one opened by a bot;
+  - opened by someone outside the repo (not me or a collaborator), because a
+    builder treats the issue body as its spec. I read it and remove nothing:
+    I add `agent:ready` myself if I want it built.
 - When the hold comes off (I answer, the blocker closes, I remove the
   pause), the issue becomes `agent:ready` on the next sync.
 - Priority decides the order, so the only call I make on most issues is its
@@ -185,8 +188,8 @@ a card to **Ready**, which adds `agent:ready`. A held issue stays held until its
 | `agent:working` and an open PR links it | In review |
 | `agent:working` | Building |
 | `agent:ready` | Ready |
-| `proposed` | Proposed |
 | no workflow label at all, or `proposed` | gets `agent:ready` (see "Ready by default"), then Ready |
+| `proposed` on a held issue (bot, outsider or release plan) | Proposed |
 | `agent:pause` or `lead` | left where I put it |
 | closed | Done (GitHub's built-in workflow) |
 

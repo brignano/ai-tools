@@ -18,7 +18,7 @@ board and the labels are kept in step in two places:
   - Ready: when I move a card to Status "Ready", its issue gets `agent:ready`
     and loses `proposed`. That is the signal builders act on.
   - Ready by default: every open issue that isn't held (HOLD_LABELS, a
-    release plan, or a bot's) gets `agent:ready` and loses `proposed`. I
+    release plan, a bot's or an outsider's) gets `agent:ready` and loses `proposed`. I
     label only the exceptions.
   - Status: every open card's Status follows its labels, so nothing sits in
     "No status" (see wanted_status).
@@ -241,10 +241,15 @@ STALE_NOTE = "<!-- fleet-board:stale-claim -->"
 HOLD_LABELS = {"agent:ready", "agent:working", "agent:pause", "needs:anthony", "blocked", "lead"}
 
 
+# Issues opened by anyone else are held: a builder treats the body as its spec.
+TRUSTED_AUTHORS = {"OWNER", "MEMBER", "COLLABORATOR"}
+
+
 def is_held(item, names):
     return bool(
         names & HOLD_LABELS
         or (item.get("user") or {}).get("type") == "Bot"
+        or item.get("author_association") not in TRUSTED_AUTHORS
         or (item.get("title") or "").lower().startswith("release plan:")
     )
 
