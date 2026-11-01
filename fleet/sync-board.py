@@ -338,8 +338,9 @@ def sync_status(owner, number, apply, repo_items):
             continue
         want = wanted_status(names, is_pr, has_pr)
         have = (node.get("status") or {}).get("name") or ""
-        # Only open items get here, so a card in Done was reopened: move it too.
-        if not want or have.lower() == want.lower():
+        # A card in Done whose issue is open again was reopened: move it too.
+        # One closed since the REST fetch stays in Done.
+        if c.get("state") != "OPEN" or not want or have.lower() == want.lower():
             continue
         option = options.get(want.lower())
         if not option:

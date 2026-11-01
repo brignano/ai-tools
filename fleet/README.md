@@ -222,7 +222,7 @@ leaving out empty parts:
    them, and offer to close the ones it finished) and issues with no priority (propose one).
 
 It is a short list with issue links, not a wall of text. It may close an
-issue that looks done, or set a missing priority, only after I say yes.
+issue that is possibly done, or set a missing priority, only after I say yes.
 
 ## Claiming an issue
 
