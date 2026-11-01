@@ -382,7 +382,8 @@ A PR **may be merged by the builder** only when every one of these holds:
 
 - The repo is listed under `auto` in [`merge.yml`](merge.yml). I add repos
   there; agents never do.
-- Its issue carries `agent:ready` (I approved the spec), `risk:low`, and
+- Its issue was `agent:ready` (I approved the spec) when it was claimed, so it
+  now carries `agent:working` and a claim comment, plus `risk:low` and
   `size:s` or `size:m`.
 - CI is green and the latest `Reviewer: APPROVE` comment names the current
   head SHA. No unresolved review threads, no `agent:pause` or `needs:anthony`.

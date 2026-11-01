@@ -247,18 +247,20 @@ def status_field(owner, number):
 def claim_state(owner, repo, num):
     """When agent:working was last added, and whether an open PR links the issue."""
     pages = gh(f"repos/{owner}/{repo}/issues/{num}/timeline?per_page=100", "--paginate", "--slurp")
-    claimed, has_pr = None, False
+    claimed, has_pr, noted = None, False, False
     for event in (e for page in pages for e in page):
         kind = event.get("event")
         if kind == "labeled" and (event.get("label") or {}).get("name") == "agent:working":
-            claimed = event["created_at"]
+            claimed, noted = event["created_at"], False
+        elif kind == "commented" and STALE_NOTE in (event.get("body") or ""):
+            noted = True  # already flagged since the latest claim
         elif kind == "cross-referenced":
             src = (event.get("source") or {}).get("issue") or {}
             if "pull_request" in src and src.get("state") == "open":
                 has_pr = True
     if claimed:
         claimed = datetime.fromisoformat(claimed.replace("Z", "+00:00"))
-    return claimed, has_pr
+    return claimed, has_pr, noted
 
 
 def sync_working(owner, number, apply, repo_node_ids):
@@ -286,8 +288,8 @@ def sync_working(owner, number, apply, repo_node_ids):
             moved += 1
         if c.get("__typename") == "PullRequest" or "needs:anthony" in names:
             continue
-        claimed, has_pr = claim_state(owner, repo, num)
-        if not claimed or claimed > cutoff or has_pr:
+        claimed, has_pr, noted = claim_state(owner, repo, num)
+        if not claimed or claimed > cutoff or has_pr or noted:
             continue
         hours = int((datetime.now(timezone.utc) - claimed).total_seconds() // 3600)
         print(f"  ! {repo}#{num}: claimed {hours}h ago, no open PR -> needs:anthony")
