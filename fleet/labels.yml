@@ -27,11 +27,15 @@ labels:
     color: 003e82 # --i-pressed
     description: Agents leave this alone until Anthony removes it
 
-  # Blocked on me: orange (--chart-2). Alone in its group so it stands out.
+  # Blocked: orange. needs:anthony (on me) is the bright one so it stands out;
+# blocked (on another issue) is darker.
   - name: needs:anthony
     color: eb6834 # --chart-2
     description: Blocked on a decision, account or hardware from Anthony
     aliases: [needs-you]
+  - name: blocked
+    color: 9a4a24 # not yet checked against brignano/design tokens
+    description: Waiting on another issue or PR; the body says "Blocked by ..."
 
   # Priority: amber (--attention family). Mirrors the board's Priority field,
   # because agents can read labels but not the board.

@@ -13,17 +13,18 @@ Plan and reasoning: the "Agent fleet plan" doc in the AI Assistant project.
 - **Work items** are GitHub Issues in the repo that owns the code.
 - **The board** is one GitHub Project, [**Fleet**](https://github.com/users/brignano/projects/1),
   across every fleet repo. Status columns: Proposed, Ready, Building, In review,
-  Done. Priority: P1, P2, P3. It is my view. Agents can't read or write it
+  Blocked, Done. Priority: P1, P2, P3. It is my view. Agents can't read or write it
   (cloud sessions only reach repo-scoped APIs), so **labels are what agents act
-  on**, and GitHub's built-in project workflows move the cards.
+  on**, and `fleet-board` moves the cards to match them.
 - **What's on the board** is listed in [`board.yml`](board.yml): driftwood,
   guidebook, sites, brignano.io, homelab, design, ai-tools and breakeven. The
   [`fleet-board`](../.github/workflows/fleet-board.yml) workflow adds every
   open issue and PR in those repos every 15 minutes, fills the board's Priority
   field from each card's `priority:` label, and gives `agent:ready` (dropping
-  `proposed`) to any card I move to **Ready**. It moves `agent:working`
-  cards to **Building** and flags stale claims (see "Claiming an issue"). It
-  never removes a card,
+  `proposed`) to any card I move to **Ready**. It sets every open card's
+  **Status from its labels** (see "Status, priority and blocked"), labels
+  untriaged issues `proposed`, and flags stale claims (see "Claiming an
+  issue"). It never removes a card,
   using the `FLEET_PROJECT_TOKEN` secret: a classic token with `project` and
   `repo` scopes. A repo earns a spot when agents ship work there and it has a
   real backlog. **life, people and ideas never go on the board.** The
@@ -69,14 +70,15 @@ workflow syncs the file to every repo I own on merge and every Monday
 | `agent:ready` | Spec approved. A builder may take it. | **Only me** (or I move the card to Ready) |
 | `agent:working` | A session claimed it; every other session skips it. | The session that claims it |
 | `agent:pause` | Leave it alone until I remove this. | Me |
-| `needs:anthony` | Blocked on a decision, account or hardware. | Any agent |
-| `priority:p1` / `p2` / `p3` | Source of truth for priority; `fleet-board` copies it to the board's Priority field. | Planner proposes, I confirm |
+| `needs:anthony` | Blocked on a decision, account or hardware from me. | Any agent |
+| `blocked` | Waiting on another issue or PR, named in a `Blocked by owner/repo#N` line in the body. | Any agent |
+| `priority:p1` / `p2` / `p3` | Source of truth for priority; `fleet-board` copies it to the board's Priority field. Every open issue has one. | Whoever files it proposes, I confirm |
 | `risk:low` / `risk:high` | Decides merge rules. | Planner proposes, I confirm |
 | `size:s` / `size:m` | Agents take S and M only. Bigger gets split. | Planner |
 | `type:bug` / `feature` / `chore` / `docs` | What kind of work it is. | Whoever files it |
 
-Every issue an agent files carries `proposed`, one `type:`, one `size:` and
-one `risk:` label. Dependabot keeps its own (`dependencies`, `javascript`, …).
+Every issue an agent files carries `proposed`, one `priority:`, one `type:`,
+one `size:` and one `risk:` label. Dependabot keeps its own (`dependencies`, `javascript`, …).
 
 Default issue forms (task, bug, feature) are in [`issue-forms/`](issue-forms/)
 and published to `brignano/.github` by [`bootstrap-dotgithub.sh`](bootstrap-dotgithub.sh).
@@ -145,6 +147,83 @@ risk labels, and my `agent:ready`. Missing any one, a builder skips it.
 checks green, the review gates passed (see "Review and merge"), and the PR
 merged, by me or, where the merge rules allow it, by the builder.
 
+## Status, priority and blocked
+
+I should be able to open the board, or ask any project "what's next", and see
+at a glance what is moving, what is waiting on me and what comes next. So
+every open issue carries enough labels to say all three, and the board
+follows the labels.
+
+**Status follows labels.** `fleet-board` sets each open card's Status every
+15 minutes. Labels win over where a card sits; the one exception is dragging
+a card to **Ready**, which adds `agent:ready`.
+
+| Labels on the issue | Status |
+|---|---|
+| `blocked` or `needs:anthony` (beats everything below) | Blocked |
+| `agent:working` and an open PR links it | In review |
+| `agent:working` | Building |
+| `agent:ready` | Ready |
+| `proposed` | Proposed |
+| no workflow label at all | gets `proposed`, then Proposed |
+| `agent:pause` or `lead` | left where I put it |
+| closed | Done (GitHub's built-in workflow) |
+
+Open PRs sit in In review. To unblock, remove the label; to un-ready, remove
+`agent:ready`. Dragging a card anywhere but Ready gets undone on the next sync.
+
+**Every open issue has a priority.** Whoever files it proposes one; I change
+it when I disagree. Priorities have to rank, or they say nothing:
+
+- `priority:p1`: what this repo should do next. **At most 2 open per repo.**
+  Adding a third means moving one down, in the same change.
+- `priority:p2`: after that, this month.
+- `priority:p3`: someday. Fine to have many, but a repo where every issue is
+  P3 has no plan; its planner run fixes that first.
+
+**Blocked has two kinds**, so I can tell what I owe from what is just queued:
+
+- `needs:anthony`: only a person can move it (a decision, account, secret,
+  hardware or a merge). The issue or PR says, in its last comment, exactly
+  what I need to do, in one line.
+- `blocked`: it waits on other work. The body has a `Blocked by
+  owner/repo#N` line. When that closes, whoever closes it (or the next
+  planner run) removes `blocked` from the issues it held up.
+
+Something blocked on me *and* other work gets both.
+
+**Backlog health.** Every Sunday, before the review, the
+[`fleet-backlog-health`](../.github/workflows/fleet-backlog-health.yml)
+workflow writes one "Fleet backlog health" issue in ai-tools, edited in
+place each week. Per repo it lists: issues that look done (a merged PR
+mentions them, no open PR does), no priority, more than 2 P1s, `blocked`
+with no "Blocked by" line, and idle for 30 days. It never changes the issues
+themselves. The planner works through its repo's section first on every run,
+and the Sunday review reads the whole thing.
+
+## "What's next"
+
+When I ask a project "what's next", "what should I work on", "what's in the
+backlog" or "what's going on", the coordinator answers from GitHub, not from
+memory of past threads. It reads every open issue and PR in its repo (and
+its repo's section of "Fleet backlog health"), then answers in this order,
+leaving out empty parts:
+
+1. **Waiting on you**: `needs:anthony` issues and PRs, each with the one
+   thing I need to do. PRs ready to merge first.
+2. **In progress**: `agent:working` issues, with their thread or PR.
+3. **Ready to build**: `agent:ready`, by priority, then size, then age. Offer
+   to start the top one.
+4. **Pick next**: the top 3 `proposed` issues by priority, with one line each
+   on why, asking me which to mark `agent:ready`. If nothing is `agent:ready`,
+   say so plainly: nothing can be built until I pick.
+5. **Blocked**: `blocked` issues and what they wait on.
+6. **Tidy-up**: issues that look done (offer to close them, with the PR that
+   did it) and issues with no priority (propose one).
+
+It is a short list with issue links, not a wall of text. It may close an
+issue that looks done, or set a missing priority, only after I say yes.
+
 ## Claiming an issue
 
 Several projects pick up `agent:ready` issues, so a session claims an issue
@@ -164,7 +243,7 @@ before it works on it. Without the claim two sessions can build the same thing.
   The session link is the `https://claude.ai/code/session_…` URL from your
   commit attribution; if you don't have one, use the project thread link.
 - **Link the PR to the issue** (`Closes #N` in the body) as soon as it opens,
-  so the claim shows progress.
+  so the claim shows progress (see "Closing issues").
 - **Release a claim you drop**: if you stop without a PR (spec question,
   blocked, I said stop), remove `agent:working`, comment why, and add
   `needs:anthony` or put `agent:ready` back as the case needs. Never leave a
@@ -174,6 +253,27 @@ before it works on it. Without the claim two sessions can build the same thing.
   to the issue gets `needs:anthony` and one comment, so a stuck session can't
   block it. To release it, I remove `agent:working` and `needs:anthony` and
   add `agent:ready` back.
+
+## Closing issues
+
+An issue closes when its work merges, without anyone remembering to do it.
+
+- **Every PR that works on an issue links it in its body**, whether or not a
+  builder run started it:
+  - `Closes #N` (or `Closes owner/repo#N` across repos) when merging it
+    finishes the issue. GitHub closes the issue on merge.
+  - `Part of #N` when it does only some of the work. The PR body then says
+    what is left, and the issue gets a comment saying the same.
+  A bare `#N` is not enough: it links without closing, so the issue sits open
+  after the work is done.
+- **The reviewer checks it**: a PR that mentions an issue without `Closes`
+  or `Part of`, or says `Closes` while acceptance boxes are unticked, gets
+  `CHANGES`.
+- **Done any other way** (fixed by a commit with no issue link, made
+  obsolete, duplicated): close it with a one-line comment saying why, as
+  `completed` or `not planned`.
+- The Sunday backlog health issue lists anything that still slips through as
+  "Looks done", and "what's next" offers to close it.
 
 ## Roles and models
 
@@ -222,8 +322,9 @@ by side.
   is dropped. Then the thread is resolved. It stays open while it is waiting
   on me, a review or CI.
 - **The coordinator keeps the overview**: which threads are running, which are
-  waiting on me, and what is next. When I ask "what's going on", it answers
-  from its threads and the labels, without pulling their work into the chat.
+  waiting on me, and what is next. When I ask "what's going on" or "what's
+  next", it answers as the "What's next" section says, from the issues, its threads
+  and the labels, without pulling their work into the chat.
 - Short questions that change no code (a status check, "what does X do") can
   be answered in the project chat without a thread.
 
@@ -248,7 +349,8 @@ in the right repo is the message.
   has the why. Add `needs:anthony` only when a person must act first: an
   account, a secret, hardware, or a decision between options.
 - **If your work waits on it**, say so where your work lives: a line on your
-  issue or PR, `Blocked by brignano/design#12`, and leave your thread open.
+  issue or PR, `Blocked by brignano/design#12`, add `blocked` to your issue,
+  and leave your thread open.
   Don't build a workaround that the other repo's fix will undo.
 - **Tell me in one line**, in the thread: "Filed brignano/design#12 for the
   design project." That's all. The other project's planner picks it up like

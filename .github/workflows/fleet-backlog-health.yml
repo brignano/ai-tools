@@ -1,0 +1,53 @@
+name: fleet-backlog-health
+
+# Weekly check of every board repo's open issues: looks done, no priority,
+# too many P1, blocked with no reason, idle. Writes one "Fleet backlog health"
+# issue in this repo and edits it each week. It never touches the issues it
+# lists. A pull request that changes the check gets a print-only run.
+on:
+  pull_request:
+    paths: [fleet/backlog-health.py, fleet/board.yml, .github/workflows/fleet-backlog-health.yml]
+  schedule:
+    - cron: "0 11 * * 0" # Sundays 11:00 UTC, before the Sunday review
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fleet-backlog-health
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the token is set
+        id: token
+        env:
+          TOKEN: ${{ secrets.FLEET_PROJECT_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::warning::FLEET_PROJECT_TOKEN is not set; skipping."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Check
+        if: steps.token.outputs.ok == 'true'
+        env:
+          # The board token: classic, `repo` scope, so it can read every board
+          # repo's issues and write the health issue here.
+          GH_TOKEN: ${{ secrets.FLEET_PROJECT_TOKEN }}
+          APPLY: ${{ github.event_name != 'pull_request' }}
+        run: |
+          set -o pipefail
+          pip install --quiet pyyaml
+          if [ "$APPLY" = "true" ]; then
+            python3 fleet/backlog-health.py --apply | tee summary.md
+          else
+            python3 fleet/backlog-health.py | tee summary.md
+          fi
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
