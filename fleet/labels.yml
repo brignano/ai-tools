@@ -64,9 +64,10 @@ labels:
     color: 4a3aa7 # --chart-7
     description: Needs a short proposal in proposals/
 
-  # Type: green (--success family).
+  # Type: green (--success family), except bug, which is red so it stands out.
+  # Bug uses --danger-ink (light), one step darker than risk:high's --danger.
   - name: type:bug
-    color: 245740 # --success-ink
+    color: 8a3722 # --danger-ink
     description: Something is broken
     aliases: [bug]
   - name: type:feature
