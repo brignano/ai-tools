@@ -5,8 +5,8 @@ Finds the open issues that make the backlog hard to read, and writes them to
 one issue in brignano/ai-tools titled "Fleet backlog health" (created once,
 then edited in place each week, so it never piles up notifications):
 
-  - Looks done: a merged PR mentions it and no open PR does. Close it or
-    say what is left. PRs that say "Part of #N" don't count.
+  - Possibly done: a merged PR mentions it and no open PR does. Close it
+    or say what is left. PRs that say "Part of #N" don't count.
   - No priority: no `priority:` label.
   - Too many P1: more than MAX_P1 open `priority:p1` issues in one repo.
   - Blocked with no reason: `blocked` but no "Blocked by" line in the body.
@@ -70,8 +70,9 @@ def check_repo(owner, repo, now):
     issues = [
         i for i in paged(f"repos/{owner}/{repo}/issues?state=open&per_page=100")
         if "pull_request" not in i and (i.get("user") or {}).get("type") != "Bot"
+        and MARKER not in (i.get("body") or "")  # the health issue itself
     ]
-    found = {"Looks done": [], "No priority": [], "Too many P1": [], "Blocked with no reason": [], "Idle": []}
+    found = {"Possibly done": [], "No priority": [], "Too many P1": [], "Blocked with no reason": [], "Idle": []}
     p1 = []
     for i in issues:
         names = {l["name"] for l in i["labels"]}
@@ -81,7 +82,7 @@ def check_repo(owner, repo, now):
         merged, still_open = mentioning_prs(owner, repo, i["number"])
         if merged and not still_open:
             last = max(merged, key=lambda p: p["pull_request"]["merged_at"])
-            found["Looks done"].append(f"{ref} (merged {last['html_url']})")
+            found["Possibly done"].append(f"{ref} (merged {last['html_url']})")
         if not any(n.startswith("priority:") for n in names):
             found["No priority"].append(ref)
         if "priority:p1" in names:
@@ -132,6 +133,8 @@ def write_issue(owner, body):
         made = gh(
             f"repos/{owner}/{HEALTH_REPO}/issues", "-X", "POST",
             "-f", f"title={HEALTH_TITLE}", "-f", f"body={body}", "-f", "labels[]=type:chore",
+            # agent:pause keeps it out of the board sync's triage and every queue.
+            "-f", "labels[]=agent:pause",
         )
         print(f"Opened {made['html_url']}")
 

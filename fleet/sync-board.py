@@ -338,7 +338,8 @@ def sync_status(owner, number, apply, repo_items):
             continue
         want = wanted_status(names, is_pr, has_pr)
         have = (node.get("status") or {}).get("name") or ""
-        if not want or have.lower() in (want.lower(), "done"):
+        # Only open items get here, so a card in Done was reopened: move it too.
+        if not want or have.lower() == want.lower():
             continue
         option = options.get(want.lower())
         if not option:

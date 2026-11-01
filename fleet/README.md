@@ -195,8 +195,8 @@ Something blocked on me *and* other work gets both.
 **Backlog health.** Every Sunday, before the review, the
 [`fleet-backlog-health`](../.github/workflows/fleet-backlog-health.yml)
 workflow writes one "Fleet backlog health" issue in ai-tools, edited in
-place each week. Per repo it lists: issues that look done (a merged PR
-mentions them, no open PR does), no priority, more than 2 P1s, `blocked`
+place each week. Per repo it lists: issues that are possibly done (a merged
+PR mentions them, no open PR does), no priority, more than 2 P1s, `blocked`
 with no "Blocked by" line, and idle for 30 days. It never changes the issues
 themselves. The planner works through its repo's section first on every run,
 and the Sunday review reads the whole thing.
@@ -218,8 +218,8 @@ leaving out empty parts:
    on why, asking me which to mark `agent:ready`. If nothing is `agent:ready`,
    say so plainly: nothing can be built until I pick.
 5. **Blocked**: `blocked` issues and what they wait on.
-6. **Tidy-up**: issues that look done (offer to close them, with the PR that
-   did it) and issues with no priority (propose one).
+6. **Tidy-up**: issues that are possibly done (check the PR that mentions
+   them, and offer to close the ones it finished) and issues with no priority (propose one).
 
 It is a short list with issue links, not a wall of text. It may close an
 issue that looks done, or set a missing priority, only after I say yes.
@@ -273,7 +273,7 @@ An issue closes when its work merges, without anyone remembering to do it.
   obsolete, duplicated): close it with a one-line comment saying why, as
   `completed` or `not planned`.
 - The Sunday backlog health issue lists anything that still slips through as
-  "Looks done", and "what's next" offers to close it.
+  "Possibly done", and "what's next" offers to close it.
 
 ## Roles and models
 

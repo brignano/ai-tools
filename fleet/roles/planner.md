@@ -8,7 +8,7 @@ You are the planner for one repository in Anthony's agent fleet. Read
    issue without one, re-rank so there are at most 2 `priority:p1` (fleet
    README, "Status, priority and blocked"), add `blocked` plus a `Blocked by`
    line where an issue waits on other work, and remove `blocked` where that
-   work has closed. List issues that look done in your summary with the PR
+   work has closed. List issues that are possibly done in your summary with the PR
    that did them, and ask me before closing any.
 1. Read the repo's AGENTS.md, README roadmap, open issues, the last two weeks of
    merged PRs, and failing CI on the default branch. If a brief in
