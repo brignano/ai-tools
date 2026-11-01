@@ -21,7 +21,9 @@ Plan and reasoning: the "Agent fleet plan" doc in the AI Assistant project.
   [`fleet-board`](../.github/workflows/fleet-board.yml) workflow adds every
   open issue and PR in those repos every 15 minutes, fills the board's Priority
   field from each card's `priority:` label, and gives `agent:ready` (dropping
-  `proposed`) to any card I move to **Ready**. It never removes a card,
+  `proposed`) to any card I move to **Ready**. It moves `agent:working`
+  cards to **Building** and flags stale claims (see "Claiming an issue"). It
+  never removes a card,
   using the `FLEET_PROJECT_TOKEN` secret: a classic token with `project` and
   `repo` scopes. A repo earns a spot when agents ship work there and it has a
   real backlog. **life, people and ideas never go on the board.** The
@@ -65,7 +67,7 @@ workflow syncs the file to every repo I own on merge and every Monday
 |---|---|---|
 | `proposed` | An agent suggested it. Nobody works on it. | Planner |
 | `agent:ready` | Spec approved. A builder may take it. | **Only me** (or I move the card to Ready) |
-| `agent:working` | A builder claimed it. | Builder |
+| `agent:working` | A session claimed it; every other session skips it. | The session that claims it |
 | `agent:pause` | Leave it alone until I remove this. | Me |
 | `needs:anthony` | Blocked on a decision, account or hardware. | Any agent |
 | `priority:p1` / `p2` / `p3` | Source of truth for priority; `fleet-board` copies it to the board's Priority field. | Planner proposes, I confirm |
@@ -142,6 +144,36 @@ risk labels, and my `agent:ready`. Missing any one, a builder skips it.
 **Definition of done:** every acceptance box ticked in the PR body, the repo's
 checks green, the review gates passed (see "Review and merge"), and the PR
 merged, by me or, where the merge rules allow it, by the builder.
+
+## Claiming an issue
+
+Several projects pick up `agent:ready` issues, so a session claims an issue
+before it works on it. Without the claim two sessions can build the same thing.
+
+- **Skip claimed issues.** Never start an issue labelled `agent:working`, even
+  if I named it, unless I said to take over that claim. Say it is claimed and
+  link the claim comment instead.
+- **Claim before any work.** Re-read the issue's labels first (another
+  session may have just claimed it). Then, in this order: add `agent:working`,
+  remove `agent:ready`, and comment:
+
+  ```markdown
+  Claimed by <session link> (<thread title>).
+  ```
+
+  The session link is the `https://claude.ai/code/session_…` URL from your
+  commit attribution; if you don't have one, use the project thread link.
+- **Link the PR to the issue** (`Closes #N` in the body) as soon as it opens,
+  so the claim shows progress.
+- **Release a claim you drop**: if you stop without a PR (spec question,
+  blocked, I said stop), remove `agent:working`, comment why, and add
+  `needs:anthony` or put `agent:ready` back as the case needs. Never leave a
+  silent claim.
+- **The board follows the claim.** `fleet-board` moves an `agent:working`
+  card to **Building**. A claim more than 24 hours old with no open PR linked
+  to the issue gets `needs:anthony` and one comment, so a stuck session can't
+  block it. To release it, I remove `agent:working` and `needs:anthony` and
+  add `agent:ready` back.
 
 ## Roles and models
 
@@ -350,7 +382,8 @@ A PR **may be merged by the builder** only when every one of these holds:
 
 - The repo is listed under `auto` in [`merge.yml`](merge.yml). I add repos
   there; agents never do.
-- Its issue carries `agent:ready` (I approved the spec), `risk:low`, and
+- Its issue was `agent:ready` (I approved the spec) when it was claimed, so it
+  now carries `agent:working` and a claim comment, plus `risk:low` and
   `size:s` or `size:m`.
 - CI is green and the latest `Reviewer: APPROVE` comment names the current
   head SHA. No unresolved review threads, no `agent:pause` or `needs:anthony`.
@@ -466,7 +499,9 @@ only ever handled by me replying and closing.
 - Never add a repo to `merge.yml`, and never skip, disable or weaken a check or test to get a PR through the gates.
 - Never bump a version outside a release I agreed to cut (see "Releases are planned").
 - Never touch secrets or `.env` files, and never widen your own permissions.
-- Never set `agent:ready` yourself, and never work on, label or close a `lead` issue.
+- Never set `agent:ready` yourself (putting it back when you release your own
+  claim is the one exception), and never work on, label or close a `lead` issue.
+- Never work on an issue another session has claimed (`agent:working`).
 - Never re-plan a Ready issue. If the spec is wrong, comment the question, add
   `needs:anthony`, remove `agent:working`, and stop.
 - Respect `agent:pause` on an issue and any repo rule in its own AGENTS.md;

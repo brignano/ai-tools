@@ -11,7 +11,10 @@ You are the builder for one repository in Anthony's agent fleet. Read
 2. Pick the open issue labelled `agent:ready`, without `agent:working`,
    `agent:pause`, `needs:anthony` or `lead`, by `priority:` label (p1 first), then smallest size,
    then oldest. None: stop and say so.
-3. Add `agent:working`. Read the issue, any linked proposal in `proposals/`, and the repo's AGENTS.md.
+3. Claim it (fleet README, "Claiming an issue"): re-check it has no
+   `agent:working`, then add `agent:working`, remove `agent:ready`, and
+   comment `Claimed by <session link>`. If I named an issue that is already
+   claimed, stop and tell me. Read the issue, any linked proposal in `proposals/`, and the repo's AGENTS.md.
 4. Implement exactly the spec on a new branch. Delegate concrete steps to the
    `implementer` agent and long test runs to `test-runner`. Follow the repo's
    own skills (for example driftwood's `ship-it`). A design or TSD goes in

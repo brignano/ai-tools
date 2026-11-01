@@ -22,7 +22,7 @@ labels:
     description: Spec approved by Anthony; a builder may take it
   - name: agent:working
     color: 87b5f3 # --seq-2
-    description: Claimed by a builder
+    description: Claimed by a session; others skip it
   - name: agent:pause
     color: 003e82 # --i-pressed
     description: Agents leave this alone until Anthony removes it
