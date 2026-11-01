@@ -1,0 +1,20 @@
+# Repos where a builder may merge its own PR once every gate in fleet/README.md
+# "Review and merge" -> "Who merges" holds. Everything else waits for Anthony.
+#
+# Only Anthony adds a repo here. Agents never edit this file.
+# A repo that deploys on merge (merging is shipping to users) should earn its
+# spot after a couple of weeks of clean reviews elsewhere.
+# Added Oct 31 2026 (Anthony's pick): repos that don't ship to users on merge.
+# brignano.io, sites and homelab deploy on merge; they stay manual until the
+# reviewer has a couple of clean weeks here.
+auto:
+  - driftwood
+  - guidebook
+  - design
+  - breakeven
+
+# Never auto-merge, whatever the list above says.
+never:
+  - life
+  - people
+  - ideas

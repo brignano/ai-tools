@@ -36,7 +36,8 @@ take the cheap, well-defined work:
 | `implementer` | Sonnet | One concrete step of an approved plan, then its tests |
 | `Explore` | Haiku | Overrides the built-in search agent so routine searches run cheap |
 | `test-runner` | Haiku | Runs checks, returns only the failures |
+| `reviewer` | Opus | Independent, read-only pre-merge review of one fleet PR (fleet README, "Review and merge") |
 
 Keep this list short. Every agent's `description` is loaded into every session,
-and overlapping agents make delegation worse, not better. Reviews and debugging
-stay on the main model.
+and overlapping agents make delegation worse, not better. Debugging stays on the main model; PR
+reviews go to `reviewer` so they aren't anchored on the builder's context.

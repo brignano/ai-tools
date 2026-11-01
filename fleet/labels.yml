@@ -81,6 +81,11 @@ labels:
     description: Documentation only
     aliases: [documentation]
 
+  # Leads: teal. Inbound leads, never agent work. Own colour, not in any group above.
+  - name: lead
+    color: 1f7a8c # not yet checked against brignano/design tokens
+    description: Inbound lead; open until someone has replied
+
   # Dependabot: neutral (--n-200). Dependabot creates these by name on its
   # PRs, so they keep their names and just get one quiet colour. The language
   # ones are only recoloured where they already exist (only_if_present).
