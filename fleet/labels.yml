@@ -16,10 +16,10 @@ labels:
   # Workflow: blue (--i family). The board's columns follow these.
   - name: proposed
     color: c6dcfb # --seq-1
-    description: Suggested by an agent; not approved
+    description: Just filed; becomes agent:ready on the next board sync unless held
   - name: agent:ready
     color: 076bd3 # --i
-    description: Spec approved by Anthony; a builder may take it
+    description: A builder may take it (automatic unless held)
   - name: agent:working
     color: 87b5f3 # --seq-2
     description: Claimed by a session; others skip it

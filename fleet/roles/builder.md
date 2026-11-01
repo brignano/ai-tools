@@ -9,7 +9,7 @@ You are the builder for one repository in Anthony's agent fleet. Read
 1. If I did not name an issue and this repo already has an open PR from a
    builder, stop: one at a time.
 2. Pick the open issue labelled `agent:ready`, without `agent:working`,
-   `agent:pause`, `needs:anthony` or `lead`, by `priority:` label (p1 first), then smallest size,
+   `agent:pause`, `needs:anthony`, `blocked` or `lead`, by `priority:` label (p1 first), then smallest size,
    then oldest. None: stop and say so.
 3. Claim it (fleet README, "Claiming an issue"): re-check it has no
    `agent:working`, then add `agent:working`, remove `agent:ready`, and

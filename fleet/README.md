@@ -20,10 +20,10 @@ Plan and reasoning: the "Agent fleet plan" doc in the AI Assistant project.
   guidebook, sites, brignano.io, homelab, design, ai-tools and breakeven. The
   [`fleet-board`](../.github/workflows/fleet-board.yml) workflow adds every
   open issue and PR in those repos every 15 minutes, fills the board's Priority
-  field from each card's `priority:` label, and gives `agent:ready` (dropping
-  `proposed`) to any card I move to **Ready**. It sets every open card's
-  **Status from its labels** (see "Status, priority and blocked"), labels
-  untriaged issues `proposed`, and flags stale claims (see "Claiming an
+  field from each card's `priority:` label, gives `agent:ready` (dropping
+  `proposed`) to every open issue that isn't held (see "Ready by default"),
+  sets every open card's **Status from its labels** (see "Status, priority
+  and blocked"), and flags stale claims (see "Claiming an
   issue"). It never removes a card,
   using the `FLEET_PROJECT_TOKEN` secret: a classic token with `project` and
   `repo` scopes. A repo earns a spot when agents ship work there and it has a
@@ -66,10 +66,10 @@ workflow syncs the file to every repo I own on merge and every Monday
 
 | Label | Meaning | Who sets it |
 |---|---|---|
-| `proposed` | An agent suggested it. Nobody works on it. | Planner |
-| `agent:ready` | Spec approved. A builder may take it. | **Only me** (or I move the card to Ready) |
+| `proposed` | Just filed. The next board sync turns it into `agent:ready` unless it is held. | Whoever files it |
+| `agent:ready` | A builder may take it. Every open issue that isn't held gets it automatically. | `fleet-board` (see "Ready by default") |
 | `agent:working` | A session claimed it; every other session skips it. | The session that claims it |
-| `agent:pause` | Leave it alone until I remove this. | Me |
+| `agent:pause` | Leave it alone until I remove this. Holds an issue back from `agent:ready`. | Me |
 | `needs:anthony` | Blocked on a decision, account or hardware from me. | Any agent |
 | `blocked` | Waiting on another issue or PR, named in a `Blocked by owner/repo#N` line in the body. | Any agent |
 | `priority:p1` / `p2` / `p3` | Source of truth for priority; `fleet-board` copies it to the board's Priority field. Every open issue has one. | Whoever files it proposes, I confirm |
@@ -140,12 +140,33 @@ Index shape:
 | [AWS provider](aws-provider.md) | proposed | #41 | |
 ```
 
-**Definition of ready:** problem, acceptance criteria, how to verify, size and
-risk labels, and my `agent:ready`. Missing any one, a builder skips it.
+**Definition of ready:** open, `agent:ready` (which is automatic, see "Ready
+by default"), and not claimed. If the spec is too thin to build from, the
+builder doesn't guess: it comments the question, adds `needs:anthony`, and
+stops.
 
 **Definition of done:** every acceptance box ticked in the PR body, the repo's
 checks green, the review gates passed (see "Review and merge"), and the PR
 merged, by me or, where the merge rules allow it, by the builder.
+
+## Ready by default
+
+Everything in the backlog is ready for agents unless something says
+otherwise. I don't label issues to approve them; I only label the exceptions.
+
+- `fleet-board` gives every open issue in a board repo `agent:ready` (and
+  drops `proposed`) on its next run, within 15 minutes, **unless it is held**:
+  - `needs:anthony`: waiting on me;
+  - `blocked`: waiting on other work;
+  - `agent:pause`: I said leave it;
+  - `agent:working`: already claimed;
+  - `lead`, a `Release plan:` issue, or one opened by a bot.
+- When the hold comes off (I answer, the blocker closes, I remove the
+  pause), the issue becomes `agent:ready` on the next sync.
+- Priority decides the order, so the only call I make on most issues is its
+  `priority:`, and only when the proposed one is wrong.
+- Builders still run only when I ask ("build the next ready issue"), and the
+  merge rules below still decide what merges without me.
 
 ## Status, priority and blocked
 
@@ -156,7 +177,7 @@ follows the labels.
 
 **Status follows labels.** `fleet-board` sets each open card's Status every
 15 minutes. Labels win over where a card sits; the one exception is dragging
-a card to **Ready**, which adds `agent:ready`.
+a card to **Ready**, which adds `agent:ready`. A held issue stays held until its hold label comes off.
 
 | Labels on the issue | Status |
 |---|---|
@@ -165,7 +186,7 @@ a card to **Ready**, which adds `agent:ready`.
 | `agent:working` | Building |
 | `agent:ready` | Ready |
 | `proposed` | Proposed |
-| no workflow label at all | gets `proposed`, then Proposed |
+| no workflow label at all, or `proposed` | gets `agent:ready` (see "Ready by default"), then Ready |
 | `agent:pause` or `lead` | left where I put it |
 | closed | Done (GitHub's built-in workflow) |
 
@@ -212,11 +233,11 @@ leaving out empty parts:
 1. **Waiting on you**: `needs:anthony` issues and PRs, each with the one
    thing I need to do. PRs ready to merge first.
 2. **In progress**: `agent:working` issues, with their thread or PR.
-3. **Ready to build**: `agent:ready`, by priority, then size, then age. Offer
-   to start the top one.
-4. **Pick next**: the top 3 `proposed` issues by priority, with one line each
-   on why, asking me which to mark `agent:ready`. If nothing is `agent:ready`,
-   say so plainly: nothing can be built until I pick.
+3. **Up next**: the top 5 `agent:ready` issues, by priority, then size,
+   then age, with one line each on why. Offer to start the top one, or
+   several in parallel threads.
+4. **Held**: issues that would be ready but carry `agent:pause`, so I can
+   lift a pause I forgot.
 5. **Blocked**: `blocked` issues and what they wait on.
 6. **Tidy-up**: issues that are possibly done (check the PR that mentions
    them, and offer to close the ones it finished) and issues with no priority (propose one).
@@ -353,8 +374,8 @@ in the right repo is the message.
   and leave your thread open.
   Don't build a workaround that the other repo's fix will undo.
 - **Tell me in one line**, in the thread: "Filed brignano/design#12 for the
-  design project." That's all. The other project's planner picks it up like
-  any `proposed` issue, and I mark it `agent:ready` when I want it built.
+  design project." That's all. It becomes `agent:ready` like any other issue,
+  and the other project builds it in priority order.
 - **Only when it's urgent** (it blocks something I asked for today, or
   something is broken in production) add: "Start a session in the **design**
   project for #12." Otherwise don't send me to another project.
@@ -385,9 +406,9 @@ breakeven shipped eight versions in one; nobody reading a release page wants tha
   This is raw material, not a decision. `none` is for CI, refactors, tests and
   docs a user never sees.
 - **One open release plan per repo**: an issue titled
-  `Release plan: vX.Y.Z — <theme>`, labelled `proposed` and `type:chore`,
-  pinned. The planner keeps it current. It never gets `agent:ready`, so no
-  builder takes it. Its body:
+  `Release plan: vX.Y.Z — <theme>`, labelled `agent:pause` and
+  `type:chore`, pinned. The planner keeps it current. The pause (and its
+  title) keep it from becoming `agent:ready`, so no builder takes it. Its body:
 
   ```markdown
   ## Theme
@@ -484,7 +505,7 @@ A PR **may be merged by the builder** only when every one of these holds:
 
 - The repo is listed under `auto` in [`merge.yml`](merge.yml). I add repos
   there; agents never do.
-- Its issue was `agent:ready` (I approved the spec) when it was claimed, so it
+- Its issue was `agent:ready` when it was claimed, so it
   now carries `agent:working` and a claim comment, plus `risk:low` and
   `size:s` or `size:m`.
 - CI is green and the latest `Reviewer: APPROVE` comment names the current
@@ -601,8 +622,9 @@ only ever handled by me replying and closing.
 - Never add a repo to `merge.yml`, and never skip, disable or weaken a check or test to get a PR through the gates.
 - Never bump a version outside a release I agreed to cut (see "Releases are planned").
 - Never touch secrets or `.env` files, and never widen your own permissions.
-- Never set `agent:ready` yourself (putting it back when you release your own
-  claim is the one exception), and never work on, label or close a `lead` issue.
+- Don't add `agent:ready` by hand (the board sync does it; putting it back
+  when you release your own claim is the exception), never remove
+  `agent:pause`, and never work on, label or close a `lead` issue.
 - Never work on an issue another session has claimed (`agent:working`).
 - Never re-plan a Ready issue. If the spec is wrong, comment the question, add
   `needs:anthony`, remove `agent:working`, and stop.
