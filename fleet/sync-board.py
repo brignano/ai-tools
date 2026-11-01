@@ -17,10 +17,13 @@ board and the labels are kept in step in two places:
     `priority:p1/p2/p3` label. A card with no priority label keeps its value.
   - Ready: when I move a card to Status "Ready", its issue gets `agent:ready`
     and loses `proposed`. That is the signal builders act on.
-  - Claims: an issue labelled `agent:working` moves to Status "Building". A
-    claim older than CLAIM_HOURS with no open PR linked to the issue gets
-    `needs:anthony` and one comment, so a stuck session can't hold it.
-Every other field is left to GitHub's built-in project workflows and to me.
+  - Status: every open card's Status follows its labels, so nothing sits in
+    "No status" (see STATUS below). An open issue with no workflow label gets
+    `proposed`, so untriaged work shows up in Proposed instead of nowhere.
+  - Claims: a claim older than CLAIM_HOURS with no open PR linked to the
+    issue gets `needs:anthony` and one comment, so a stuck session can't hold
+    it.
+Done is left to GitHub's built-in "Item closed" workflow.
 """
 import argparse
 import json
@@ -230,9 +233,9 @@ def sync_ready(owner, number, apply, repo_node_ids):
     print(f"{verb} {changed} Ready card(s) agent:ready.")
 
 
-BUILDING = "Building"
 CLAIM_HOURS = 24
 STALE_NOTE = "<!-- fleet-board:stale-claim -->"
+WORKFLOW_LABELS = {"proposed", "agent:ready", "agent:working", "agent:pause", "needs:anthony", "blocked"}
 
 
 def status_field(owner, number):
@@ -263,50 +266,98 @@ def claim_state(owner, repo, num):
     return claimed, has_pr, noted
 
 
-def sync_working(owner, number, apply, repo_node_ids):
-    """Claimed issues move to Building; stale claims get needs:anthony."""
+def wanted_status(names, is_pr, has_pr):
+    """The Status a card's labels call for, or None to leave it alone.
+
+    Blocked wins over everything, so a card waiting on me or on another issue
+    never looks like it is moving. A card with `agent:pause` or `lead` keeps
+    whatever Status I gave it.
+    """
+    if is_pr:
+        return "In review"
+    if "agent:pause" in names or "lead" in names:
+        return None
+    if "blocked" in names or "needs:anthony" in names:
+        return "Blocked"
+    if "agent:working" in names:
+        return "In review" if has_pr else "Building"
+    if "agent:ready" in names:
+        return "Ready"
+    if "proposed" in names:
+        return "Proposed"
+    return None
+
+
+def sync_status(owner, number, apply, repo_items):
+    """Status follows labels; untriaged issues get `proposed`; stale claims get flagged."""
     project_id, cards = project_items(owner, number)
     field_id, options = status_field(owner, number)
-    building = options.get(BUILDING.lower())
-    if not building:
-        print(f"Status field has no '{BUILDING}' option; claimed cards stay where they are.")
+    if not field_id:
+        print("Board has no Status field; leaving Status alone.")
     cutoff = datetime.now(timezone.utc) - timedelta(hours=CLAIM_HOURS)
-    moved = flagged = 0
+    moved = triaged = flagged = 0
+    missing_options = set()
     for content_id, node in cards.items():
-        if content_id not in repo_node_ids:
+        item = repo_items.get(content_id)
+        if not item:
             continue
         c = node["content"]
-        names = {n["name"] for n in c["labels"]["nodes"]}
-        if "agent:working" not in names:
-            continue
         repo, num = c["repository"]["name"], c["number"]
-        status = (node.get("status") or {}).get("name") or ""
-        if building and status.lower() not in (BUILDING.lower(), "in review", "done"):
-            print(f"  ~ {repo}#{num}: claimed -> Status {BUILDING}")
+        names = {n["name"] for n in c["labels"]["nodes"]}
+        is_pr = c.get("__typename") == "PullRequest"
+        is_bot = (item.get("user") or {}).get("type") == "Bot"
+
+        # Untriaged: an open issue nobody labelled. Give it `proposed` so it
+        # lands in Proposed and in the planner's and my queue.
+        if not is_pr and not is_bot and not names & (WORKFLOW_LABELS | {"lead"}):
+            print(f"  + {repo}#{num}: no workflow label -> proposed")
             if apply:
-                graphql(SET_FIELD, project=project_id, item=node["id"], field=field_id, option=building)
-            moved += 1
-        if c.get("__typename") == "PullRequest" or "needs:anthony" in names:
+                gh(f"repos/{owner}/{repo}/issues/{num}/labels", "-X", "POST", "-f", "labels[]=proposed")
+            names.add("proposed")
+            triaged += 1
+
+        has_pr = False
+        if not is_pr and "agent:working" in names:
+            claimed, has_pr, noted = claim_state(owner, repo, num)
+            if claimed and claimed <= cutoff and not has_pr and not noted and "needs:anthony" not in names:
+                hours = int((datetime.now(timezone.utc) - claimed).total_seconds() // 3600)
+                print(f"  ! {repo}#{num}: claimed {hours}h ago, no open PR -> needs:anthony")
+                if apply:
+                    gh(f"repos/{owner}/{repo}/issues/{num}/labels", "-X", "POST", "-f", "labels[]=needs:anthony")
+                    gh(
+                        f"repos/{owner}/{repo}/issues/{num}/comments", "-X", "POST", "-f",
+                        f"body={STALE_NOTE}\nThis issue was claimed (`agent:working`) {hours} hours ago "
+                        "and no open PR links to it, so the session may be stuck. Check the claim "
+                        "comment above for its session. To release it, remove `agent:working` and "
+                        "`needs:anthony` and add `agent:ready` back.",
+                    )
+                names.add("needs:anthony")
+                flagged += 1
+
+        if not field_id:
             continue
-        claimed, has_pr, noted = claim_state(owner, repo, num)
-        if not claimed or claimed > cutoff or has_pr or noted:
+        want = wanted_status(names, is_pr, has_pr)
+        have = (node.get("status") or {}).get("name") or ""
+        # A card in Done whose issue is open again was reopened: move it too.
+        # One closed since the REST fetch stays in Done.
+        if c.get("state") != "OPEN" or not want or have.lower() == want.lower():
             continue
-        hours = int((datetime.now(timezone.utc) - claimed).total_seconds() // 3600)
-        print(f"  ! {repo}#{num}: claimed {hours}h ago, no open PR -> needs:anthony")
+        option = options.get(want.lower())
+        if not option:
+            missing_options.add(want)
+            continue
+        print(f"  ~ {repo}#{num}: Status {have or 'No status'} -> {want}")
         if apply:
-            gh(f"repos/{owner}/{repo}/issues/{num}/labels", "-X", "POST", "-f", "labels[]=needs:anthony")
-            gh(
-                f"repos/{owner}/{repo}/issues/{num}/comments", "-X", "POST", "-f",
-                f"body={STALE_NOTE}\nThis issue was claimed (`agent:working`) {hours} hours ago "
-                "and no open PR links to it, so the session may be stuck. Check the claim "
-                "comment above for its session. To release it, remove `agent:working` and "
-                "`needs:anthony` and add `agent:ready` back.",
-            )
-        flagged += 1
-    verb = "Moved" if apply else "Would move"
-    print(f"{verb} {moved} claimed card(s) to {BUILDING}.")
+            graphql(SET_FIELD, project=project_id, item=node["id"], field=field_id, option=option)
+        moved += 1
+    for name in sorted(missing_options):
+        print(f"::warning title=fleet-board::Status field has no '{name}' option; add it on the board")
+    verb = "Labelled" if apply else "Would label"
+    print(f"{verb} {triaged} untriaged issue(s) proposed.")
     verb = "Flagged" if apply else "Would flag"
     print(f"{verb} {flagged} stale claim(s) needs:anthony.")
+    verb = "Moved" if apply else "Would move"
+    print(f"{verb} {moved} card(s) to the Status their labels call for.")
 
 
 def main():
@@ -322,7 +373,7 @@ def main():
         repos = [args.repo]
 
     project_id, on_board = project_items(owner, number)
-    total, failed, repo_node_ids = 0, False, {}
+    total, failed, repo_items = 0, False, {}
     for repo in repos:
         try:
             items = open_items(owner, repo)
@@ -331,7 +382,7 @@ def main():
             failed = True
             continue
         for i in items:
-            repo_node_ids[i["node_id"]] = f"{repo}#{i['number']}"
+            repo_items[i["node_id"]] = i
         missing = [i for i in items if i["node_id"] not in on_board]
         print(f"{repo}: {len(items)} open, {len(missing)} to add")
         for i in missing:
@@ -342,11 +393,14 @@ def main():
         total += len(missing)
     verb = "Added" if args.apply else "Would add"
     print(f"\n{verb} {total} item(s) to {owner}'s project {number}.\n")
+    repo_node_ids = {k: f"{v['html_url'].split('/')[-3]}#{v['number']}" for k, v in repo_items.items()}
     sync_priority(owner, number, args.apply, repo_node_ids)
     print()
-    sync_working(owner, number, args.apply, repo_node_ids)
-    print()
+    # Ready first: a card I dragged to Ready gets its label before Status is
+    # re-derived from labels, so my move sticks.
     sync_ready(owner, number, args.apply, repo_node_ids)
+    print()
+    sync_status(owner, number, args.apply, repo_items)
     if failed:
         sys.exit(1)
 

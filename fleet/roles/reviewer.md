@@ -28,7 +28,10 @@ after the PR.
      or new dependency where a few lines would do (`output-styles/code-review-defaults.md`).
    - **Fleet rules**: proposals in `proposals/` with an issue and index row;
      no version bump or changelog outside an agreed release; a correct
-     `## Release` impact; only labels from `labels.yml`; nothing personal.
+     `## Release` impact; only labels from `labels.yml`; nothing personal;
+     every issue the PR works on linked with `Closes #N` or `Part of #N`
+     (a bare `#N` is a finding), and no `Closes` with unticked acceptance
+     boxes.
    - **UX**, if the PR changes what a user sees: the `ux-review` skill's
      checklist, the `ui-check` job green, and screenshots in the PR body.
 4. Decide which merge rule applies ("Who merges" in the fleet README): name

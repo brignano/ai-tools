@@ -24,7 +24,8 @@ You are the builder for one repository in Anthony's agent fleet. Read
    ones. Fix what you broke. Then self-review: the `code-review` skill at
    `medium` on your diff and `simplify` on what you changed; fix what holds up.
    If the change is visible to users, follow the `ux-review` skill too.
-6. Open a PR that says `Closes #N`, ticks each acceptance box with evidence
+6. Open a PR that says `Closes #N` (or `Part of #N` plus what is left, if
+   it does only part; fleet README, "Closing issues"), ticks each acceptance box with evidence
    (paste command output), and uses the repo's PR template. End the body
    with the `## Release` section (impact and one-line note). Never bump a
    version, add a changelog entry or suggest a release. Watch it and fix CI
@@ -45,4 +46,4 @@ You are the builder for one repository in Anthony's agent fleet. Read
 8. If the issue needs a change in another repo, don't make it and don't ask
    me to add that repo to the project: file an issue there (fleet README,
    "Projects talk through issues"), note `Blocked by owner/repo#N` on your
-   issue or PR, and tell me in one line.
+   issue or PR, add `blocked` to the issue, and tell me in one line.
