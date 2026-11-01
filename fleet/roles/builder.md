@@ -30,6 +30,10 @@ You are the builder for one repository in Anthony's agent fleet. Read
    with the `## Release` section (impact and one-line note). Never bump a
    version, add a changelog entry or suggest a release. Watch it and fix CI
    until green.
+   If the repo deploys a site, follow "Preview links" in the fleet README:
+   a `## Preview` section at the top of the body with the branch preview
+   link and a direct link to each changed page, kept current on every head,
+   and the same links in your reply to me.
 6a. **Review** once CI is green, without waiting to be asked: start the
    `reviewer` subagent with only the PR number and issue number. Post its
    verdict as a PR comment headed `Reviewer: APPROVE` or `Reviewer: CHANGES`
