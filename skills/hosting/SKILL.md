@@ -85,6 +85,7 @@ project.
 | `life.brignano.io` | Cloudflare **Pages** (project `life`) | `Me` — verified enforcing 2026-08-24 |
 | `trips.brignano.io` | Workers static assets — **not yet created** | `Me` + `Family` + `Trip friends` |
 | `hoststats.brignano.io` | Cloudflare **Workers** static assets | **public** — `bypass` / everyone |
+| `design.brignano.io` | Cloudflare **Workers** static assets (Worker `design`, Workers Builds, PR previews on) | **public** on the hostname only — `bypass` / everyone; `workers.dev` and PR previews stay `Me` |
 
 New sites use **Workers static assets**, not Pages — Cloudflare's own docs now
 open the Pages section with "Start new projects with Workers". `life` predates
@@ -121,6 +122,12 @@ site uses them, under Zero Trust → Access controls → Policies:
 
 `hoststats` is the deliberate exception — an MIT-licensed public tool with a
 live URL in its README, exempted with a `bypass` / `everyone` policy.
+
+`design` is the other one, and the worked example of the "one hostname open"
+case above: the design system's public showcase. Its bypass is a
+**hostname** application for `design.brignano.io`, never a Worker-level one,
+because a Worker-level bypass would also open every PR preview. Production on
+`workers.dev` and the previews fall through to the `Me` floor.
 
 Adding a relative is one edit to `Family` and it lands on every site that
 includes it. **Include rules are OR** — so one person holding two addresses is
