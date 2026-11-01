@@ -16,6 +16,7 @@ repos:
   - design
   - ai-tools
   - breakeven
+  - card
 never:
   - life
   - people

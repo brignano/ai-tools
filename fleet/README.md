@@ -39,8 +39,10 @@ project.
   `.claude/hooks/session-start.sh` and `.claude/settings.json`. If the repo
   already has a SessionStart hook, add the fleet block to the end of it and
   keep one hook.
-- Repos with it today: driftwood, guidebook, homelab, life. Any other repo
-  gets a `proposed` issue to add it.
+- Repos with it today (checked 2026-11-01): driftwood, guidebook, sites,
+  brignano.io, homelab, design, breakeven, life, card. ai-tools itself doesn't
+  need it: it is where the hook's payload lives. Any other repo gets a
+  `proposed` issue to add it.
 
 **New repo checklist** (the planner's first run does this):
 
