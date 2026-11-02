@@ -27,6 +27,13 @@ body:
     validations:
       required: true
   - type: textarea
+    id: decisions
+    attributes:
+      label: Decisions
+      description: Approach (one, not options), files to touch, code to reuse, and every choice a builder could make two ways, already made. End with "Do not decide:" and what to ask about instead. Without this the issue stays proposed.
+    validations:
+      required: true
+  - type: textarea
     id: out-of-scope
     attributes:
       label: Out of scope

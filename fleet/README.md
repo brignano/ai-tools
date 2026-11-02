@@ -99,12 +99,25 @@ What is wrong or missing, and who it hurts. One paragraph.
 ## How to verify
 The exact commands or checks that prove it (the repo's own, e.g. `npm test`).
 
+## Decisions
+The calls the builder must not make. Approach (one, not options), files to
+touch, existing code to reuse, and any choice a reasonable builder could make
+two ways, already made. Written by the planner or me, never the builder.
+Ends with "Do not decide:" listing what the builder must ask about instead.
+
 ## Out of scope
 What this deliberately does not do.
 
 ## Notes
 Files likely involved, links to the brief or TSD, risks.
 ```
+
+**Decisions is required.** `fleet-board` leaves an issue filed on or after
+2026-11-02 at `proposed` until its body has a `## Decisions` section, so a
+builder never gets a spec with open design questions. I can still push a card
+to Ready by hand. Spec test for the planner: could a careful builder who has
+never seen this repo implement it without choosing between two approaches?
+If not, the missing choice goes in Decisions first.
 
 Size S: the issue body is the spec. Size M: also a short proposal in the
 repo's `proposals/`, linked from the issue. Anything bigger is split before it
@@ -309,6 +322,19 @@ AGENTS.md "Planning & delegation".
 | Planner | Opus | When I ask, in the repo's project | [`roles/planner.md`](roles/planner.md) |
 | Builder | Sonnet; Haiku for searches and test runs | When I ask, in the repo's project | [`roles/builder.md`](roles/builder.md) |
 | Reviewer | Opus, fresh context | **Automatically**, started by the builder once CI is green | [`roles/reviewer.md`](roles/reviewer.md), as the [`reviewer`](../agents/reviewer.md) subagent |
+
+**Deciders decide, builders execute.** Every judgment call (approach,
+trade-offs, scope, what an ambiguous requirement means) is made by a thread on
+Opus: the planner, the coordinator, or me. A builder thread on a cheaper model
+only carries out the issue's Decisions section. If it hits a fork the spec
+doesn't settle, it does not choose: it comments the question and the options
+it sees on the issue, adds `needs:anthony`, removes `agent:working` and
+stops. The coordinator (or planner) answers by editing Decisions, then the
+issue is picked up again. Starting a thread, the coordinator states the role
+and model (Opus for plan, review, debugging an unknown cause and anything
+without a Decisions section; Sonnet for a build with Decisions; Haiku for
+searches and test runs). A build request for an issue with no Decisions
+section is routed to the planner first.
 
 Nothing runs on a schedule. The reviewer is the exception to "when I ask":
 no PR waits for me to request a review (see "Review and merge"). I start a role from the repo's own Claude project

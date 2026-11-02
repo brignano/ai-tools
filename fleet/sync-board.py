@@ -27,6 +27,7 @@ board and the labels are kept in step in two places:
     it.
 Done is left to GitHub's built-in "Item closed" workflow.
 """
+import re
 import argparse
 import json
 import subprocess
@@ -245,9 +246,20 @@ HOLD_LABELS = {"agent:ready", "agent:working", "agent:pause", "needs:anthony", "
 TRUSTED_AUTHORS = {"OWNER", "MEMBER", "COLLABORATOR"}
 
 
+# Issues filed on or after this date need a "## Decisions" section to become
+# agent:ready (fleet README, "An issue is a spec"). Older issues are grandfathered.
+DECISIONS_FROM = "2026-11-02"
+DECISIONS_RE = re.compile(r"^#{2,3}\s*Decisions\b", re.IGNORECASE | re.MULTILINE)
+
+
+def lacks_decisions(item):
+    return (item.get("created_at") or "") >= DECISIONS_FROM and not DECISIONS_RE.search(item.get("body") or "")
+
+
 def is_held(item, names):
     return bool(
         names & HOLD_LABELS
+        or lacks_decisions(item)
         or (item.get("user") or {}).get("type") == "Bot"
         or item.get("author_association") not in TRUSTED_AUTHORS
         or (item.get("title") or "").lower().startswith("release plan:")
