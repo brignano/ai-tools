@@ -542,7 +542,7 @@ preview public to save me a sign-in.
 | driftwood | Cloudflare Workers Builds | `cloudflare-workers-and-pages[bot]` comment, "Preview URL" |
 | hoststats | Cloudflare Workers Builds | `cloudflare-workers-and-pages[bot]` comment, "Preview URL" |
 | sites | GitHub Actions (`Deploy sites`) | the run's summary table, one link per changed site; none for a brand-new site or the editor |
-| design | none yet | screenshots of `previews/*.html` |
+| design | Cloudflare Workers Builds | `cloudflare-workers-and-pages[bot]` comment, "Preview URL" |
 | card, breakeven | not web (CLI, desktop app) | screenshots or the demo GIF |
 | homelab | not a public site | `Preview: none (deploys on CT 100)` |
 
