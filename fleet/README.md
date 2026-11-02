@@ -502,6 +502,52 @@ flowchart LR
    skill's list against the diff.
 5. **Merge**, by the rules below.
 
+### Preview links
+
+I review on my phone, so a PR that changes a site is not ready until I can
+tap a link and see it. For any PR on a repo with a deployable site:
+
+1. **Wait for the preview of the current head.** The host builds one per
+   branch (table below). Read the URL from the host's bot comment or check
+   run, and confirm the commit it names is the PR's head SHA. A preview that
+   failed to build is a failing check: fix it like CI.
+2. **Put it at the top of the PR body**, kept current on every new head:
+
+   ```markdown
+   ## Preview
+   [Open the preview](<branch preview URL>) · head <short sha>
+   - [<page name>](<preview URL>/<path>): <what changed there, a few words>
+   ```
+
+   One bullet per page the diff changes, as a direct link to that path on
+   the preview (work out the route from the files changed). List at most 8,
+   most important first; say "and N more" past that.
+3. **Put the same links in the thread reply** that hands me the PR, and in
+   the `Preview:` line of the Ready to merge comment.
+4. **Use the branch link**, not a per-commit one: it keeps working after the
+   next push. Per-commit links are only for comparing two versions.
+5. **No preview possible?** Write `Preview: none (<why>)` and put
+   screenshots or a GIF in the PR body instead (the UX gate already asks for
+   them). If the repo deploys a site but gives PRs no preview, file a
+   `proposed` issue there to add one.
+
+Every preview is private to me: Vercel previews ask me to sign in to Vercel,
+`*.workers.dev` previews to Cloudflare Access (one-time PIN). Never make a
+preview public to save me a sign-in.
+
+| Repo | Host | Where the preview link comes from |
+|---|---|---|
+| brignano.io | Vercel | `vercel[bot]` comment, **Preview** column |
+| guidebook | Vercel (`packages/site`) | `vercel[bot]` comment, **Preview** column |
+| driftwood | Cloudflare Workers Builds | `cloudflare-workers-and-pages[bot]` comment, "Preview URL" |
+| hoststats | Cloudflare Workers Builds | `cloudflare-workers-and-pages[bot]` comment, "Preview URL" |
+| sites | GitHub Actions (`Deploy sites`) | the run's summary table, one link per changed site; none for a brand-new site or the editor |
+| design | Cloudflare Workers Builds | `cloudflare-workers-and-pages[bot]` comment, "Preview URL" |
+| card, breakeven | not web (CLI, desktop app) | screenshots or the demo GIF |
+| homelab | not a public site | `Preview: none (deploys on CT 100)` |
+
+Keep this table current when a repo's hosting changes.
+
 ### Who merges
 
 A PR **may be merged by the builder** only when every one of these holds:
@@ -531,7 +577,8 @@ on every new head:
 ```markdown
 ## Ready to merge
 Head: <sha> · CI green · Reviewer: APPROVE · UX gate: passed | n/a
-Up to date with <base>: yes · Conflicts: none
+Preview: <link to the preview of this head> | none (<why>)
+Up to with <base>: yes · Conflicts: none
 What changed: <one or two lines>
 Why it needs Anthony: <the "Who merges" rule it misses>
 After merge: <what deploys or runs, and how it will be checked>

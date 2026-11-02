@@ -34,6 +34,10 @@ after the PR.
      boxes.
    - **UX**, if the PR changes what a user sees: the `ux-review` skill's
      checklist, the `ui-check` job green, and screenshots in the PR body.
+   - **Preview**, if the repo deploys a site: the PR body's `## Preview`
+     links point at a preview of the current head and cover each changed
+     page, or it says `Preview: none` with a reason ("Preview links" in the
+     fleet README).
 4. Decide which merge rule applies ("Who merges" in the fleet README): name
    the first rule it misses, or say it is auto-eligible.
 5. Verdict: `APPROVE` only when every criterion is met, checks are green and

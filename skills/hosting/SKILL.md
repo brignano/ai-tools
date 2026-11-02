@@ -86,6 +86,12 @@ project.
 | `trips.brignano.io` | Workers static assets — **not yet created** | `Me` + `Family` + `Trip friends` |
 | `hoststats.brignano.io` | Cloudflare **Workers** static assets | **public** — `bypass` / everyone |
 | `design.brignano.io` | Cloudflare **Workers** static assets (Worker `design`, Workers Builds, PR previews on) | **public** on the hostname only — `bypass` / everyone; `workers.dev` and PR previews stay `Me` |
+| `guidebook.brignano.io` | Vercel (`packages/site`), previews behind Vercel login | public by design |
+| `driftwood.brignano.io` | Cloudflare **Workers** (Workers Builds, `preview_urls`) | public by design |
+| `sites.brignano.io`, `<slug>.sites.brignano.io` | Cloudflare **Workers**, deployed by the `sites` repo's Actions | front door and client sites public; `/edit` behind Access |
+
+Which PRs get a preview link, and where agents find it: "Preview links" in
+`fleet/README.md`.
 
 New sites use **Workers static assets**, not Pages — Cloudflare's own docs now
 open the Pages section with "Start new projects with Workers". `life` predates
