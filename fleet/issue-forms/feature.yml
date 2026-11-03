@@ -1,6 +1,6 @@
 name: Feature
 description: New behaviour or capability.
-labels: [type:feature, proposed]
+labels: [type:feature]
 body:
   - type: textarea
     id: problem

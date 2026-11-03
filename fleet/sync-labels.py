@@ -17,6 +17,8 @@ Per repo, in order:
      `only_if_present` is set.
   2. Each label in `retire`: delete it, but only if no open issue or PR
      carries it. Otherwise report it and leave it.
+  3. Each label in `drop`: delete it even where open issues carry it, which
+     takes it off them too. For labels the fleet no longer uses at all.
 Labels in neither list are never touched.
 """
 import argparse
@@ -58,6 +60,7 @@ def load_config():
     cfg = yaml.safe_load(CONFIG.read_text())
     labels = cfg.get("labels") or []
     retire = cfg.get("retire") or []
+    drop = cfg.get("drop") or []
     seen = set()
     for lab in labels:
         for n in [lab["name"], *(lab.get("aliases") or [])]:
@@ -68,10 +71,10 @@ def load_config():
         lab["color"] = str(lab["color"]).lstrip("#").lower()
         if len(lab["color"]) != 6:
             sys.exit(f"labels.yml: bad colour for '{lab['name']}'")
-    for n in retire:
+    for n in [*retire, *drop]:
         if n.lower() in seen:
-            sys.exit(f"labels.yml: '{n}' is both kept and retired")
-    return labels, retire
+            sys.exit(f"labels.yml: '{n}' is both kept and retired or dropped")
+    return labels, retire, drop
 
 
 def list_repos(only):
@@ -99,7 +102,7 @@ def open_items(repo, label):
     )
 
 
-def sync_repo(repo, labels, retire, apply):
+def sync_repo(repo, labels, retire, drop, apply):
     changes, notes = [], []
 
     def do(desc, *args, **kw):
@@ -152,6 +155,11 @@ def sync_repo(repo, labels, retire, apply):
             continue
         do(f"retire '{have['name']}'", f"repos/{OWNER}/{repo}/labels/{q(have['name'])}", method="DELETE")
 
+    for n in drop:
+        have = current.get(n.lower())
+        if have:
+            do(f"drop '{have['name']}'", f"repos/{OWNER}/{repo}/labels/{q(have['name'])}", method="DELETE")
+
     return changes, notes
 
 
@@ -161,14 +169,14 @@ def main():
     ap.add_argument("--repo", help="sync one repo by name")
     args = ap.parse_args()
 
-    labels, retire = load_config()
+    labels, retire, drop = load_config()
     mode = "APPLY" if args.apply else "DRY RUN"
-    print(f"{mode}: {len(labels)} labels, {len(retire)} to retire")
+    print(f"{mode}: {len(labels)} labels, {len(retire)} to retire, {len(drop)} to drop")
 
     failed = []
     for repo in list_repos(args.repo):
         try:
-            changes, notes = sync_repo(repo, labels, retire, args.apply)
+            changes, notes = sync_repo(repo, labels, retire, drop, args.apply)
         except RuntimeError as e:
             failed.append(repo)
             print(f"\n{repo}: FAILED {e}")

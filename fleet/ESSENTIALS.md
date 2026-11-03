@@ -8,9 +8,10 @@ own AGENTS.md/CLAUDE.md win where they are stricter.
 ## How work flows
 - **Backlog = GitHub issues in the repo that owns the code.** The Fleet board
   (github.com/users/brignano/projects/1) is my view; labels are what agents act on.
-- **Every open issue is ready by default** (`agent:ready`, set by the board sync)
-  unless held: `needs:anthony`, `blocked`, `agent:pause`, `agent:working`, `lead`,
-  a `Release plan:` issue, or one opened by a bot or outsider.
+- **Every open issue is ready** unless held: `needs:anthony`, `blocked`,
+  `agent:pause`, `agent:working`, `lead`, a `Release plan:` issue, one opened by
+  a bot or outsider, or (filed since 2026-11-02) one with no `## Decisions`.
+  No label marks "ready".
 - **Order:** highest `priority:` first (p1 > p2 > p3), then smallest `size:`, then oldest.
 - **Issues are specs:** Problem, Acceptance criteria, How to verify, Decisions,
   Out of scope, Notes. A builder never decides what Decisions leaves open: it
@@ -25,13 +26,12 @@ own AGENTS.md/CLAUDE.md win where they are stricter.
 - **Keep everything in sync in the same PR:** README, `docs/`, the product site, and
   agent context (AGENTS.md, CLAUDE.md, skills) so the next session starts informed.
   Other repos get an issue.
-- **Labels only from fleet/labels.yml.** Every agent-filed issue gets `proposed`
-  plus one `priority:`, `type:`, `size:` and `risk:`.
+- **Labels only from fleet/labels.yml.** Every agent-filed issue gets one `priority:`, `type:`, `size:` and `risk:`.
 
 ## Threads and projects
 - One thread per issue or PR, titled after it. It ends when the PR merges or the
   issue closes.
-- **Claim before work:** add `agent:working`, remove `agent:ready`, comment
+- **Claim before work:** add `agent:working`, comment
   "Claimed by <session link>". Never touch an issue someone else claimed.
 - **Projects talk through issues.** Work for another repo becomes an issue there
   (spec shape, labels, "From owner/repo#N"), and you tell me in one line

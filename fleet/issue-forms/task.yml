@@ -1,6 +1,6 @@
 name: Task (agent-ready spec)
 description: Work for the agent fleet. Fill every section; a builder skips an issue that lacks one.
-labels: [proposed]
+labels: []
 body:
   - type: textarea
     id: problem
@@ -30,7 +30,7 @@ body:
     id: decisions
     attributes:
       label: Decisions
-      description: Approach (one, not options), files to touch, code to reuse, and every choice a builder could make two ways, already made. End with "Do not decide:" and what to ask about instead. Without this the issue stays proposed.
+      description: Approach (one, not options), files to touch, code to reuse, and every choice a builder could make two ways, already made. End with "Do not decide:" and what to ask about instead. Without this the issue is held.
     validations:
       required: true
   - type: textarea
