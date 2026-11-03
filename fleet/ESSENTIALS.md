@@ -15,6 +15,9 @@ own AGENTS.md/CLAUDE.md win where they are stricter.
 - **Issues are specs:** Problem, Acceptance criteria, How to verify, Decisions,
   Out of scope, Notes. A builder never decides what Decisions leaves open: it
   comments the question, adds `needs:anthony`, and stops.
+- **Specs in `proposals/`, decisions in `decisions/` (ADRs), user docs in `docs/`.**
+  Repos that deploy several parts keep a driftwood `architecture.yaml`, checked in
+  CI; never hand-draw the system diagram. No GitHub Pages.
 - **Labels only from fleet/labels.yml.** Every agent-filed issue gets `proposed`
   plus one `priority:`, `type:`, `size:` and `risk:`.
 

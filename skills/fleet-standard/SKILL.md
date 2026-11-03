@@ -13,7 +13,8 @@ freshest copy you can find, in this order:
 2. `standard.md` next to this file: the copy the plugin shipped with.
 
 Sections: Where things live · Every session loads this file · Labels · An issue
-is a spec · Proposals · Ready by default · Status, priority and blocked ·
+is a spec · Proposals · Decisions (ADRs) · Architecture · Where docs live ·
+Ready by default · Status, priority and blocked ·
 "What's next" · Claiming an issue · Closing issues · Roles and models · Projects
 orchestrate, threads do one thing · Projects talk through issues · Releases are
 planned · Review and merge (Preview links, Who merges, Ready to merge, Merging

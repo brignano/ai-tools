@@ -27,6 +27,11 @@ after the PR.
    - **Simplicity**: no dead code, speculative abstraction, duplicated logic
      or new dependency where a few lines would do (`output-styles/code-review-defaults.md`).
    - **Fleet rules**: proposals in `proposals/` with an issue and index row;
+     an ADR in `decisions/` (with an index row) when the PR records a
+     decision, and no merged ADR edited except to mark it superseded;
+     `architecture.yaml` updated when the PR adds, removes or rewires a
+     service or component; nothing design-like (specs, TSDs, briefs, plans)
+     added under `docs/`;
      no version bump or changelog outside an agreed release; a correct
      `## Release` impact; only labels from `labels.yml`; nothing personal;
      every issue the PR works on linked with `Closes #N` or `Part of #N`
