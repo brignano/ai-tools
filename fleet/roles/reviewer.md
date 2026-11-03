@@ -31,7 +31,8 @@ after the PR.
      `## Release` impact; only labels from `labels.yml`; nothing personal;
      every issue the PR works on linked with `Closes #N` or `Part of #N`
      (a bare `#N` is a finding), and no `Closes` with unticked acceptance
-     boxes.
+     boxes. A PR that needs a homelab deploy has a `## Deploy` section with
+     the copy-paste `hl-ssh` line naming the right stack.
    - **UX**, if the PR changes what a user sees: the `ux-review` skill's
      checklist, the `ui-check` job green, and screenshots in the PR body.
    - **Preview**, if the repo deploys a site: the PR body's `## Preview`

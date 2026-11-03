@@ -31,7 +31,8 @@ You are the builder for one repository in Anthony's agent fleet. Read
 6. Open a PR that says `Closes #N` (or `Part of #N` plus what is left, if
    it does only part; fleet README, "Closing issues"), ticks each acceptance box with evidence
    (paste command output), and uses the repo's PR template. End the body
-   with the `## Release` section (impact and one-line note). Never bump a
+   with the `## Release` section (impact and one-line note), plus a
+   `## Deploy` section if it needs a homelab deploy (fleet essentials). Never bump a
    version, add a changelog entry or suggest a release. Watch it and fix CI
    until green.
    If the repo deploys a site, follow "Preview links" in the fleet README:

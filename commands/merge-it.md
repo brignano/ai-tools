@@ -18,7 +18,8 @@ Load the `fleet-standard` skill and follow "Merging when I ask":
 3. Merge with the repo's merge method and delete the branch.
 4. Check the default branch's CI after the merge, and the deploy if the repo
    deploys on merge. Tell me in one line that it merged and main is green, or what broke.
-   If it needs a homelab deploy, end with the copy-paste line in a code block:
+   If it needs a homelab deploy, end with the PR's `## Deploy` section: whether
+   CT 100 deploys it automatically, and the copy-paste line in a code block:
    `hl-ssh -t "cd /root/homelab && claude '/deploy <stack>'"` (fill in the stack).
 
 If a gate fails, don't merge: say in one line what failed and what you're doing,
