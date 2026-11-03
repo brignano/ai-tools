@@ -242,17 +242,24 @@ if [ -e "$CLAUDE_DIR/settings.json" ] && [ ! -L "$CLAUDE_DIR/settings.json" ]; t
     if [ "$DRY_RUN" = 1 ]; then
       echo "    [dry-run] merge model + worktree from $SETTINGS into $CLAUDE_DIR/settings.json"
     else
-      python3 - "$SETTINGS" "$CLAUDE_DIR/settings.json" <<'PY'
+      if python3 - "$SETTINGS" "$CLAUDE_DIR/settings.json" <<'PY'
 import json, sys
 src, dest = sys.argv[1:3]
 base, cur = json.load(open(src)), json.load(open(dest))
+if not isinstance(cur, dict):
+    sys.exit(1)
 for k in ("model", "worktree"):
     if k in base:
         cur[k] = base[k]
-json.dump(cur, open(dest, "w"), indent=2)
-open(dest, "a").write("\n")
+text = json.dumps(cur, indent=2, ensure_ascii=False) + "\n"
+with open(dest, "w") as f:
+    f.write(text)
 PY
-      echo "    merged model + worktree into $CLAUDE_DIR/settings.json (real file kept)"
+      then
+        echo "    merged model + worktree into $CLAUDE_DIR/settings.json (real file kept)"
+      else
+        echo "    SKIP (could not merge; is $CLAUDE_DIR/settings.json valid JSON?): add model/worktree from $SETTINGS by hand"
+      fi
     fi
   else
     echo "    SKIP (real file present, no python3 to merge): add model/worktree from $SETTINGS by hand"
