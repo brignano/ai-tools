@@ -16,7 +16,7 @@ trap 'rm -rf "$STAGE"' EXIT
 mkdir -p "$STAGE/.claude-plugin" "$STAGE/fleet/plugin" "$STAGE/agents" "$STAGE/skills"
 cp .claude-plugin/plugin.json .claude-plugin/icon.png "$STAGE/.claude-plugin/"
 cp -R hooks commands "$STAGE/"
-cp fleet/plugin/session-start.sh fleet/plugin/content-hash.sh "$STAGE/fleet/plugin/"
+cp fleet/plugin/session-start.sh fleet/plugin/content-hash.sh fleet/plugin/guard.py "$STAGE/fleet/plugin/"
 cp fleet/README.md fleet/ESSENTIALS.md "$STAGE/fleet/"
 cp -R fleet/roles "$STAGE/fleet/"
 cp AGENTS.md LICENSE "$STAGE/"
@@ -25,7 +25,11 @@ for d in skills/*/; do
   [ -f "$d/SKILL.md" ] && cp -RL "${d%/}" "$STAGE/skills/"
 done
 
+# Stamp the content hash, so the start hook can tell whether this upload is
+# behind main without re-hashing a copy the upload step may have rewritten.
+bash fleet/plugin/content-hash.sh . > "$STAGE/fleet/plugin/BUILD"
+
 mkdir -p "$(dirname "$OUT")"
 rm -f "$OUT"
 (cd "$STAGE" && zip -qr "$OUT" .)
-echo "$OUT (content $(bash fleet/plugin/content-hash.sh "$STAGE"))"
+echo "$OUT (content $(cat "$STAGE/fleet/plugin/BUILD"))"

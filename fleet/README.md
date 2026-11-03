@@ -47,6 +47,13 @@ every project.
   the next session without a rebuild. A changed skill, agent or command reaches
   cloud sessions when the plugin is uploaded again, and until then the hook
   tells me the uploaded copy is out of date.
+- **Guards:** a PreToolUse hook, [`plugin/guard.py`](plugin/guard.py), blocks
+  a push to `main`/`master` (force pushes included) and any write to a
+  secrets file (`.env`, `.env.local`; templates like `.env.example` are fine),
+  so those two hard rules hold without being remembered.
+- **Stale check:** the zip carries `fleet/plugin/BUILD`, the content hash of
+  its sources at build time. The start hook compares it with main's and, when
+  they differ, has the session tell me once to re-upload.
 - **Keep ESSENTIALS.md in step.** A PR that changes a rule here checks whether
   the one-line version in ESSENTIALS.md still holds, and fixes it in the same PR.
 - **Shortcuts:** `/next` ("What's next"), `/handoff` ("Projects talk through
