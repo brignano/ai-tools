@@ -29,7 +29,8 @@ that repo's `.claude/agents/`.
 ## Model routing
 
 Each agent can set `model:` (`haiku`, `sonnet`, `opus`, `inherit`) and `effort:`.
-The main session stays on the strongest model and does the planning; these agents
+The main session defaults to `opusplan` (set in `claude/settings.json`): Opus in
+plan mode, Sonnet otherwise. Override one session with `/model`. These agents
 take the cheap, well-defined work:
 
 | Agent | Model | Job |
@@ -38,6 +39,10 @@ take the cheap, well-defined work:
 | `Explore` | Haiku | Overrides the built-in search agent so routine searches run cheap |
 | `test-runner` | Haiku | Runs checks, returns only the failures |
 | `reviewer` | Opus | Independent, read-only pre-merge review of one fleet PR (fleet README, "Review and merge") |
+
+`implementer` sets `isolation: worktree`: each step runs in its own temporary git
+worktree (branched from the default branch), so the planning session reviews a
+separate diff before anything lands.
 
 Keep this list short. Every agent's `description` is loaded into every session,
 and overlapping agents make delegation worse, not better. Debugging stays on the main model; PR
