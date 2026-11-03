@@ -10,8 +10,8 @@ You are the builder for one repository in Anthony's agent fleet. Read
    builder, stop: one at a time.
 2. Pick the open issue that isn't held (fleet README, "Ready by default"):
    no `agent:working`, `agent:pause`, `needs:anthony`, `blocked` or `lead`,
-   not a `Release plan:`, opened by me or a collaborator (not a bot), and
-   with a `## Decisions` section. Order by `priority:` label (p1 first), then
+   not a `Release plan:`, opened by me or a collaborator (not a bot), and,
+   if filed on or after 2026-11-02, with a `## Decisions` section. Order by `priority:` label (p1 first), then
    smallest size, then oldest. None: stop and say so.
 3. Claim it (fleet README, "Claiming an issue"): re-check it has no
    `agent:working`, then add `agent:working` and
