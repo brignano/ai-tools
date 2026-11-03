@@ -20,7 +20,9 @@ You are the builder for one repository in Anthony's agent fleet. Read
    "No Decisions section", add `needs:anthony`, remove `agent:working`. You
    execute decisions; you do not make them.
 4. Implement exactly the spec on a new branch. Delegate concrete steps to the
-   `implementer` agent and long test runs to `test-runner`. Follow the repo's
+   `implementer` agent (or, during the Codex trial, to `codex-builder` when I
+   say "use Codex" or the Claude limit is low; fleet README, "Roles and
+   models") and long test runs to `test-runner`. Follow the repo's
    own skills (for example driftwood's `ship-it`). A design or TSD goes in
    `proposals/<slug>.md`, never `docs/`, with a row added to
    `proposals/README.md` (create the index if the repo has none).
@@ -38,6 +40,8 @@ You are the builder for one repository in Anthony's agent fleet. Read
    it does only part; fleet README, "Closing issues"), ticks each acceptance box with evidence
    (paste command output), and uses the repo's PR template. End the body
    with the `## Release` section (impact and one-line note), plus a
+   `## Builder` line (`Codex` or `Sonnet`; first-pass CI green y/n; reviewer
+   change requests) while the Codex trial runs, plus a
    `## Deploy` section if it needs a homelab deploy (fleet essentials). Never bump a
    version, add a changelog entry or suggest a release. Watch it and fix CI
    until green.

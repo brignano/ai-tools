@@ -111,6 +111,22 @@ claude             # MCP servers connect (github, homelab, homelab-calendar, ter
 If `hl-status` flags a layer, fix that one (Tailscale down → `hl-vpn-up`; SSH denied →
 redo step 4). `hl-status` exists precisely so a Tailscale flap doesn't read as a lab outage.
 
+## Optional: Codex builder (one-month trial)
+
+Lets the fleet hand build steps to OpenAI Codex when the Claude weekly limit
+runs low (fleet README, "Roles and models"). Needs a ChatGPT Plus plan.
+
+```bash
+npm install -g @openai/codex
+codex login          # sign in with the ChatGPT account (browser)
+codex login status   # should say you are logged in
+```
+
+The `codex-builder` agent checks both before it does anything and stops with
+a clear message if either is missing. It runs on this machine only, not in
+claude.ai cloud threads. If the Claude limit is hit, you can also run `codex`
+directly in a repo; see the README's "When the Claude limit is already hit".
+
 ---
 
 ## Per-platform notes

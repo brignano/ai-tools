@@ -36,6 +36,8 @@ after the PR.
      true after the change, with cross-repo updates filed as issues ("Keep
      docs and context in sync"), and a reason given if the PR says
      `Docs: none needed`;
+     a `## Builder` line when the PR was built through `codex-builder`, and no
+     Codex run with sandbox or approvals bypassed;
      no version bump or changelog outside an agreed release; a correct
      `## Release` impact; only labels from `labels.yml`; nothing personal;
      every issue the PR works on linked with `Closes #N` or `Part of #N`
