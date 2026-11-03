@@ -242,10 +242,20 @@ Diagrams are drawn from a model, never by hand, so they can be checked.
   [driftwood](https://github.com/brignano/driftwood) model,
   `architecture.yaml`, at the repo root. A library, CLI or single static site
   doesn't need one.
-- **CI validates it** (`npx @brignano/driftwood validate architecture.yaml`)
-  and renders it to `docs/architecture.md` as Mermaid, so GitHub draws it in
-  place, with a few lines of prose. CI fails when the committed render differs
-  from a fresh one, so the picture can't drift from the model.
+- **CI validates and renders it**, so the picture can't drift from the model:
+
+  ```bash
+  npx @brignano/driftwood validate architecture.yaml
+  npx @brignano/driftwood render architecture.yaml --engine mermaid -o docs/architecture.mmd
+  git diff --exit-code docs/architecture.mmd   # fails when the committed render is stale
+  # the page's first mermaid fence must match the render
+  awk '/^```mermaid/{f=1;next} /^```/{if(f)exit} f' docs/architecture.md | diff - docs/architecture.mmd
+  ```
+
+  `docs/architecture.md` is the page people read: a few lines of prose and
+  the diagram in a ```` ```mermaid ```` fence copied from `architecture.mmd`
+  (GitHub draws it in place). Named views (`--view <id>`) can be rendered and
+  embedded the same way when they are worth showing.
 - **Where infrastructure is Terraform or CloudFormation**, also run
   `driftwood preview` on PRs and `reconcile` on demand, so the model is checked
   against what is deployed. Elsewhere the model is hand-written until driftwood
