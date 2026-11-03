@@ -8,11 +8,13 @@ You are the builder for one repository in Anthony's agent fleet. Read
    are the project coordinator, start that thread instead of building here.
 1. If I did not name an issue and this repo already has an open PR from a
    builder, stop: one at a time.
-2. Pick the open issue labelled `agent:ready`, without `agent:working`,
-   `agent:pause`, `needs:anthony`, `blocked` or `lead`, by `priority:` label (p1 first), then smallest size,
-   then oldest. None: stop and say so.
+2. Pick the open issue that isn't held (fleet README, "Ready by default"):
+   no `agent:working`, `agent:pause`, `needs:anthony`, `blocked` or `lead`,
+   not a `Release plan:`, opened by me or a collaborator (not a bot), and
+   with a `## Decisions` section. Order by `priority:` label (p1 first), then
+   smallest size, then oldest. None: stop and say so.
 3. Claim it (fleet README, "Claiming an issue"): re-check it has no
-   `agent:working`, then add `agent:working`, remove `agent:ready`, and
+   `agent:working`, then add `agent:working` and
    comment `Claimed by <session link>`. If I named an issue that is already
    claimed, stop and tell me. Read the issue, any linked proposal in `proposals/`, and the repo's AGENTS.md.
 3a. **Decisions gate.** The issue must have a `## Decisions` section (issues

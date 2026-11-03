@@ -11,17 +11,13 @@ token with the `project` scope (plus `repo` to see private repos).
   python3 fleet/sync-board.py --repo guidebook   # dry run, one repo
   python3 fleet/sync-board.py --apply            # what the workflow runs
 
-It never removes or archives a card. Labels are what agents can see, so the
-board and the labels are kept in step in two places:
+It never removes or archives a card. An open issue is ready for a builder
+when it isn't held (see is_held); there is no "ready" label. Labels are what
+agents see, so the board follows them:
   - Priority: created if missing (P1, P2, P3) and filled from each card's
     `priority:p1/p2/p3` label. A card with no priority label keeps its value.
-  - Ready: when I move a card to Status "Ready", its issue gets `agent:ready`
-    and loses `proposed`. That is the signal builders act on.
-  - Ready by default: every open issue that isn't held (HOLD_LABELS, a
-    release plan, a bot's or an outsider's) gets `agent:ready` and loses `proposed`. I
-    label only the exceptions.
-  - Status: every open card's Status follows its labels, so nothing sits in
-    "No status" (see wanted_status).
+  - Status: every open card's Status follows its labels and whether it is
+    held, so nothing sits in "No status" (see wanted_status).
   - Claims: a claim older than CLAIM_HOURS with no open PR linked to the
     issue gets `needs:anthony` and one comment, so a stuck session can't hold
     it.
@@ -212,42 +208,18 @@ def sync_priority(owner, number, apply, repo_node_ids):
     print(f"{verb} Priority on {changed} card(s).")
 
 
-def sync_ready(owner, number, apply, repo_node_ids):
-    """Cards I moved to Ready get agent:ready (and lose proposed)."""
-    _, cards = project_items(owner, number)
-    changed = 0
-    for content_id, node in cards.items():
-        if content_id not in repo_node_ids:
-            continue
-        if ((node.get("status") or {}).get("name") or "").lower() != "ready":
-            continue
-        c = node["content"]
-        names = {n["name"] for n in c["labels"]["nodes"]}
-        if "agent:ready" in names or "agent:working" in names:
-            continue
-        repo, num = c["repository"]["name"], c["number"]
-        print(f"  ~ {repo}#{num}: Status is Ready -> label agent:ready")
-        if apply:
-            gh(f"repos/{owner}/{repo}/issues/{num}/labels", "-X", "POST", "-f", "labels[]=agent:ready")
-            if "proposed" in names:
-                gh(f"repos/{owner}/{repo}/issues/{num}/labels/proposed", "-X", "DELETE")
-        changed += 1
-    verb = "Labelled" if apply else "Would label"
-    print(f"{verb} {changed} Ready card(s) agent:ready.")
-
-
 CLAIM_HOURS = 24
 STALE_NOTE = "<!-- fleet-board:stale-claim -->"
-# Any of these keeps an open issue from becoming agent:ready.
-HOLD_LABELS = {"agent:ready", "agent:working", "agent:pause", "needs:anthony", "blocked", "lead"}
+# Any of these holds an open issue back from builders.
+HOLD_LABELS = {"agent:working", "agent:pause", "needs:anthony", "blocked", "lead"}
 
 
 # Issues opened by anyone else are held: a builder treats the body as its spec.
 TRUSTED_AUTHORS = {"OWNER", "MEMBER", "COLLABORATOR"}
 
 
-# Issues filed on or after this date need a "## Decisions" section to become
-# agent:ready (fleet README, "An issue is a spec"). Older issues are grandfathered.
+# Issues filed on or after this date need a "## Decisions" section to be
+# ready (fleet README, "An issue is a spec"). Older issues are grandfathered.
 DECISIONS_FROM = "2026-11-02"
 DECISIONS_RE = re.compile(r"^#{2,3}\s*Decisions\b", re.IGNORECASE | re.MULTILINE)
 
@@ -294,7 +266,7 @@ def claim_state(owner, repo, num):
     return claimed, has_pr, noted
 
 
-def wanted_status(names, is_pr, has_pr):
+def wanted_status(names, is_pr, has_pr, held):
     """The Status a card's labels call for, or None to leave it alone.
 
     Blocked wins over everything, so a card waiting on me or on another issue
@@ -309,21 +281,19 @@ def wanted_status(names, is_pr, has_pr):
         return "Blocked"
     if "agent:working" in names:
         return "In review" if has_pr else "Building"
-    if "agent:ready" in names:
-        return "Ready"
-    if "proposed" in names:
-        return "Proposed"
-    return None
+    # Held for another reason (no Decisions, a bot's or outsider's, a release
+    # plan): it waits in Proposed until that changes.
+    return "Proposed" if held else "Ready"
 
 
 def sync_status(owner, number, apply, repo_items):
-    """Unheld issues get agent:ready; Status follows labels; stale claims get flagged."""
+    """Status follows labels and holds; stale claims get flagged."""
     project_id, cards = project_items(owner, number)
     field_id, options = status_field(owner, number)
     if not field_id:
         print("Board has no Status field; leaving Status alone.")
     cutoff = datetime.now(timezone.utc) - timedelta(hours=CLAIM_HOURS)
-    moved = readied = flagged = 0
+    moved = flagged = 0
     missing_options = set()
     for content_id, node in cards.items():
         item = repo_items.get(content_id)
@@ -333,16 +303,6 @@ def sync_status(owner, number, apply, repo_items):
         repo, num = c["repository"]["name"], c["number"]
         names = {n["name"] for n in c["labels"]["nodes"]}
         is_pr = c.get("__typename") == "PullRequest"
-
-        # Ready by default: anything not held is open for a builder.
-        if not is_pr and c.get("state") == "OPEN" and not is_held(item, names):
-            print(f"  + {repo}#{num}: not held -> agent:ready")
-            if apply:
-                gh(f"repos/{owner}/{repo}/issues/{num}/labels", "-X", "POST", "-f", "labels[]=agent:ready")
-                if "proposed" in names:
-                    gh(f"repos/{owner}/{repo}/issues/{num}/labels/proposed", "-X", "DELETE")
-            names = (names - {"proposed"}) | {"agent:ready"}
-            readied += 1
 
         has_pr = False
         if not is_pr and "agent:working" in names:
@@ -357,14 +317,14 @@ def sync_status(owner, number, apply, repo_items):
                         f"body={STALE_NOTE}\nThis issue was claimed (`agent:working`) {hours} hours ago "
                         "and no open PR links to it, so the session may be stuck. Check the claim "
                         "comment above for its session. To release it, remove `agent:working` and "
-                        "`needs:anthony` and add `agent:ready` back.",
+                        "`needs:anthony`.",
                     )
                 names.add("needs:anthony")
                 flagged += 1
 
         if not field_id:
             continue
-        want = wanted_status(names, is_pr, has_pr)
+        want = wanted_status(names, is_pr, has_pr, not is_pr and is_held(item, names))
         have = (node.get("status") or {}).get("name") or ""
         # A card in Done whose issue is open again was reopened: move it too.
         # One closed since the REST fetch stays in Done.
@@ -380,8 +340,6 @@ def sync_status(owner, number, apply, repo_items):
         moved += 1
     for name in sorted(missing_options):
         print(f"::warning title=fleet-board::Status field has no '{name}' option; add it on the board")
-    verb = "Labelled" if apply else "Would label"
-    print(f"{verb} {readied} unheld issue(s) agent:ready.")
     verb = "Flagged" if apply else "Would flag"
     print(f"{verb} {flagged} stale claim(s) needs:anthony.")
     verb = "Moved" if apply else "Would move"
@@ -423,10 +381,6 @@ def main():
     print(f"\n{verb} {total} item(s) to {owner}'s project {number}.\n")
     repo_node_ids = {k: f"{v['html_url'].split('/')[-3]}#{v['number']}" for k, v in repo_items.items()}
     sync_priority(owner, number, args.apply, repo_node_ids)
-    print()
-    # Ready first: a card I dragged to Ready gets its label before Status is
-    # re-derived from labels, so my move sticks.
-    sync_ready(owner, number, args.apply, repo_node_ids)
     print()
     sync_status(owner, number, args.apply, repo_items)
     if failed:

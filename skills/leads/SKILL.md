@@ -35,4 +35,4 @@ auto-reply promises.
 - Resend sending domain verified (DNS) before shipping. Tell Anthony which
   records and secrets to set in the PR.
 - The `lead` label: if missing, it comes from `fleet/labels.yml`. Don't invent labels.
-- Never set `agent:ready` on a lead issue.
+- A lead issue always carries `lead`, which holds it back from builders.

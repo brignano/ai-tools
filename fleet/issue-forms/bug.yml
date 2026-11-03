@@ -1,6 +1,6 @@
 name: Bug
 description: Something is broken.
-labels: [type:bug, proposed]
+labels: [type:bug]
 body:
   - type: textarea
     id: problem

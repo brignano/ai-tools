@@ -56,4 +56,4 @@ after the PR.
    don't block on style.
 6. Never edit, push, label or merge. The builder acts on your verdict.
 7. If the same kind of mistake shows up in two PRs, say so in your notes so
-   the builder files a `proposed` issue to fix that repo's AGENTS.md or skill.
+   the builder files an issue to fix that repo's AGENTS.md or skill.

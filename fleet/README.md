@@ -20,8 +20,7 @@ Plan and reasoning: the "Agent fleet plan" doc in the AI Assistant project.
   guidebook, sites, brignano.io, homelab, design, ai-tools and breakeven. The
   [`fleet-board`](../.github/workflows/fleet-board.yml) workflow adds every
   open issue and PR in those repos every 15 minutes, fills the board's Priority
-  field from each card's `priority:` label, gives `agent:ready` (dropping
-  `proposed`) to every open issue that isn't held (see "Ready by default"),
+  field from each card's `priority:` label,
   sets every open card's **Status from its labels** (see "Status, priority
   and blocked"), and flags stale claims (see "Claiming an
   issue"). It never removes a card,
@@ -91,10 +90,8 @@ workflow syncs the file to every repo I own on merge and every Monday
 
 | Label | Meaning | Who sets it |
 |---|---|---|
-| `proposed` | Just filed. The next board sync turns it into `agent:ready` unless it is held. | Whoever files it |
-| `agent:ready` | A builder may take it. Every open issue that isn't held gets it automatically. | `fleet-board` (see "Ready by default") |
 | `agent:working` | A session claimed it; every other session skips it. | The session that claims it |
-| `agent:pause` | Leave it alone until I remove this. Holds an issue back from `agent:ready`. | Me |
+| `agent:pause` | Leave it alone until I remove this. Holds an issue back from builders. | Me |
 | `needs:anthony` | Blocked on a decision, account or hardware from me. | Any agent |
 | `blocked` | Waiting on another issue or PR, named in a `Blocked by owner/repo#N` line in the body. | Any agent |
 | `priority:p1` / `p2` / `p3` | Source of truth for priority; `fleet-board` copies it to the board's Priority field. Every open issue has one. | Whoever files it proposes, I confirm |
@@ -102,8 +99,9 @@ workflow syncs the file to every repo I own on merge and every Monday
 | `size:s` / `size:m` | Agents take S and M only. Bigger gets split. | Planner |
 | `type:bug` / `feature` / `chore` / `docs` | What kind of work it is. | Whoever files it |
 
-Every issue an agent files carries `proposed`, one `priority:`, one `type:`,
-one `size:` and one `risk:` label. Dependabot keeps its own (`dependencies`, `javascript`, …).
+Every issue an agent files carries one `priority:`, one `type:`,
+one `size:` and one `risk:` label. No label marks an issue "ready": an open
+issue that isn't held is ready (see "Ready by default"). Dependabot keeps its own (`dependencies`, `javascript`, …).
 
 Default issue forms (task, bug, feature) are in [`issue-forms/`](issue-forms/)
 and published to `brignano/.github` by [`bootstrap-dotgithub.sh`](bootstrap-dotgithub.sh).
@@ -137,10 +135,9 @@ What this deliberately does not do.
 Files likely involved, links to the brief or TSD, risks.
 ```
 
-**Decisions is required.** `fleet-board` leaves an issue filed on or after
-2026-11-02 at `proposed` until its body has a `## Decisions` section, so a
-builder never gets a spec with open design questions. I can still push a card
-to Ready by hand. Spec test for the planner: could a careful builder who has
+**Decisions is required.** An issue filed on or after 2026-11-02 is held
+(and sits in Proposed on the board) until its body has a `## Decisions`
+section, so a builder never gets a spec with open design questions. Spec test for the planner: could a careful builder who has
 never seen this repo implement it without choosing between two approaches?
 If not, the missing choice goes in Decisions first.
 
@@ -166,7 +163,7 @@ built from `docs/` without dragging in rejected designs.
   status, tracking issue and the issues it was split into. Any PR that adds a
   proposal or changes its status updates the index in the same PR.
 - A proposal that writes "proposed issues" at the end gets them filed by the
-  planner as `proposed` once the proposal merges, and the index links them.
+  planner once the proposal merges, and the index links them.
 - `/new-tsd` drafts a proposal in this shape; save it as `proposals/<slug>.md`.
 
 Index shape:
@@ -184,8 +181,8 @@ Index shape:
 keeps the reasoning and the alternatives; the ADR is the one-screen record of
 what was decided, and the index links the two.
 
-**Definition of ready:** open, `agent:ready` (which is automatic, see "Ready
-by default"), and not claimed. If the spec is too thin to build from, the
+**Definition of ready:** open and not held (see "Ready by default"), which
+includes not claimed. If the spec is too thin to build from, the
 builder doesn't guess: it comments the question, adds `needs:anthony`, and
 stops.
 
@@ -313,18 +310,19 @@ link it from the PR. The PR body lists what it updated, or says
 Everything in the backlog is ready for agents unless something says
 otherwise. I don't label issues to approve them; I only label the exceptions.
 
-- `fleet-board` gives every open issue in a board repo `agent:ready` (and
-  drops `proposed`) on its next run, within 15 minutes, **unless it is held**:
+- An open issue is ready, with no label to mark it, **unless it is held**:
   - `needs:anthony`: waiting on me;
   - `blocked`: waiting on other work;
   - `agent:pause`: I said leave it;
   - `agent:working`: already claimed;
   - `lead`, a `Release plan:` issue, or one opened by a bot;
   - opened by someone outside the repo (not me or a collaborator), because a
-    builder treats the issue body as its spec. I read it and remove nothing:
-    I add `agent:ready` myself if I want it built.
+    builder treats the issue body as its spec. If I want one built, I open my
+    own issue that links it;
+  - filed on or after 2026-11-02 with no `## Decisions` section.
 - When the hold comes off (I answer, the blocker closes, I remove the
-  pause), the issue becomes `agent:ready` on the next sync.
+  pause), the issue is ready again at once.
+- A builder checks these itself before claiming; the board only shows them.
 - Priority decides the order, so the only call I make on most issues is its
   `priority:`, and only when the proposed one is wrong.
 - Builders still run only when I ask ("build the next ready issue"), and the
@@ -338,22 +336,20 @@ every open issue carries enough labels to say all three, and the board
 follows the labels.
 
 **Status follows labels.** `fleet-board` sets each open card's Status every
-15 minutes. Labels win over where a card sits; the one exception is dragging
-a card to **Ready**, which adds `agent:ready`. A held issue stays held until its hold label comes off.
+15 minutes. Labels win over where a card sits. A held issue stays held until its hold comes off.
 
 | Labels on the issue | Status |
 |---|---|
 | `blocked` or `needs:anthony` (beats everything below) | Blocked |
 | `agent:working` and an open PR links it | In review |
 | `agent:working` | Building |
-| `agent:ready` | Ready |
-| no workflow label at all, or `proposed` | gets `agent:ready` (see "Ready by default"), then Ready |
-| `proposed` on a held issue (bot, outsider or release plan) | Proposed |
+| none of the above, not held | Ready |
+| none of the above, held another way (no Decisions, bot, outsider, release plan) | Proposed |
 | `agent:pause` or `lead` | left where I put it |
 | closed | Done (GitHub's built-in workflow) |
 
-Open PRs sit in In review. To unblock, remove the label; to un-ready, remove
-`agent:ready`. Dragging a card anywhere but Ready gets undone on the next sync.
+Open PRs sit in In review. To unblock, remove the label; to hold one back, add
+`agent:pause`. Dragging a card gets undone on the next sync.
 
 **Every open issue has a priority.** Whoever files it proposes one; I change
 it when I disagree. Priorities have to rank, or they say nothing:
@@ -395,7 +391,7 @@ leaving out empty parts:
 1. **Waiting on you**: `needs:anthony` issues and PRs, each with the one
    thing I need to do. PRs ready to merge first.
 2. **In progress**: `agent:working` issues, with their thread or PR.
-3. **Up next**: the top 5 `agent:ready` issues, by priority, then size,
+3. **Up next**: the top 5 issues that aren't held, by priority, then size,
    then age, with one line each on why. Offer to start the top one, or
    several in parallel threads.
 4. **Held**: issues that would be ready but carry `agent:pause`, so I can
@@ -409,15 +405,15 @@ issue that is possibly done, or set a missing priority, only after I say yes.
 
 ## Claiming an issue
 
-Several projects pick up `agent:ready` issues, so a session claims an issue
+Several projects pick up ready issues, so a session claims an issue
 before it works on it. Without the claim two sessions can build the same thing.
 
 - **Skip claimed issues.** Never start an issue labelled `agent:working`, even
   if I named it, unless I said to take over that claim. Say it is claimed and
   link the claim comment instead.
 - **Claim before any work.** Re-read the issue's labels first (another
-  session may have just claimed it). Then, in this order: add `agent:working`,
-  remove `agent:ready`, and comment:
+  session may have just claimed it). Then, in this order: add `agent:working`
+  and comment:
 
   ```markdown
   Claimed by <session link> (<thread title>).
@@ -429,13 +425,12 @@ before it works on it. Without the claim two sessions can build the same thing.
   so the claim shows progress (see "Closing issues").
 - **Release a claim you drop**: if you stop without a PR (spec question,
   blocked, I said stop), remove `agent:working`, comment why, and add
-  `needs:anthony` or put `agent:ready` back as the case needs. Never leave a
+  `needs:anthony` if it needs me. Never leave a
   silent claim.
 - **The board follows the claim.** `fleet-board` moves an `agent:working`
   card to **Building**. A claim more than 24 hours old with no open PR linked
   to the issue gets `needs:anthony` and one comment, so a stuck session can't
-  block it. To release it, I remove `agent:working` and `needs:anthony` and
-  add `agent:ready` back.
+  block it. To release it, I remove `agent:working` and `needs:anthony`.
 
 ## Closing issues
 
@@ -511,7 +506,7 @@ by side.
   item yet ("plan driftwood", "review open PRs") gets its own thread too, and
   any issue it turns into a build gets a thread of its own.
 - **One item per thread.** If a thread uncovers new work, it files an issue
-  (`proposed`) in the repo that owns that work (see "Projects talk through
+  in the repo that owns that work (see "Projects talk through
   issues") and tells the coordinator; it does not start the new work itself. Follow-ups on the same issue or its PR (review fixes, CI, my
   comments) stay in that thread.
 - **A thread ends when its item does**: the PR merges, or the issue closes or
@@ -539,7 +534,7 @@ in the right repo is the message.
   and don't tell me you can't reach the other project. Attach the repo to the
   session only as far as filing the issue needs; never save it to the project
   and never push to it.
-- **The issue is a normal spec**: the spec shape above, `proposed` plus one
+- **The issue is a normal spec**: the spec shape above, one `priority:`,
   `type:`, `size:` and `risk:` label from `labels.yml`. Say which repo and
   issue or PR it came from (`From brignano/driftwood#42`), so the other side
   has the why. Add `needs:anthony` only when a person must act first: an
@@ -549,7 +544,7 @@ in the right repo is the message.
   and leave your thread open.
   Don't build a workaround that the other repo's fix will undo.
 - **Tell me in one line**, in the thread: "Filed brignano/design#12 for the
-  design project." That's all. It becomes `agent:ready` like any other issue,
+  design project." That's all. It is ready like any other issue,
   and the other project builds it in priority order.
 - **Only when it's urgent** (it blocks something I asked for today, or
   something is broken in production) add: "Start a session in the **design**
@@ -583,7 +578,7 @@ breakeven shipped eight versions in one; nobody reading a release page wants tha
 - **One open release plan per repo**: an issue titled
   `Release plan: vX.Y.Z — <theme>`, labelled `agent:pause` and
   `type:chore`, pinned. The planner keeps it current. The pause (and its
-  title) keep it from becoming `agent:ready`, so no builder takes it. Its body:
+  title) hold it, so no builder takes it. Its body:
 
   ```markdown
   ## Theme
@@ -649,7 +644,7 @@ flowchart LR
    verify", then the `code-review` skill on your own diff at `medium` and
    `simplify` on what you changed. Fix what they find before opening the PR.
 2. **CI green.** The repo's required checks pass on the PR's head. A repo with
-   no CI gets a `proposed` issue to add one; until then, paste the local check
+   no CI gets an issue to add one; until then, paste the local check
    output in the PR body.
 3. **Reviewer pass** (independent). Once CI is green, the builder starts the
    [`reviewer`](../agents/reviewer.md) subagent with only the PR number and
@@ -700,8 +695,8 @@ tap a link and see it. For any PR on a repo with a deployable site:
    next push. Per-commit links are only for comparing two versions.
 5. **No preview possible?** Write `Preview: none (<why>)` and put
    screenshots or a GIF in the PR body instead (the UX gate already asks for
-   them). If the repo deploys a site but gives PRs no preview, file a
-   `proposed` issue there to add one.
+   them). If the repo deploys a site but gives PRs no preview, file an
+   issue there to add one.
 
 Every preview is private to me: Vercel previews ask me to sign in to Vercel,
 `*.workers.dev` previews to Cloudflare Access (one-time PIN). Never make a
@@ -726,7 +721,7 @@ A PR **may be merged by the builder** only when every one of these holds:
 
 - The repo is listed under `auto` in [`merge.yml`](merge.yml). I add repos
   there; agents never do.
-- Its issue was `agent:ready` when it was claimed, so it
+- Its issue was ready (not held) when it was claimed, so it
   now carries `agent:working` and a claim comment, plus `risk:low` and
   `size:s` or `size:m`.
 - CI is green and the latest `Reviewer: APPROVE` comment names the current
@@ -847,8 +842,7 @@ Changing the nudge here changes it for every project, because callers point at
   nudge workflow needs no secret.
 - The `lead` label arrives from `labels.yml` like any other. Do not invent one.
 
-**Agents leave leads alone.** `lead` issues are not work: nobody sets
-`agent:ready` on them, a builder never takes one, and a planner never proposes
+**Agents leave leads alone.** `lead` issues are not work: `lead` holds them, a builder never takes one, and a planner never proposes
 or re-labels them. They can sit on the Fleet board so I see them, but they are
 only ever handled by me replying and closing.
 
@@ -859,9 +853,7 @@ only ever handled by me replying and closing.
 - Never add a repo to `merge.yml`, and never skip, disable or weaken a check or test to get a PR through the gates.
 - Never bump a version outside a release I agreed to cut (see "Releases are planned").
 - Never touch secrets or `.env` files, and never widen your own permissions.
-- Don't add `agent:ready` by hand (the board sync does it; putting it back
-  when you release your own claim is the exception), never remove
-  `agent:pause`, and never work on, label or close a `lead` issue.
+- Never remove `agent:pause`, and never work on, label or close a `lead` issue.
 - Never work on an issue another session has claimed (`agent:working`).
 - Never re-plan a Ready issue. If the spec is wrong, comment the question, add
   `needs:anthony`, remove `agent:working`, and stop.

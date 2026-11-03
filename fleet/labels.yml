@@ -9,17 +9,14 @@
 #   place (issues keep it), or, where both already exist, moves open issues and
 #   PRs onto this label and then deletes the alias.
 # retire: labels the sync deletes, but only from a repo where no open issue or
-#   PR carries them. Labels not listed anywhere here are left alone, so a repo
-#   can keep its own (homelab's `dns`, for example).
+#   PR carries them.
+# drop: labels the sync deletes outright, taking them off any issue that has
+#   them. Only for labels the fleet has stopped using entirely.
+# Labels not listed anywhere here are left alone, so a repo can keep its own
+# (homelab's `dns`, for example).
 
 labels:
   # Workflow: blue (--i family). The board's columns follow these.
-  - name: proposed
-    color: c6dcfb # --seq-1
-    description: Just filed; becomes agent:ready on the next board sync unless held
-  - name: agent:ready
-    color: 076bd3 # --i
-    description: A builder may take it (automatic unless held)
   - name: agent:working
     color: 87b5f3 # --seq-2
     description: Claimed by a session; others skip it
@@ -119,3 +116,8 @@ retire:
   - question
   - wontfix
   - accessibility
+
+drop:
+  # Readiness is "open and not held", so no label carries it (2026-11-03).
+  - agent:ready
+  - proposed

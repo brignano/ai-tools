@@ -12,8 +12,7 @@ Load the `fleet-standard` skill and follow "Projects talk through issues" and
    comment there with the new context instead of filing a duplicate.
 2. Otherwise file one issue in that repo: the full spec shape (Problem,
    Acceptance criteria, How to verify, Decisions, Out of scope, Notes), a
-   `From owner/repo#N` line naming where it came from, and labels `proposed`
-   plus one `priority:`, `type:`, `size:` and `risk:` from fleet/labels.yml. Add
+   `From owner/repo#N` line naming where it came from, and labels: one `priority:`, `type:`, `size:` and `risk:` from fleet/labels.yml. Add
    `needs:anthony` only if a person must act first.
 3. If our work waits on it: add `Blocked by owner/repo#N` to our issue or PR,
    add `blocked` to our issue, and keep this thread open.

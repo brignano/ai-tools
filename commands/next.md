@@ -13,7 +13,7 @@ reach it. Answer in this order, leaving out empty parts:
 
 1. **Waiting on you**: `needs:anthony` issues and PRs, with the one thing to do. PRs ready to merge first.
 2. **In progress**: `agent:working` issues, with their claim, thread or PR.
-3. **Up next**: top 5 `agent:ready` by priority, then size, then age, one line each on why.
+3. **Up next**: top 5 open issues that aren't held (fleet README, "Ready by default") by priority, then size, then age, one line each on why.
 4. **Held**: issues held only by `agent:pause`.
 5. **Blocked**: `blocked` issues and what they wait on.
 6. **Tidy-up**: possibly done issues (a merged PR mentions them) and issues missing a priority.

@@ -34,7 +34,7 @@ jobs:
         /about
 ```
 
-A repo without it gets a `proposed` issue to add it. Until then, run the same
+A repo without it gets an issue to add it. Until then, run the same
 check locally against your dev server:
 
 ```sh
