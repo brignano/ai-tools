@@ -653,8 +653,21 @@ Claude session, it just works. That ask is my approval for that PR, whatever
 2. Merges with the repo's merge method (squash by default) and deletes the
    branch.
 3. Checks the result: CI on the default branch after the merge, and the
-   deploy if the repo deploys on merge (homelab: its `/deploy` rule). It
-   tells me in one line that it merged and that main is green, or what broke.
+   deploy if the repo deploys on merge. It tells me in one line that it
+   merged and that main is green, or what broke.
+   **Homelab deploys** (homelab itself, or anything that runs on CT 100) are
+   manual: cloud sessions can't reach the box. The reply ends with the one
+   line I paste into a terminal on the Mac or Windows, in a code block, naming
+   the stack the change touched:
+
+   ```sh
+   hl-ssh -t "cd /root/homelab && claude '/deploy monitoring'"
+   ```
+
+   `hl-ssh` connects to CT 100, `-t` keeps the session interactive, and
+   `/deploy` is the homelab repo's deploy command (no stack = every stack).
+   If the change needs something `/deploy` doesn't cover (a new `.env` key, a
+   host step), say so above the line. Never just say "run /deploy".
 4. If a gate fails, it doesn't merge. It says in one line what failed and
    what it's doing about it, fixes what it can in the PR, and merges once
    green without asking again.

@@ -39,6 +39,10 @@ own AGENTS.md/CLAUDE.md win where they are stricter.
   or the repo is in fleet/merge.yml `auto` and "Who merges" allows it. Otherwise
   add `needs:anthony` plus a "Ready to merge" comment.
 - No version bumps or releases without my "publish X".
+- **Homelab deploys are mine to run.** Cloud sessions can't reach CT 100, so
+  when a merged change needs a deploy, end the reply with the exact line in a
+  code block, e.g. `hl-ssh -t "cd /root/homelab && claude '/deploy monitoring'"`
+  (name the stack; drop it to deploy all). Never just say "run /deploy".
 
 ## Always
 - UI styles from `brignano/design` tokens only, never a picked colour or hex
