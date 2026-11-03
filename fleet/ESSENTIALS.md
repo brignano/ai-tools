@@ -15,6 +15,10 @@ own AGENTS.md/CLAUDE.md win where they are stricter.
 - **Issues are specs:** Problem, Acceptance criteria, How to verify, Decisions,
   Out of scope, Notes. A builder never decides what Decisions leaves open: it
   comments the question, adds `needs:anthony`, and stops.
+- **Design review before build:** size M work starts with a proposal PR (no code),
+  then the agent explains it to me in plain words with options and costs, adds
+  `needs:anthony` and stops. Nothing is built until I accept it. Builders comment
+  their plan before coding.
 - **Specs in `proposals/`, decisions in `decisions/` (ADRs), user docs in `docs/`.**
   Repos that deploy several parts keep a driftwood `architecture.yaml`, checked in
   CI; never hand-draw the system diagram. No GitHub Pages.

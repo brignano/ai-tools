@@ -1,4 +1,4 @@
-# 0003: Codex as an optional, sandboxed builder for a one-month trial
+# 0004: Codex as an optional, sandboxed builder for a one-month trial
 
 Status: accepted
 Date: 2026-11-03
