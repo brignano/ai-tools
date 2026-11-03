@@ -1,0 +1,73 @@
+name: fleet-plugin
+
+# Builds the fleet plugin zip (fleet/plugin/build.sh). Every run keeps it as a
+# workflow artifact; a merge to main also refreshes the `fleet-plugin` release,
+# so the latest zip to upload at claude.ai is always at one link:
+# https://github.com/brignano/ai-tools/releases/tag/fleet-plugin
+on:
+  push:
+    branches: [main]
+    paths:
+      - .claude-plugin/**
+      - hooks/**
+      - AGENTS.md
+      - fleet/README.md
+      - fleet/plugin/**
+      - skills/**
+      - agents/**
+      - commands/**
+      - .github/workflows/fleet-plugin.yml
+  pull_request:
+    paths:
+      - .claude-plugin/**
+      - hooks/**
+      - fleet/plugin/**
+      - skills/**
+      - agents/**
+      - commands/**
+      - .github/workflows/fleet-plugin.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fleet-plugin-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: bash fleet/plugin/build.sh dist/fleet-plugin.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fleet-plugin
+          path: dist/fleet-plugin.zip
+
+  release:
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: bash fleet/plugin/build.sh dist/fleet-plugin.zip
+      - name: Refresh the fleet-plugin release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          note="Latest fleet plugin, built from ${GITHUB_SHA::7}. Upload fleet-plugin.zip at claude.ai > Customize > Plugins. See fleet/README.md."
+          if gh release view fleet-plugin >/dev/null 2>&1; then
+            gh release upload fleet-plugin dist/fleet-plugin.zip --clobber
+            gh release edit fleet-plugin --notes "$note"
+          else
+            gh release create fleet-plugin dist/fleet-plugin.zip --prerelease \
+              --title "Fleet plugin (latest)" --notes "$note"
+          fi

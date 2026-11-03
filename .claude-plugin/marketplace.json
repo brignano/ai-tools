@@ -1,0 +1,11 @@
+{
+  "name": "brignano",
+  "owner": { "name": "Anthony Brignano" },
+  "plugins": [
+    {
+      "name": "fleet",
+      "source": "./",
+      "description": "Fleet standard, shared skills, subagents and commands from brignano/ai-tools."
+    }
+  ]
+}

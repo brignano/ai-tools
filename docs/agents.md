@@ -1,7 +1,8 @@
 # agents/
 
-Personal subagents, installed into `~/.claude/agents/` on every machine. Each agent
-is one `.md` file (this README is skipped):
+Personal subagents in `agents/`, shipped in the `fleet` plugin to every machine and
+every cloud project. Each agent is one `.md` file. Keep only agents in that folder:
+the plugin loads every `.md` there, which is why this page lives in `docs/`.
 
 ```markdown
 ---

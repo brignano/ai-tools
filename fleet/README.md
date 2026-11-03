@@ -2,7 +2,7 @@
 
 I am the product owner. Agents plan, build and review; I decide what gets built
 and what merges. This file is the standard every repo in the fleet follows, and
-every cloud session loads it through [`session-start.sh`](session-start.sh).
+every session loads it through the fleet plugin (see "Every session loads this file").
 
 Plan and reasoning: the "Agent fleet plan" doc in the AI Assistant project.
 
@@ -30,31 +30,42 @@ Plan and reasoning: the "Agent fleet plan" doc in the AI Assistant project.
   real backlog. **life, people and ideas never go on the board.** The
   "By repo" view groups cards by Repository.
 
-## Every repo loads this file
+## Every session loads this file
 
 Project instructions are set by hand per project and drift; this file doesn't.
-So **every repo I own runs the fleet hook**, which loads this README and the
-global AGENTS.md into each cloud session. One edit here then reaches every
-project.
+So **the fleet plugin** loads this README and the global AGENTS.md into every
+session, in every Claude Code project and thread. One edit here then reaches
+every project.
 
-- The hook is [`hook/session-start.sh`](hook/session-start.sh), wired by
-  [`hook/settings.json`](hook/settings.json). Copy both into the repo as
-  `.claude/hooks/session-start.sh` and `.claude/settings.json`. If the repo
-  already has a SessionStart hook, add the fleet block to the end of it and
-  keep one hook.
-- Repos with it today (checked 2026-11-01): driftwood, guidebook, sites,
-  brignano.io, homelab, design, breakeven, life, card. ai-tools itself doesn't
-  need it: it is where the hook's payload lives. Any other repo gets a
-  `proposed` issue to add it.
+- **The plugin is this repo.** [`.claude-plugin/plugin.json`](../.claude-plugin/plugin.json)
+  makes the repo root a plugin named `fleet`: the skills in `skills/`, the
+  subagents in `agents/`, the commands in `commands/`, and a start hook,
+  [`plugin/session-start.sh`](plugin/session-start.sh), that prints this file
+  and AGENTS.md. The hook reads them from a fresh clone of `main`, so a merged
+  rule reaches the next session without a rebuild. A changed skill, agent or
+  command reaches cloud sessions when the plugin is uploaded again.
+- **Cloud (every project):** installed once on my claude.ai account, under
+  Customize > Plugins, from the `fleet-plugin.zip` on the
+  [`fleet-plugin` release](https://github.com/brignano/ai-tools/releases/tag/fleet-plugin).
+  The [`fleet-plugin`](../.github/workflows/fleet-plugin.yml) workflow
+  rebuilds that zip on every merge; I upload it again when skills, agents or
+  commands change.
+- **My devices:** `install.sh` installs the same plugin from the local checkout
+  (`claude plugin install fleet@brignano`), and it loads in place, so
+  `ai-refresh` is all it takes to update it.
+- **Why not the repo hook:** a project thread starts in a folder above its
+  repos, so a repo's own `.claude/settings.json` hook never runs there. The
+  old [`hook/`](hook/) still exists for repos that have it; it steps aside
+  when the plugin is installed, so nothing loads twice.
 
 **New repo checklist** (the planner's first run does this):
 
-1. Add the fleet hook (above).
+1. Nothing to install: the plugin already reaches it.
 2. Labels arrive on their own: the `fleet-labels` workflow syncs every repo I
    own on Mondays. Run it by hand to get them sooner.
 3. If it will have a real backlog, add it to [`board.yml`](board.yml).
-4. Nothing to paste into the project's instructions: the hook carries the
-   rules.
+4. Its project lists only the repos it owns. Work for another repo is an issue
+   there (see "Projects talk through issues"), never a repo added to the project.
 
 ## Labels
 

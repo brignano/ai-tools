@@ -1,6 +1,7 @@
 # skills/
 
-Personal skills, installed into `~/.claude/skills/` on every machine. Each skill is
+Personal skills, shipped in the `fleet` plugin to every machine and every cloud
+project (see the root README). Each skill is
 a directory:
 
 ```
@@ -21,8 +22,9 @@ description: What it does and when to use it. Claude reads only this line until
 The instructions, loaded when a task matches the description.
 ```
 
-The installer links the whole directory, so a file added to a skill arrives with a
-plain `git pull`. A directory with no `SKILL.md` is ignored.
+On my devices the plugin loads from the checkout, so a file added to a skill
+arrives with a plain `git pull`; cloud sessions get it when the plugin is uploaded
+again. A directory with no `SKILL.md` is ignored.
 
 ## What goes here, and what doesn't
 

@@ -12,15 +12,24 @@ servers — installed once per device so every machine stays in sync.
 | Repo file | Linked / registered to | Purpose |
 |-----------|------------------------|---------|
 | `AGENTS.md` | `~/.claude/CLAUDE.md` | Your context, preferences, conventions |
-| `commands/*.md` | `~/.claude/commands/` | Slash commands (`/new-tsd`, `/review-pr`, …) |
+| `commands/*.md` | `fleet` plugin (linked to `~/.claude/commands/` if there's no `claude` CLI) | Slash commands (`/new-tsd`, `/review-pr`, …) |
 | `output-styles/*.md` | `~/.claude/output-styles/` | Switchable personas (`/output-style`) |
-| `skills/<name>/` | `~/.claude/skills/<name>/` | Skills — loaded when a task matches their description |
-| `agents/*.md` | `~/.claude/agents/` | Subagents — run in their own context, report back a conclusion |
+| `skills/<name>/` | `fleet` plugin (linked to `~/.claude/skills/` if there's no `claude` CLI) | Skills — loaded when a task matches their description |
+| `agents/*.md` | `fleet` plugin (linked to `~/.claude/agents/` if there's no `claude` CLI) | Subagents — run in their own context, report back a conclusion |
 | `claude/settings.json` | `~/.claude/settings.json` | Baseline permission allowlist |
 | `claude/mcp-servers.json` | user-scope MCP (`claude mcp add-json`) | github, homelab, homelab-calendar, terraform, rea |
 | `.env.example` → `secrets.env` | sourced by `~/.zshenv` (zsh) / `~/.bashrc` — `.zshenv` so the desktop app sees it too | Tokens (gitignored, never committed) |
 | `shell/profile.ps1` | sourced by both PowerShell `$PROFILE`s | oh-my-zsh-style Windows shell: nav + git aliases, PSReadLine, Starship prompt |
 | `shell/aliases.sh` | sourced by `~/.zshrc` / `~/.bashrc` | Same nav + git aliases on Mac/Linux (prompt untouched — omz stays) |
+
+**The `fleet` plugin.** This repo is also a Claude Code plugin
+([`.claude-plugin/`](.claude-plugin/)): commands, skills, agents, and a start
+hook that loads AGENTS.md and the fleet standard. `install.sh` installs it from
+this checkout, so it loads in place and `ai-refresh` keeps it current. Cloud
+sessions get the same plugin from claude.ai (Customize > Plugins, the zip on the
+[`fleet-plugin` release](https://github.com/brignano/ai-tools/releases/tag/fleet-plugin));
+see [fleet/README.md](fleet/README.md#every-session-loads-this-file). Windows
+(`install.ps1`) still links them into `~/.claude` for now.
 
 `AGENTS.md` is AI-agnostic — other tools (Cursor, Copilot, Windsurf) can point at the
 same file; uncomment the relevant block in the install scripts. The commands, output
@@ -166,7 +175,7 @@ ai-tools/
 - **Command:** drop a `.md` (with `description` / `argument-hint` frontmatter) in `commands/`, `git push`, then `git pull` + re-run install elsewhere.
 - **Output style:** same, in `output-styles/` (frontmatter: `name`, `description`).
 - **Skill:** add `skills/<name>/SKILL.md` (frontmatter: `name`, `description`) plus any files it uses, then re-run install. See [`skills/README.md`](skills/README.md) for what belongs here versus a repo's own `.claude/skills/`.
-- **Agent:** drop a `.md` (frontmatter: `name`, `description`, optional `tools`) in `agents/`, then re-run install. See [`agents/README.md`](agents/README.md).
+- **Agent:** drop a `.md` (frontmatter: `name`, `description`, optional `tools`) in `agents/`, then re-run install. See [`docs/agents.md`](docs/agents.md).
 - **MCP server:** add it to `claude/mcp-servers.json` (use `${VAR}` for any secret, add the var to `.env.example`), then re-run install.
 - **Permission:** add a pattern to `claude/settings.json` `permissions.allow`.
 - **Shell alias:** add it to both `shell/profile.ps1` (PowerShell) and `shell/aliases.sh` (zsh/bash), `git push` — no re-install needed, profiles source the repo files directly.

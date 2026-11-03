@@ -9,6 +9,13 @@
 set -uo pipefail
 [ "${CLAUDE_CODE_REMOTE:-}" = "true" ] || exit 0
 
+# The fleet plugin (fleet/plugin/) already loads all of this, in every project
+# thread. When it is installed, step aside so nothing loads twice.
+if find "$HOME/.claude/plugins" -maxdepth 6 -path '*/.claude-plugin/plugin.json' \
+     -exec grep -l '"homepage": "https://github.com/brignano/ai-tools"' {} + 2>/dev/null | grep -q .; then
+  exit 0
+fi
+
 DIR="$HOME/.ai-tools"
 if [ -d "$DIR/.git" ]; then
   git -C "$DIR" pull -q --ff-only 2>/dev/null || true
