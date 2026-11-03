@@ -44,5 +44,6 @@ own AGENTS.md/CLAUDE.md win where they are stricter.
 - UI styles from `brignano/design` tokens only, never a picked colour or hex
   (`design-system` skill). New sites follow the `hosting` skill and default to private.
 - Never touch secrets or `.env`, never weaken a check, never work on a `lead` issue.
+  (The plugin's guard blocks pushes to main and writes to secrets files.)
 - Personal topics (`life`, `people`) never go into issues or PRs, and no project
   files issues in life, people or ideas.

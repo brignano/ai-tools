@@ -1,7 +1,7 @@
 {
   "name": "fleet",
   "version": "0.1.0",
-  "description": "Anthony's fleet standard for every Claude Code project and thread: global AGENTS.md and fleet/README.md loaded at session start, plus the shared skills, subagents and commands from brignano/ai-tools.",
+  "description": "Anthony's fleet standard in every Claude Code project and thread: AGENTS.md and the one-page fleet essentials at session start, the full standard as the fleet-standard skill, shared skills, subagents and commands (/next, /handoff, /merge-it, /new-repo), and guards that block pushes to main and edits to secrets files.",
   "author": {
     "name": "Anthony Brignano"
   },

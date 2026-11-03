@@ -12,6 +12,7 @@
 - `design` — **the design system**. Every UI I build styles from this. See below.
 - `driftwood` — architecture as code, reconciled with live infrastructure (npm package)
 - `guidebook` — guided walkthroughs on any website (private, proof of concept)
+- `sites`, `receipts`, `brignano.io`, `breakeven`, `card` — products, each run from its own Claude project
 - `life`, `people` — personal; never referenced from issues or PRs in other repos
 
 ## How I work
@@ -39,49 +40,21 @@ The main session plans; cheaper subagents implement — but only for real featur
 
 ## Agent fleet
 
-Backlogs are GitHub Issues on one **Fleet** project board; agents plan, build and
-review. Every unheld issue is ready by default; I set priority, hold what I
-want held, and decide what merges. Every session starts with the one-page
-[`fleet/ESSENTIALS.md`](fleet/ESSENTIALS.md). **Before planning, building,
-reviewing or merging an issue or PR, load the `fleet-standard` skill** (the
-full [`fleet/README.md`](fleet/README.md)): labels, the spec shape every issue
-uses, definition of ready, and the hard rules.
+The rules every agent follows are the fleet essentials (loaded at session
+start) and the `fleet-standard` skill (the full
+[`fleet/README.md`](fleet/README.md)): load it before planning, building,
+reviewing or merging.
 
-**Projects talk through issues.** Projects can't reach each other. When work
-belongs to another repo, open an issue in that repo (fleet labels, spec shape)
-instead of asking me to add the repo to this project, and tell me in one line.
-Only when it's urgent, also tell me which project to start a session in.
+## Skills to load first
 
-## Styling — always use the design system
-
-Every UI styles from [`brignano/design`](https://github.com/brignano/design):
-**never pick a colour and never hardcode a hex** — take it from `tokens.css`. If a
-project needs something the system lacks, add it to `brignano/design` and bump the
-pin rather than inventing a local value.
-
-**When starting a new project, and before writing any UI, styling or colour, read the `design-system` skill**
-([`skills/design-system/SKILL.md`](skills/design-system/SKILL.md)): how to wire
-it into a new project (install, fonts, browserslist, Tailwind), what each colour means, and the rules for tiers, dark mode and charts.
-
-## Hosting & access
-
-One hosting pattern (Cloudflare Workers static assets on the `brignano.io` zone)
-with a separate access decision layered on it. **Default to private** — public is
-the deliberate exception, and if you cannot tell which applies, ask.
-
-**Before standing up any site, subdomain or preview, or changing who can reach
-one, read the `hosting` skill** ([`skills/hosting/SKILL.md`](skills/hosting/SKILL.md),
-installed to `~/.claude/skills/hosting/`). It has the load-bearing Access rules,
-the ordering that keeps a new site from serving before it is protected, and the
-current estate.
-
-## Releases
-
-**The release page is the changelog.** I cut a release by telling you "publish X"
-(a Release workflow creates it from `releases/v<version>.md`) or in the GitHub UI.
-Releases are planned batches, never one per change: don't bump a version or
-suggest a release in an ordinary PR. Before planning or cutting a release,
-writing notes, or touching a workflow that runs on tags, read the `releases` skill ([`skills/releases/SKILL.md`](skills/releases/SKILL.md)).
+- **Any UI, styling or colour:** the `design-system` skill. Every UI styles from
+  [`brignano/design`](https://github.com/brignano/design) tokens; never pick a
+  colour or hardcode a hex. Missing something? Add it to design, don't invent it.
+- **Any site, subdomain, preview or access change:** the `hosting` skill.
+  Cloudflare Workers on the `brignano.io` zone, private by default.
+- **Planning or cutting a release, release notes, tag workflows:** the
+  `releases` skill. Releases are planned batches; ordinary PRs never bump a version.
+- **Forms that take in leads:** the `leads` skill.
 
 ## Communication preferences
 - Short, direct responses
@@ -95,13 +68,8 @@ writing notes, or touching a workflow that runs on tags, read the `releases` ski
 - Prefer proven tools over new ones unless there's a clear reason
 - Always consider: what does this cost to run monthly?
 
-## Custom commands, output styles, skills & agents
-Shipped by the `fleet` plugin from the `ai-tools` repo, in every project and on
-every machine. Fleet shortcuts: `/next`, `/handoff`, `/merge-it`, `/new-repo`. Slash commands live in `commands/`
-(each self-describes via frontmatter — run `/` to list them); reusable personas live
-in `output-styles/` (`/output-style` to switch); skills in `skills/<name>/SKILL.md`;
-subagents in `agents/`. This list is intentionally not duplicated here — the
-directories are the source of truth.
-
-Anything tied to one repo's paths, hosts or services goes in **that repo's**
-`.claude/` instead, not here.
+## Commands, skills & agents
+Shipped by the `fleet` plugin from `ai-tools`, in every project and on every
+machine: run `/` to list them. Fleet shortcuts: `/next`, `/handoff`,
+`/merge-it`, `/new-repo`. Anything tied to one repo's paths, hosts or services
+goes in **that repo's** `.claude/` instead.

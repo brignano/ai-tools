@@ -37,9 +37,11 @@ cat "$SRC/fleet/ESSENTIALS.md" 2>/dev/null
 
 # Stale-copy check: an uploaded plugin is a snapshot, so tell Anthony when the
 # skills, agents or commands on main no longer match the copy running here.
-if [ "$SRC" = "$LIVE" ] && [ "$(cd "$ROOT" 2>/dev/null && pwd -P)" != "$(cd "$LIVE" && pwd -P)" ]; then
-  here="$(bash "$ROOT/fleet/plugin/content-hash.sh" "$ROOT" 2>/dev/null)"
-  main="$(bash "$ROOT/fleet/plugin/content-hash.sh" "$LIVE" 2>/dev/null)"
+# The zip carries fleet/plugin/BUILD, the hash of its sources at build time;
+# a checkout (my devices) has none and is never stale.
+if [ "$SRC" = "$LIVE" ] && [ -f "$ROOT/fleet/plugin/BUILD" ]; then
+  here="$(tr -d '[:space:]' < "$ROOT/fleet/plugin/BUILD")"
+  main="$(bash "$LIVE/fleet/plugin/content-hash.sh" "$LIVE" 2>/dev/null)"
   if [ -n "$here" ] && [ -n "$main" ] && [ "$here" != "$main" ]; then
     echo
     echo "# Fleet plugin is out of date"
