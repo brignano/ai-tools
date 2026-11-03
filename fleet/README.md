@@ -508,6 +508,7 @@ AGENTS.md "Planning & delegation".
 |---|---|---|---|
 | Planner | Opus | When I ask, in the repo's project | [`roles/planner.md`](roles/planner.md) |
 | Builder | Sonnet; Haiku for searches and test runs | When I ask, in the repo's project | [`roles/builder.md`](roles/builder.md) |
+| Builder (optional) | Codex via the [`codex-builder`](../agents/codex-builder.md) agent, Sonnet wrapper | Only when I say "use Codex" or the Claude weekly limit is low (trial, see below) | same prompt; the Claude session stays builder of record |
 | Reviewer | Opus, fresh context | **Automatically**, started by the builder once CI is green | [`roles/reviewer.md`](roles/reviewer.md), as the [`reviewer`](../agents/reviewer.md) subagent |
 
 **Deciders decide, builders execute.** Every judgment call (approach,
@@ -530,6 +531,37 @@ keep their own `model:` frontmatter. The `implementer` runs with
 `isolation: worktree`, so each step is committed on its own worktree branch (from the
 planner's committed HEAD) and the planner reviews that diff before merging the branch. Cloud sessions take their model from the
 claude.ai project or thread, not a settings file; the coordinator pins it by role.
+
+**Codex as an optional builder (one-month trial, from 2026-11-03).** Fleet
+builds draw on the Claude weekly limit; ChatGPT Plus includes Codex CLI, a
+second usage pool at the same per-token price as Sonnet. When the Claude limit
+is running low (past about 70% of the week) or I say "use Codex", the builder
+hands a concrete step to the `codex-builder` agent instead of `implementer`.
+Rules:
+
+- Only issues with a `## Decisions` section go to Codex, same as the Sonnet
+  builder.
+- The agent shells out to `codex exec` in its own worktree with the sandbox on
+  (`workspace-write`, no network unless the step needs it). Never use an MCP
+  wrapper for Codex or any flag that bypasses the sandbox or approvals.
+- Codex never pushes, opens PRs or merges. The Claude session stays the
+  builder of record: it reviews the diff, merges the worktree branch and runs
+  the normal gates (self-review, CI, `reviewer` APPROVE).
+- If Codex isn't installed or logged in, the agent stops and says so. There is
+  no silent fallback, and no automatic routing: the session picks by hand.
+- The PR body gets a `## Builder` line: `Codex` or `Sonnet`, first-pass CI
+  green (y/n), reviewer change requests (count). After the month those lines
+  decide whether Codex stays.
+- Codex needs a ChatGPT login on the machine, so it works on my devices, not
+  in claude.ai cloud threads.
+
+**When the Claude limit is already hit.** Codex cannot run the fleet by
+itself: planning, the reviewer and the project threads are Claude. To keep
+shipping, run `codex` in the repo (it reads AGENTS.md) on an issue that has
+Decisions, on a branch, and open the PR yourself. Run the repo's checks and
+read the diff before merging; there is no `Reviewer: APPROVE` until Claude is
+back, so mark the PR `needs:anthony`. Do not merge fleet-rule or agent-context
+changes this way.
 
 Nothing runs on a schedule. The reviewer is the exception to "when I ask":
 no PR waits for me to request a review (see "Review and merge"). I start a role from the repo's own Claude project
