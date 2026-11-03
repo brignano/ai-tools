@@ -1,0 +1,10 @@
+{
+  "name": "fleet",
+  "version": "0.1.0",
+  "description": "Anthony's fleet standard for every Claude Code project and thread: global AGENTS.md and fleet/README.md loaded at session start, plus the shared skills, subagents and commands from brignano/ai-tools.",
+  "author": {
+    "name": "Anthony Brignano"
+  },
+  "homepage": "https://github.com/brignano/ai-tools",
+  "repository": "https://github.com/brignano/ai-tools"
+}

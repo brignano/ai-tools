@@ -171,9 +171,45 @@ fi
 echo "==> Context (~/.claude/CLAUDE.md)"
 link "$AGENTS_MD" "$CLAUDE_DIR/CLAUDE.md"
 
+# Commands, skills and agents ship as the `fleet` plugin (.claude-plugin/), the
+# same plugin cloud sessions get from claude.ai. Installed from this checkout, it
+# loads in place, so `git pull` updates it with nothing to re-link. Without the
+# claude CLI we fall back to linking them into ~/.claude as before.
+USE_PLUGIN=0
+command -v claude >/dev/null 2>&1 && USE_PLUGIN=1
+
+echo "==> Fleet plugin (commands, skills, agents)"
+if [ "$USE_PLUGIN" = 1 ]; then
+  if [ "$DRY_RUN" = 1 ]; then
+    echo "    [dry-run] claude plugin marketplace add $REPO_DIR && claude plugin install fleet@brignano"
+  elif claude plugin marketplace add "$REPO_DIR" >/dev/null 2>&1 \
+       && claude plugin install fleet@brignano >/dev/null 2>&1; then
+    echo "    fleet@brignano (loads from $REPO_DIR)"
+  else
+    echo "    FAILED: plugin install did not work — linking into ~/.claude instead"
+    echo "      retry by hand: claude plugin marketplace add $REPO_DIR && claude plugin install fleet@brignano"
+    USE_PLUGIN=0
+  fi
+fi
+if [ "$USE_PLUGIN" = 1 ]; then
+  # Remove the links earlier runs made, so nothing loads twice.
+  for d in commands skills agents; do
+    for l in "$CLAUDE_DIR/$d"/*; do
+      [ -L "$l" ] || continue
+      case "$(readlink "$l")" in
+        "$REPO_DIR"/*) echo "    unlink (now in plugin): $l"; run rm -f "$l" ;;
+      esac
+    done
+  done
+else
+  echo "    linking commands, skills and agents into ~/.claude"
+fi
+
+if [ "$USE_PLUGIN" = 0 ]; then
 echo "==> Commands (~/.claude/commands/)"
 prune "$CLAUDE_DIR/commands"
 for f in "$COMMANDS_DIR"/*.md; do link "$f" "$CLAUDE_DIR/commands/$(basename "$f")"; done
+fi
 
 echo "==> Output styles (~/.claude/output-styles/)"
 prune "$CLAUDE_DIR/output-styles"
@@ -181,6 +217,7 @@ for f in "$STYLES_DIR"/*.md; do link "$f" "$CLAUDE_DIR/output-styles/$(basename 
 
 # A skill is a directory (SKILL.md plus any files it bundles), so link the whole
 # directory: files added to a skill later arrive with a plain `git pull`.
+if [ "$USE_PLUGIN" = 0 ]; then
 echo "==> Skills (~/.claude/skills/)"
 prune "$CLAUDE_DIR/skills"
 for d in "$SKILLS_DIR"/*/; do
@@ -195,6 +232,7 @@ for f in "$AGENT_DEFS_DIR"/*.md; do
   [ "$(basename "$f")" = README.md ] && continue
   link "$f" "$CLAUDE_DIR/agents/$(basename "$f")"
 done
+fi
 
 echo "==> Settings (~/.claude/settings.json)"
 link "$SETTINGS" "$CLAUDE_DIR/settings.json"
