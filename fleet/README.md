@@ -800,8 +800,8 @@ Why it needs Anthony: <the "Who merges" rule it misses>
 After merge: <what deploys or runs, and how it will be checked>
 ```
 
-The three added lines follow "Asking Anthony": I must be able to approve from
-this comment alone. If a decision is still open, the PR isn't ready: ask it
+What you're approving, Risk and Decisions made in this PR follow "Asking Anthony":
+I must be able to approve from this comment alone. If a decision is still open, the PR isn't ready: ask it
 first, in that shape.
 
 A PR is only "ready" when every line is true for its current head. A new
