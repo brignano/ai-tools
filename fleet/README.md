@@ -145,8 +145,9 @@ never seen this repo implement it without choosing between two approaches?
 If not, the missing choice goes in Decisions first.
 
 Size S: the issue body is the spec. Size M: also a short proposal in the
-repo's `proposals/`, linked from the issue. Anything bigger is split before it
-is Ready.
+repo's `proposals/`, linked from the issue, which I approve before anything is
+built ("Design review before build"). Anything bigger is split before it is
+Ready.
 
 ## Proposals
 
@@ -192,6 +193,43 @@ stops.
 **Definition of done:** every acceptance box ticked in the PR body, the repo's
 checks green, the review gates passed (see "Review and merge"), and the PR
 merged, by me or, where the merge rules allow it, by the builder.
+
+## Design review before build
+
+Building the wrong thing wastes more tokens than any other mistake, so design
+is settled with me before code is written, and the build then does exactly
+what was agreed.
+
+1. **The proposal comes first, on its own.** Any size M issue, or any work
+   whose Decisions can't settle every fork, starts with
+   `proposals/<slug>.md` (`Status: proposed`) in a PR with **no code**.
+2. **Then stop and explain it to me.** The agent adds `needs:anthony` to the
+   issue and the proposal PR and posts a **Design review** in its thread (and
+   as a PR comment), in plain words:
+   - what will be built and what the user will see;
+   - the approach in a few sentences, plus a Mermaid diagram if it has moving
+     parts;
+   - the options it rejected and why, one line each;
+   - what it costs: build size (S/M), running cost, and maintenance;
+   - every open question as a choice with a recommendation (a decision card
+     where the app offers one).
+
+   Then it ends its turn. Nothing else on that issue runs until I answer.
+3. **My answer is the approval.** I approve by merging the proposal PR, or by
+   saying so in the thread, after which the agent sets `Status: accepted`,
+   writes the ADR, merges it, and removes `needs:anthony` from the issue so it
+   can be built. Changes I ask for go into the proposal and
+   get a fresh Design review. A rejection sets `Status: rejected` with an ADR.
+4. **Only then build.** The planner files the proposal's issues with their
+   Decisions taken from the accepted proposal. A builder whose issue links a
+   proposal that isn't `accepted` or `building` stops with `needs:anthony`.
+5. **Say the plan before the code.** On every claimed issue, the builder's
+   first comment is its plan: files it will touch, the steps, and what it
+   won't do. If that plan departs from the issue's Decisions or the accepted
+   proposal, it asks and stops instead of building.
+
+Proposal and ADR PRs are never merged by an agent on its own say-so ("Who
+merges").
 
 ## Decisions (ADRs)
 
@@ -737,7 +775,8 @@ A PR **may be merged by the builder** only when every one of these holds:
   config; dependency manifests or lockfiles (Dependabot and Renovate PRs
   included); data migrations or anything that deletes data; versions,
   changelogs or release notes; agent rules (`AGENTS.md`, `CLAUDE.md`,
-  `.claude/`); and anything the repo's own AGENTS.md lists as protected.
+  `.claude/`); proposals and decisions (`proposals/`, `decisions/`), which
+  only my approval accepts; and anything the repo's own AGENTS.md lists as protected.
 
 Then the builder squash-merges, deletes the branch, and tells me in one line
 in the thread: what merged and the PR link.
