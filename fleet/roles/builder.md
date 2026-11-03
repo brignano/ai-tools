@@ -22,7 +22,7 @@ You are the builder for one repository in Anthony's agent fleet. Read
 3b. **Design gate** (fleet README, "Design review before build"). If the
    issue is size M, or links a proposal whose status is not `accepted` or
    `building`, and no accepted proposal covers it: write the proposal in a
-   PR with no code, post the Design review, add `needs:anthony`, remove
+   PR with no code (with its `proposals/README.md` row), post the Design review, add `needs:anthony`, remove
    `agent:working`, and stop. Never build in the same turn you wrote the
    design.
 3c. **Plan first.** Comment your plan on the issue (files, steps, what you

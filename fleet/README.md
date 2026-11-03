@@ -167,7 +167,7 @@ built from `docs/` without dragging in rejected designs.
   status, tracking issue and the issues it was split into. Any PR that adds a
   proposal or changes its status updates the index in the same PR.
 - A proposal that writes "proposed issues" at the end gets them filed by the
-  planner as `proposed` once the proposal merges, and the index links them.
+  planner as `proposed` once the proposal is `accepted`, and the index links them.
 - `/new-tsd` drafts a proposal in this shape; save it as `proposals/<slug>.md`.
 
 Index shape:
@@ -215,11 +215,14 @@ what was agreed.
      where the app offers one).
 
    Then it ends its turn. Nothing else on that issue runs until I answer.
-3. **My answer is the approval.** I approve by merging the proposal PR, or by
-   saying so in the thread, after which the agent sets `Status: accepted`,
-   writes the ADR, merges it, and removes `needs:anthony` from the issue so it
-   can be built. Changes I ask for go into the proposal and
-   get a fresh Design review. A rejection sets `Status: rejected` with an ADR.
+3. **My answer is the approval.** When I say yes (in the thread or on the
+   PR), the agent pushes `Status: accepted`, the index row and the ADR onto
+   the same proposal PR and merges it: my approval of the design counts as
+   "merge it" for that PR. If I merged the proposal PR myself, it does the
+   same in a small follow-up PR, which my approval also covers. Then it
+   removes `needs:anthony` from the issue so it can be built. Changes I ask
+   for go into the proposal and get a fresh Design review. A rejection sets
+   `Status: rejected` with an ADR, the same way.
 4. **Only then build.** The planner files the proposal's issues with their
    Decisions taken from the accepted proposal. A builder whose issue links a
    proposal that isn't `accepted` or `building` stops with `needs:anthony`.
@@ -775,8 +778,9 @@ A PR **may be merged by the builder** only when every one of these holds:
   config; dependency manifests or lockfiles (Dependabot and Renovate PRs
   included); data migrations or anything that deletes data; versions,
   changelogs or release notes; agent rules (`AGENTS.md`, `CLAUDE.md`,
-  `.claude/`); proposals and decisions (`proposals/`, `decisions/`), which
-  only my approval accepts; and anything the repo's own AGENTS.md lists as protected.
+  `.claude/`); proposals and decisions (`proposals/`, `decisions/`), except
+  the accept or reject PR my design approval covers ("Design review before
+  build"); and anything the repo's own AGENTS.md lists as protected.
 
 Then the builder squash-merges, deletes the branch, and tells me in one line
 in the thread: what merged and the PR link.

@@ -28,7 +28,7 @@ after the PR.
      or new dependency where a few lines would do (`output-styles/code-review-defaults.md`).
    - **Fleet rules**: proposals in `proposals/` with an issue and index row;
      a proposal PR carries no code, and a code PR builds only from an
-     `accepted` proposal or a size S issue's Decisions, matching the plan
+     `accepted` or `building` proposal or a size S issue's Decisions, matching the plan
      comment ("Design review before build");
      an ADR in `decisions/` (with an index row) when the PR records a
      decision, and no merged ADR edited except to mark it superseded;
