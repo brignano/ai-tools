@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/fleet/plugin/guard.py\"",
+            "command": "command -v python3 >/dev/null 2>&1 || exit 0; exec python3 \"${CLAUDE_PLUGIN_ROOT}/fleet/plugin/guard.py\"",
             "timeout": 10
           }
         ]
