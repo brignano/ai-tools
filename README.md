@@ -16,7 +16,7 @@ servers — installed once per device so every machine stays in sync.
 | `output-styles/*.md` | `~/.claude/output-styles/` | Switchable personas (`/output-style`) |
 | `skills/<name>/` | `fleet` plugin (linked to `~/.claude/skills/` if there's no `claude` CLI) | Skills — loaded when a task matches their description |
 | `agents/*.md` | `fleet` plugin (linked to `~/.claude/agents/` if there's no `claude` CLI) | Subagents — run in their own context, report back a conclusion |
-| `claude/settings.json` | `~/.claude/settings.json` | Baseline permission allowlist |
+| `claude/settings.json` | `~/.claude/settings.json` | Baseline permission allowlist and default model (`opusplan`). If you already have a real settings file, the installer merges only `model` and `worktree` into it |
 | `claude/mcp-servers.json` | user-scope MCP (`claude mcp add-json`) | github, homelab, homelab-calendar, terraform, rea |
 | `.env.example` → `secrets.env` | sourced by `~/.zshenv` (zsh) / `~/.bashrc` — `.zshenv` so the desktop app sees it too | Tokens (gitignored, never committed) |
 | `shell/profile.ps1` | sourced by both PowerShell `$PROFILE`s | oh-my-zsh-style Windows shell: nav + git aliases, PSReadLine, Starship prompt |
