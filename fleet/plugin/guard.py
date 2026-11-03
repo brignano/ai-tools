@@ -59,6 +59,8 @@ def git_subcommand(words, i):
 
 def check_push(command, cwd):
     cdir = cwd or "."
+    # Drop redirections (2>&1, > log, <in) so they never read as refspecs.
+    command = re.sub(r"\d*(>>|>&|<&|>|<)\s*\S*", " ", command)
     for part in re.split(r"&&|\|\||[;|&\n]", command):
         try:
             words = shlex.split(part)
