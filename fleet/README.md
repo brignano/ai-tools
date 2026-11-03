@@ -486,8 +486,8 @@ section is routed to the planner first.
 main sessions on my devices plan on Opus (plan mode) and do everything else on
 Sonnet. Override one session with `/model opus` or `/model sonnet`. Subagents
 keep their own `model:` frontmatter. The `implementer` runs with
-`isolation: worktree`, so each step lands in a separate worktree and the planner
-reviews that diff before merging it. Cloud sessions take their model from the
+`isolation: worktree`, so each step is committed on its own worktree branch (from the
+planner's committed HEAD) and the planner reviews that diff before merging the branch. Cloud sessions take their model from the
 claude.ai project or thread, not a settings file; the coordinator pins it by role.
 
 Nothing runs on a schedule. The reviewer is the exception to "when I ask":

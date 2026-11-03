@@ -35,7 +35,7 @@ The main session plans; cheaper subagents implement — but only for real featur
 - **Then delegate:** hand each concrete step to the `implementer` agent (Sonnet)
   rather than writing it here. Independent steps can run in parallel. The default
   model is `opusplan` (Opus in plan mode, Sonnet otherwise; `/model` overrides),
-  and the implementer runs in its own git worktree: review its diff, then merge.
+  and the implementer runs in its own git worktree: review its diff, then merge its branch.
 - **Searches** go to `Explore` (Haiku), **long test/lint runs** to `test-runner`.
 - **Keep here:** design decisions, debugging an unknown cause, reviewing what the
   agents return, and anything small enough that a handoff costs more than doing it.

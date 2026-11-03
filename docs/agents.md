@@ -41,7 +41,7 @@ take the cheap, well-defined work:
 | `reviewer` | Opus | Independent, read-only pre-merge review of one fleet PR (fleet README, "Review and merge") |
 
 `implementer` sets `isolation: worktree`: each step runs in its own temporary git
-worktree (branched from the default branch), so the planning session reviews a
+worktree (branched from the caller's committed HEAD via `worktree.baseRef: head`), so the planning session reviews a
 separate diff before anything lands.
 
 Keep this list short. Every agent's `description` is loaded into every session,
