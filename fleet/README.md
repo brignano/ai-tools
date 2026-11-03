@@ -142,8 +142,9 @@ never seen this repo implement it without choosing between two approaches?
 If not, the missing choice goes in Decisions first.
 
 Size S: the issue body is the spec. Size M: also a short proposal in the
-repo's `proposals/`, linked from the issue. Anything bigger is split before it
-is Ready.
+repo's `proposals/`, linked from the issue, which I approve before anything is
+built ("Design review before build"). Anything bigger is split before it is
+Ready.
 
 ## Proposals
 
@@ -163,7 +164,7 @@ built from `docs/` without dragging in rejected designs.
   status, tracking issue and the issues it was split into. Any PR that adds a
   proposal or changes its status updates the index in the same PR.
 - A proposal that writes "proposed issues" at the end gets them filed by the
-  planner once the proposal merges, and the index links them.
+  planner once the proposal is `accepted`, and the index links them.
 - `/new-tsd` drafts a proposal in this shape; save it as `proposals/<slug>.md`.
 
 Index shape:
@@ -189,6 +190,46 @@ stops.
 **Definition of done:** every acceptance box ticked in the PR body, the repo's
 checks green, the review gates passed (see "Review and merge"), and the PR
 merged, by me or, where the merge rules allow it, by the builder.
+
+## Design review before build
+
+Building the wrong thing wastes more tokens than any other mistake, so design
+is settled with me before code is written, and the build then does exactly
+what was agreed.
+
+1. **The proposal comes first, on its own.** Any size M issue, or any work
+   whose Decisions can't settle every fork, starts with
+   `proposals/<slug>.md` (`Status: proposed`) in a PR with **no code**.
+2. **Then stop and explain it to me.** The agent adds `needs:anthony` to the
+   issue and the proposal PR and posts a **Design review** in its thread (and
+   as a PR comment), in plain words:
+   - what will be built and what the user will see;
+   - the approach in a few sentences, plus a Mermaid diagram if it has moving
+     parts;
+   - the options it rejected and why, one line each;
+   - what it costs: build size (S/M), running cost, and maintenance;
+   - every open question as a choice with a recommendation (a decision card
+     where the app offers one).
+
+   Then it ends its turn. Nothing else on that issue runs until I answer.
+3. **My answer is the approval.** When I say yes (in the thread or on the
+   PR), the agent pushes `Status: accepted`, the index row and the ADR onto
+   the same proposal PR and merges it: my approval of the design counts as
+   "merge it" for that PR. If I merged the proposal PR myself, it does the
+   same in a small follow-up PR, which my approval also covers. Then it
+   removes `needs:anthony` from the issue so it can be built. Changes I ask
+   for go into the proposal and get a fresh Design review. A rejection sets
+   `Status: rejected` with an ADR, the same way.
+4. **Only then build.** The planner files the proposal's issues with their
+   Decisions taken from the accepted proposal. A builder whose issue links a
+   proposal that isn't `accepted` or `building` stops with `needs:anthony`.
+5. **Say the plan before the code.** On every claimed issue, the builder's
+   first comment is its plan: files it will touch, the steps, and what it
+   won't do. If that plan departs from the issue's Decisions or the accepted
+   proposal, it asks and stops instead of building.
+
+Proposal and ADR PRs are never merged by an agent on its own say-so ("Who
+merges").
 
 ## Decisions (ADRs)
 
@@ -477,6 +518,14 @@ without a Decisions section; Sonnet for a build with Decisions; Haiku for
 searches and test runs). A build request for an issue with no Decisions
 section is routed to the planner first.
 
+**How it is enforced.** `claude/settings.json` sets `"model": "opusplan"`, so
+main sessions on my devices plan on Opus (plan mode) and do everything else on
+Sonnet. Override one session with `/model opus` or `/model sonnet`. Subagents
+keep their own `model:` frontmatter. The `implementer` runs with
+`isolation: worktree`, so each step is committed on its own worktree branch (from the
+planner's committed HEAD) and the planner reviews that diff before merging the branch. Cloud sessions take their model from the
+claude.ai project or thread, not a settings file; the coordinator pins it by role.
+
 Nothing runs on a schedule. The reviewer is the exception to "when I ask":
 no PR waits for me to request a review (see "Review and merge"). I start a role from the repo's own Claude project
 ("build the next ready issue", "review the open PR", "plan driftwood") and say
@@ -619,6 +668,39 @@ breakeven shipped eight versions in one; nobody reading a release page wants tha
   homelab) don't version: no bumps, no plan, and the `## Release` section can
   be left out.
 
+## Asking Anthony
+
+Every ask stands on its own. This applies to every role and every channel: a
+`needs:anthony` comment, a thread reply, a decision card and a Ready to merge
+comment. I should be able to answer from that one message, on a phone, without
+opening the issue, the PR or the thread. This is the only place the format is
+defined; roles link here and don't restate it.
+
+- **Lead with the ask**, in plain words: what you need from me and by when it
+  matters (what is blocked until I answer).
+- **Never a bare count.** "3 decisions left" or "make the last 2 decisions
+  before merging" is not allowed on its own. A count may head a list that
+  spells every item out.
+- **One block per decision**, numbered, in this shape:
+
+  ```markdown
+  ### Decision 1 of N: <the question, in plain words>
+  Context: <what this is about and why it came up, 1-2 sentences>
+  Options:
+  - A (recommended): <what it is> → <what happens / cost / risk>
+  - B: <what it is> → <what happens / cost / risk>
+  Why I recommend A: <one sentence>
+  Reply with: "1A" (or your own answer)
+  ```
+
+- **Every decision carries a recommendation.** If you truly have none, say why
+  in the "Why I recommend" line.
+- **Reply codes** (`1A`, `2B`) let me answer several decisions in one line.
+- **A PR with an open decision is not ready.** Put the decision to me first;
+  don't post Ready to merge with questions still open.
+- Post the full block wherever you ask (issue comment, thread, card), not a
+  link to somewhere else that holds it.
+
 ## Review and merge
 
 Every PR an agent opens goes through the same gates, in the same order, in the
@@ -732,7 +814,9 @@ A PR **may be merged by the builder** only when every one of these holds:
   config; dependency manifests or lockfiles (Dependabot and Renovate PRs
   included); data migrations or anything that deletes data; versions,
   changelogs or release notes; agent rules (`AGENTS.md`, `CLAUDE.md`,
-  `.claude/`); and anything the repo's own AGENTS.md lists as protected.
+  `.claude/`); proposals and decisions (`proposals/`, `decisions/`), except
+  the accept or reject PR my design approval covers ("Design review before
+  build"); and anything the repo's own AGENTS.md lists as protected.
 
 Then the builder squash-merges, deletes the branch, and tells me in one line
 in the thread: what merged and the PR link.
@@ -747,9 +831,16 @@ Head: <sha> · CI green · Reviewer: APPROVE · UX gate: passed | n/a
 Preview: <link to the preview of this head> | none (<why>)
 Up to with <base>: yes · Conflicts: none
 What changed: <one or two lines>
+What you're approving: <the user-visible or system effect, in plain words>
+Risk: <what could break and how it would show up>
+Decisions made in this PR: <each decision, one line, with a link to where it was decided> | none
 Why it needs Anthony: <the "Who merges" rule it misses>
 After merge: <what deploys or runs, and how it will be checked>
 ```
+
+What you're approving, Risk and Decisions made in this PR follow "Asking Anthony":
+I must be able to approve from this comment alone. If a decision is still open, the PR isn't ready: ask it
+first, in that shape.
 
 A PR is only "ready" when every line is true for its current head. A new
 push, a base branch that moved, or a new review comment makes it not ready

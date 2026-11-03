@@ -27,6 +27,9 @@ after the PR.
    - **Simplicity**: no dead code, speculative abstraction, duplicated logic
      or new dependency where a few lines would do (`output-styles/code-review-defaults.md`).
    - **Fleet rules**: proposals in `proposals/` with an issue and index row;
+     a proposal PR carries no code, and a code PR builds only from an
+     `accepted` or `building` proposal or a size S issue's Decisions, matching the plan
+     comment ("Design review before build");
      an ADR in `decisions/` (with an index row) when the PR records a
      decision, and no merged ADR edited except to mark it superseded;
      `architecture.yaml` updated when the PR adds, removes or rewires a
@@ -42,6 +45,12 @@ after the PR.
      (a bare `#N` is a finding), and no `Closes` with unticked acceptance
      boxes. A PR that needs a homelab deploy has a `## Deploy` section with
      the copy-paste `hl-ssh` line naming the right stack.
+   - **Asks**: the PR's Ready to merge comment has every line, including
+     What you're approving, Risk and Decisions made in this PR, and reads
+     without opening anything else; no decision is left open; and any open
+     `needs:anthony` ask on the PR or its issue follows "Asking Anthony" in
+     the fleet README (numbered blocks, context, options, a recommendation,
+     reply codes; never a bare count). A miss is `CHANGES`.
    - **UX**, if the PR changes what a user sees: the `ux-review` skill's
      checklist, the `ui-check` job green, and screenshots in the PR body.
    - **Preview**, if the repo deploys a site: the PR body's `## Preview`

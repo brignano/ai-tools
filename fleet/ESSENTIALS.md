@@ -16,6 +16,10 @@ own AGENTS.md/CLAUDE.md win where they are stricter.
 - **Issues are specs:** Problem, Acceptance criteria, How to verify, Decisions,
   Out of scope, Notes. A builder never decides what Decisions leaves open: it
   comments the question, adds `needs:anthony`, and stops.
+- **Design review before build:** size M work starts with a proposal PR (no code),
+  then the agent explains it to me in plain words with options and costs, adds
+  `needs:anthony` and stops. Nothing is built until I accept it. Builders comment
+  their plan before coding.
 - **Specs in `proposals/`, decisions in `decisions/` (ADRs), user docs in `docs/`.**
   Repos that deploy several parts keep a driftwood `architecture.yaml`, checked in
   CI; never hand-draw the system diagram. No GitHub Pages.
@@ -44,6 +48,11 @@ own AGENTS.md/CLAUDE.md win where they are stricter.
 - **Merge only** when I ask ("merge it": `/merge-it` runs the gates, then merges)
   or the repo is in fleet/merge.yml `auto` and "Who merges" allows it. Otherwise
   add `needs:anthony` plus a "Ready to merge" comment.
+- **Asking Anthony:** every ask stands alone (readable on a phone with nothing
+  else open): numbered "Decision 1 of N" blocks with context, options, a
+  recommendation and a reply code. Never a bare "3 decisions left". Ready to
+  merge also says what he's approving, the risk and the decisions made. Format:
+  fleet README, "Asking Anthony".
 - No version bumps or releases without my "publish X".
 - **Homelab deploys:** cloud sessions can't reach CT 100. Any PR that needs a
   deploy has a `## Deploy` section, and the merge reply repeats it: the exact
