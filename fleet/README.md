@@ -655,10 +655,12 @@ Claude session, it just works. That ask is my approval for that PR, whatever
 3. Checks the result: CI on the default branch after the merge, and the
    deploy if the repo deploys on merge. It tells me in one line that it
    merged and that main is green, or what broke.
-   **Homelab deploys** (homelab itself, or anything that runs on CT 100) are
-   manual: cloud sessions can't reach the box. The reply ends with the one
-   line I paste into a terminal on the Mac or Windows, in a code block, naming
-   the stack the change touched:
+   **Homelab deploys** (homelab itself, or anything that runs on CT 100):
+   cloud sessions can't reach the box. The PR body gets a `## Deploy` section
+   and the merge reply ends with the same thing: whether CT 100 picks it up
+   automatically (homelab's auto-deploy, brignano/homelab#335, once it ships)
+   and the one line I paste into a terminal on the Mac or Windows to run it
+   myself, in a code block, naming the stack the change touched:
 
    ```sh
    hl-ssh -t "cd /root/homelab && claude '/deploy monitoring'"
