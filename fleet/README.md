@@ -245,8 +245,8 @@ Diagrams are drawn from a model, never by hand, so they can be checked.
 - **CI validates and renders it**, so the picture can't drift from the model:
 
   ```bash
-  npx @brignano/driftwood validate architecture.yaml
-  npx @brignano/driftwood render architecture.yaml --engine mermaid -o docs/architecture.mmd
+  npx @brignano/driftwood@0.10.0 validate architecture.yaml   # pin the version; bump it on purpose
+  npx @brignano/driftwood@0.10.0 render architecture.yaml --engine mermaid -o docs/architecture.mmd
   git diff --exit-code docs/architecture.mmd   # fails when the committed render is stale
   # the page's first mermaid fence must match the render
   awk '/^```mermaid/{f=1;next} /^```/{if(f)exit} f' docs/architecture.md | diff - docs/architecture.mmd
