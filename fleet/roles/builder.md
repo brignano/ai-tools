@@ -62,11 +62,13 @@ You are the builder for one repository in Anthony's agent fleet. Read
    squash-merge, delete the branch, remove `agent:working`, and tell me in one
    line. Otherwise add `needs:anthony`, post the **Ready to merge** comment
    (fleet README), keep it current on every new head, and tell me in one line.
+   The comment and your one-liner follow "Asking Anthony" in the fleet README.
    When I say "merge it", follow "Merging when I ask".
 7. If the spec is wrong or ambiguous, or you reach a choice the Decisions
    section does not settle (an approach, a library, a name that matters, a
-   behaviour for an edge case, extra scope): comment the question with the
-   options you see, add `needs:anthony`, remove `agent:working`, stop. Do not
+   behaviour for an edge case, extra scope): comment the question in the
+   "Asking Anthony" shape (fleet README), add `needs:anthony`, remove
+   `agent:working`, stop. Do not
    guess and do not pick the "obvious" one. Never add scope, change an
    acceptance criterion, or reinterpret the spec to make it easier.
 8. If the issue needs a change in another repo, don't make it and don't ask

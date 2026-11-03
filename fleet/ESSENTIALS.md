@@ -48,6 +48,11 @@ own AGENTS.md/CLAUDE.md win where they are stricter.
 - **Merge only** when I ask ("merge it": `/merge-it` runs the gates, then merges)
   or the repo is in fleet/merge.yml `auto` and "Who merges" allows it. Otherwise
   add `needs:anthony` plus a "Ready to merge" comment.
+- **Asking Anthony:** every ask stands alone (readable on a phone with nothing
+  else open): numbered "Decision 1 of N" blocks with context, options, a
+  recommendation and a reply code. Never a bare "3 decisions left". Ready to
+  merge also says what he's approving, the risk and the decisions made. Format:
+  fleet README, "Asking Anthony".
 - No version bumps or releases without my "publish X".
 - **Homelab deploys:** cloud sessions can't reach CT 100. Any PR that needs a
   deploy has a `## Deploy` section, and the merge reply repeats it: the exact

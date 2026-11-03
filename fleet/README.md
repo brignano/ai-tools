@@ -673,6 +673,39 @@ breakeven shipped eight versions in one; nobody reading a release page wants tha
   homelab) don't version: no bumps, no plan, and the `## Release` section can
   be left out.
 
+## Asking Anthony
+
+Every ask stands on its own. This applies to every role and every channel: a
+`needs:anthony` comment, a thread reply, a decision card and a Ready to merge
+comment. I should be able to answer from that one message, on a phone, without
+opening the issue, the PR or the thread. This is the only place the format is
+defined; roles link here and don't restate it.
+
+- **Lead with the ask**, in plain words: what you need from me and by when it
+  matters (what is blocked until I answer).
+- **Never a bare count.** "3 decisions left" or "make the last 2 decisions
+  before merging" is not allowed on its own. A count may head a list that
+  spells every item out.
+- **One block per decision**, numbered, in this shape:
+
+  ```markdown
+  ### Decision 1 of N: <the question, in plain words>
+  Context: <what this is about and why it came up, 1-2 sentences>
+  Options:
+  - A (recommended): <what it is> → <what happens / cost / risk>
+  - B: <what it is> → <what happens / cost / risk>
+  Why I recommend A: <one sentence>
+  Reply with: "1A" (or your own answer)
+  ```
+
+- **Every decision carries a recommendation.** If you truly have none, say why
+  in the "Why I recommend" line.
+- **Reply codes** (`1A`, `2B`) let me answer several decisions in one line.
+- **A PR with an open decision is not ready.** Put the decision to me first;
+  don't post Ready to merge with questions still open.
+- Post the full block wherever you ask (issue comment, thread, card), not a
+  link to somewhere else that holds it.
+
 ## Review and merge
 
 Every PR an agent opens goes through the same gates, in the same order, in the
@@ -803,9 +836,16 @@ Head: <sha> · CI green · Reviewer: APPROVE · UX gate: passed | n/a
 Preview: <link to the preview of this head> | none (<why>)
 Up to with <base>: yes · Conflicts: none
 What changed: <one or two lines>
+What you're approving: <the user-visible or system effect, in plain words>
+Risk: <what could break and how it would show up>
+Decisions made in this PR: <each decision, one line, with a link to where it was decided> | none
 Why it needs Anthony: <the "Who merges" rule it misses>
 After merge: <what deploys or runs, and how it will be checked>
 ```
+
+What you're approving, Risk and Decisions made in this PR follow "Asking Anthony":
+I must be able to approve from this comment alone. If a decision is still open, the PR isn't ready: ask it
+first, in that shape.
 
 A PR is only "ready" when every line is true for its current head. A new
 push, a base branch that moved, or a new review comment makes it not ready
