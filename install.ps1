@@ -275,10 +275,53 @@ else {
 Write-Host "==> Context (~/.claude/CLAUDE.md)"
 Link-File $AgentsMd (Join-Path $ClaudeDir "CLAUDE.md")
 
+# Commands, skills and agents ship as the `fleet` plugin (.claude-plugin/), the
+# same plugin cloud sessions get from claude.ai. Installed from this checkout, it
+# loads in place, so 'git pull' updates it with nothing to re-link. Without the
+# claude CLI we fall back to linking them into ~/.claude as before.
+$UsePlugin = [bool](Get-Command claude -ErrorAction SilentlyContinue)
+
+Write-Host "==> Fleet plugin (commands, skills, agents)"
+if ($UsePlugin) {
+    if ($DryRun) {
+        Write-Host "    [dry-run] claude plugin marketplace add $RepoDir; claude plugin install fleet@brignano"
+    } else {
+        claude plugin marketplace add "$RepoDir" *> $null
+        claude plugin install fleet@brignano *> $null
+        if ($LASTEXITCODE -eq 0) { Write-Host "    fleet@brignano (loads from $RepoDir)" }
+        else { Write-Host "    FAILED: run 'claude plugin install fleet@brignano' by hand" }
+    }
+    # Remove the links earlier runs made, so nothing loads twice.
+    foreach ($d in "commands", "agents") {
+        $dir = Join-Path $ClaudeDir $d
+        if (-not (Test-Path $dir)) { continue }
+        Get-ChildItem $dir -Force -File | ForEach-Object {
+            $tgt = $_.Target | Select-Object -First 1
+            $ours = $Installed.ContainsKey($_.FullName) -or ($_.LinkType -and $tgt -and $tgt.StartsWith($RepoDir))
+            if (-not $ours) { return }
+            Write-Host "    unlink (now in plugin): $($_.FullName)"
+            if (-not $DryRun) { Remove-Item $_.FullName -Force; $Installed.Remove($_.FullName) }
+        }
+    }
+    $dir = Join-Path $ClaudeDir "skills"
+    if (Test-Path $dir) {
+        Get-ChildItem $dir -Force | Where-Object { $_.LinkType } | ForEach-Object {
+            $tgt = $_.Target | Select-Object -First 1
+            if (-not ($tgt -and $tgt.StartsWith($RepoDir))) { return }
+            Write-Host "    unlink (now in plugin): $($_.FullName)"
+            if (-not $DryRun) { Remove-Link $_.FullName }
+        }
+    }
+} else {
+    Write-Host "    'claude' CLI not found - linking into ~/.claude instead"
+}
+
+if (-not $UsePlugin) {
 Write-Host "==> Commands (~/.claude/commands/)"
 Prune-Dir (Join-Path $ClaudeDir "commands") $CommandsDir
 Get-ChildItem $CommandsDir -Filter "*.md" | ForEach-Object {
     Link-File $_.FullName (Join-Path $ClaudeDir "commands\$($_.Name)")
+}
 }
 
 Write-Host "==> Output styles (~/.claude/output-styles/)"
@@ -287,6 +330,7 @@ Get-ChildItem $StylesDir -Filter "*.md" | ForEach-Object {
     Link-File $_.FullName (Join-Path $ClaudeDir "output-styles\$($_.Name)")
 }
 
+if (-not $UsePlugin) {
 Write-Host "==> Skills (~/.claude/skills/)"
 Prune-DirLinks (Join-Path $ClaudeDir "skills") $SkillsDir
 Get-ChildItem $SkillsDir -Directory |
@@ -297,6 +341,7 @@ Write-Host "==> Agents (~/.claude/agents/)"
 Prune-Dir (Join-Path $ClaudeDir "agents") $AgentDefsDir
 Get-ChildItem $AgentDefsDir -Filter "*.md" | Where-Object { $_.Name -ne "README.md" } | ForEach-Object {
     Link-File $_.FullName (Join-Path $ClaudeDir "agents\$($_.Name)")
+}
 }
 
 Write-Host "==> Settings (~/.claude/settings.json)"

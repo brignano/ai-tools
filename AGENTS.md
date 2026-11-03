@@ -41,9 +41,11 @@ The main session plans; cheaper subagents implement — but only for real featur
 
 Backlogs are GitHub Issues on one **Fleet** project board; agents plan, build and
 review. Every unheld issue is ready by default; I set priority, hold what I
-want held, and decide what merges. **Before planning, building
-or reviewing an issue, read [`fleet/README.md`](fleet/README.md)**: labels, the
-spec shape every issue uses, definition of ready, and the hard rules.
+want held, and decide what merges. Every session starts with the one-page
+[`fleet/ESSENTIALS.md`](fleet/ESSENTIALS.md). **Before planning, building,
+reviewing or merging an issue or PR, load the `fleet-standard` skill** (the
+full [`fleet/README.md`](fleet/README.md)): labels, the spec shape every issue
+uses, definition of ready, and the hard rules.
 
 **Projects talk through issues.** Projects can't reach each other. When work
 belongs to another repo, open an issue in that repo (fleet labels, spec shape)
@@ -94,7 +96,8 @@ writing notes, or touching a workflow that runs on tags, read the `releases` ski
 - Always consider: what does this cost to run monthly?
 
 ## Custom commands, output styles, skills & agents
-Installed globally from the `ai-tools` repo. Slash commands live in `commands/`
+Shipped by the `fleet` plugin from the `ai-tools` repo, in every project and on
+every machine. Fleet shortcuts: `/next`, `/handoff`, `/merge-it`, `/new-repo`. Slash commands live in `commands/`
 (each self-describes via frontmatter — run `/` to list them); reusable personas live
 in `output-styles/` (`/output-style` to switch); skills in `skills/<name>/SKILL.md`;
 subagents in `agents/`. This list is intentionally not duplicated here — the

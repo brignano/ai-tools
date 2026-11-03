@@ -40,10 +40,17 @@ every project.
 - **The plugin is this repo.** [`.claude-plugin/plugin.json`](../.claude-plugin/plugin.json)
   makes the repo root a plugin named `fleet`: the skills in `skills/`, the
   subagents in `agents/`, the commands in `commands/`, and a start hook,
-  [`plugin/session-start.sh`](plugin/session-start.sh), that prints this file
-  and AGENTS.md. The hook reads them from a fresh clone of `main`, so a merged
-  rule reaches the next session without a rebuild. A changed skill, agent or
-  command reaches cloud sessions when the plugin is uploaded again.
+  [`plugin/session-start.sh`](plugin/session-start.sh), that prints AGENTS.md
+  and the one-page [`ESSENTIALS.md`](ESSENTIALS.md). This full file is the
+  `fleet-standard` skill, loaded only when a task needs it, so sessions start
+  light. The hook reads from a fresh clone of `main`, so a merged rule reaches
+  the next session without a rebuild. A changed skill, agent or command reaches
+  cloud sessions when the plugin is uploaded again, and until then the hook
+  tells me the uploaded copy is out of date.
+- **Keep ESSENTIALS.md in step.** A PR that changes a rule here checks whether
+  the one-line version in ESSENTIALS.md still holds, and fixes it in the same PR.
+- **Shortcuts:** `/next` ("What's next"), `/handoff` ("Projects talk through
+  issues"), `/merge-it` ("Merging when I ask"), `/new-repo` (the checklist below).
 - **Cloud (every project):** installed once on my claude.ai account, under
   Customize > Plugins, from the `fleet-plugin.zip` on the
   [`fleet-plugin` release](https://github.com/brignano/ai-tools/releases/tag/fleet-plugin).

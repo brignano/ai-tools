@@ -12,6 +12,8 @@ on:
       - hooks/**
       - AGENTS.md
       - fleet/README.md
+      - fleet/ESSENTIALS.md
+      - fleet/roles/**
       - fleet/plugin/**
       - skills/**
       - agents/**

@@ -28,8 +28,9 @@ hook that loads AGENTS.md and the fleet standard. `install.sh` installs it from
 this checkout, so it loads in place and `ai-refresh` keeps it current. Cloud
 sessions get the same plugin from claude.ai (Customize > Plugins, the zip on the
 [`fleet-plugin` release](https://github.com/brignano/ai-tools/releases/tag/fleet-plugin));
-see [fleet/README.md](fleet/README.md#every-session-loads-this-file). Windows
-(`install.ps1`) still links them into `~/.claude` for now.
+see [fleet/README.md](fleet/README.md#every-session-loads-this-file). Both
+installers fall back to linking them into `~/.claude` when the `claude` CLI is
+missing.
 
 `AGENTS.md` is AI-agnostic — other tools (Cursor, Copilot, Windsurf) can point at the
 same file; uncomment the relevant block in the install scripts. The commands, output
