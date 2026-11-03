@@ -36,11 +36,12 @@ take the cheap, well-defined work:
 | Agent | Model | Job |
 |-------|-------|-----|
 | `implementer` | Sonnet | One concrete step of an approved plan, then its tests |
+| `codex-builder` | Sonnet wrapper around Codex CLI | One build step on Codex (sandboxed, own worktree) during the one-month trial; fleet README, "Roles and models" |
 | `Explore` | Haiku | Overrides the built-in search agent so routine searches run cheap |
 | `test-runner` | Haiku | Runs checks, returns only the failures |
 | `reviewer` | Opus | Independent, read-only pre-merge review of one fleet PR (fleet README, "Review and merge") |
 
-`implementer` sets `isolation: worktree`: each step runs in its own temporary git
+`implementer` and `codex-builder` set `isolation: worktree`: each step runs in its own temporary git
 worktree (branched from the caller's committed HEAD via `worktree.baseRef: head`), so the planning session reviews a
 separate diff before anything lands.
 
