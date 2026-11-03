@@ -42,6 +42,12 @@ after the PR.
      (a bare `#N` is a finding), and no `Closes` with unticked acceptance
      boxes. A PR that needs a homelab deploy has a `## Deploy` section with
      the copy-paste `hl-ssh` line naming the right stack.
+   - **Asks**: the PR's Ready to merge comment has every line, including
+     What you're approving, Risk and Decisions made in this PR, and reads
+     without opening anything else; no decision is left open; and any open
+     `needs:anthony` ask on the PR or its issue follows "Asking Anthony" in
+     the fleet README (numbered blocks, context, options, a recommendation,
+     reply codes; never a bare count). A miss is `CHANGES`.
    - **UX**, if the PR changes what a user sees: the `ux-review` skill's
      checklist, the `ui-check` job green, and screenshots in the PR body.
    - **Preview**, if the repo deploys a site: the PR body's `## Preview`

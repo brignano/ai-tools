@@ -18,7 +18,7 @@ and context in sync ·
 Ready by default · Status, priority and blocked ·
 "What's next" · Claiming an issue · Closing issues · Roles and models · Projects
 orchestrate, threads do one thing · Projects talk through issues · Releases are
-planned · Review and merge (Preview links, Who merges, Ready to merge, Merging
+planned · Asking Anthony · Review and merge (Preview links, Who merges, Ready to merge, Merging
 when I ask) · Leads · Hard rules for every agent.
 
 Role prompts live beside it in `fleet/roles/` (planner, builder, reviewer).
