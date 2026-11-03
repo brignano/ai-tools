@@ -41,7 +41,7 @@ own AGENTS.md/CLAUDE.md win where they are stricter.
 - No version bumps or releases without my "publish X".
 - **Homelab deploys are mine to run.** Cloud sessions can't reach CT 100, so
   when a merged change needs a deploy, end the reply with the exact line in a
-  code block, e.g. `hl-ssh -t 'cd /root/homelab && claude "/deploy monitoring"'`
+  code block, e.g. `hl-ssh -t "cd /root/homelab && claude '/deploy monitoring'"`
   (name the stack; drop it to deploy all). Never just say "run /deploy".
 
 ## Always

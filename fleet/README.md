@@ -661,7 +661,7 @@ Claude session, it just works. That ask is my approval for that PR, whatever
    the stack the change touched:
 
    ```sh
-   hl-ssh -t 'cd /root/homelab && claude "/deploy monitoring"'
+   hl-ssh -t "cd /root/homelab && claude '/deploy monitoring'"
    ```
 
    `hl-ssh` connects to CT 100, `-t` keeps the session interactive, and
