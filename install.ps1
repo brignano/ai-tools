@@ -287,10 +287,17 @@ if ($UsePlugin) {
         Write-Host "    [dry-run] claude plugin marketplace add $RepoDir; claude plugin install fleet@brignano"
     } else {
         claude plugin marketplace add "$RepoDir" *> $null
-        claude plugin install fleet@brignano *> $null
-        if ($LASTEXITCODE -eq 0) { Write-Host "    fleet@brignano (loads from $RepoDir)" }
-        else { Write-Host "    FAILED: run 'claude plugin install fleet@brignano' by hand" }
+        $ok = ($LASTEXITCODE -eq 0)
+        if ($ok) { claude plugin install fleet@brignano *> $null; $ok = ($LASTEXITCODE -eq 0) }
+        if ($ok) { Write-Host "    fleet@brignano (loads from $RepoDir)" }
+        else {
+            Write-Host "    FAILED: plugin install did not work - linking into ~/.claude instead"
+            Write-Host "      retry by hand: claude plugin marketplace add $RepoDir; claude plugin install fleet@brignano"
+            $UsePlugin = $false
+        }
     }
+}
+if ($UsePlugin) {
     # Remove the links earlier runs made, so nothing loads twice.
     foreach ($d in "commands", "agents") {
         $dir = Join-Path $ClaudeDir $d
@@ -313,7 +320,7 @@ if ($UsePlugin) {
         }
     }
 } else {
-    Write-Host "    'claude' CLI not found - linking into ~/.claude instead"
+    Write-Host "    linking commands, skills and agents into ~/.claude"
 }
 
 if (-not $UsePlugin) {

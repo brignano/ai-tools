@@ -186,8 +186,12 @@ if [ "$USE_PLUGIN" = 1 ]; then
        && claude plugin install fleet@brignano >/dev/null 2>&1; then
     echo "    fleet@brignano (loads from $REPO_DIR)"
   else
-    echo "    FAILED: run 'claude plugin install fleet@brignano' by hand"
+    echo "    FAILED: plugin install did not work — linking into ~/.claude instead"
+    echo "      retry by hand: claude plugin marketplace add $REPO_DIR && claude plugin install fleet@brignano"
+    USE_PLUGIN=0
   fi
+fi
+if [ "$USE_PLUGIN" = 1 ]; then
   # Remove the links earlier runs made, so nothing loads twice.
   for d in commands skills agents; do
     for l in "$CLAUDE_DIR/$d"/*; do
@@ -198,7 +202,7 @@ if [ "$USE_PLUGIN" = 1 ]; then
     done
   done
 else
-  echo "    'claude' CLI not found — linking into ~/.claude instead"
+  echo "    linking commands, skills and agents into ~/.claude"
 fi
 
 if [ "$USE_PLUGIN" = 0 ]; then
