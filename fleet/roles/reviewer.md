@@ -31,7 +31,11 @@ after the PR.
      decision, and no merged ADR edited except to mark it superseded;
      `architecture.yaml` updated when the PR adds, removes or rewires a
      service or component; nothing design-like (specs, TSDs, briefs, plans)
-     added under `docs/`;
+     added under `docs/`; README, `docs/`, product-site copy and agent
+     context (AGENTS.md, CLAUDE.md, `.claude/` skills, ai-tools skills) still
+     true after the change, with cross-repo updates filed as issues ("Keep
+     docs and context in sync"), and a reason given if the PR says
+     `Docs: none needed`;
      no version bump or changelog outside an agreed release; a correct
      `## Release` impact; only labels from `labels.yml`; nothing personal;
      every issue the PR works on linked with `Closes #N` or `Part of #N`

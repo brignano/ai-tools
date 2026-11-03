@@ -284,6 +284,30 @@ Diagrams are drawn from a model, never by hand, so they can be checked.
   publicly, and it sits outside the Cloudflare and Access pattern every other
   site uses.
 
+## Keep docs and context in sync
+
+A change isn't done until everything that describes it says the same thing.
+The next session only knows what the repo tells it, so stale docs or stale
+agent context cost every future session time and get things built wrong.
+
+Every PR updates, in the same PR, whatever its change makes untrue:
+
+- **User-facing:** `README.md`, `docs/` (guides, runbooks,
+  `architecture.md` and `architecture.yaml`), and the marketing or product
+  site's copy, screenshots and feature lists.
+- **Records:** the proposal's status and index row, and an ADR if a decision
+  was made.
+- **Agent context:** the repo's `AGENTS.md`/`CLAUDE.md`, its `.claude/`
+  skills, commands and agents, and anything in brignano/ai-tools (skills,
+  `AGENTS.md`, this standard) that describes the repo or the way it works.
+  Add what a future session would otherwise have to rediscover: a new
+  command, a gotcha, a path, a decision, a service.
+
+If the thing to update lives in another repo (the marketing site, ai-tools),
+file an issue there in the same session ("Projects talk through issues") and
+link it from the PR. The PR body lists what it updated, or says
+`Docs: none needed` with a reason.
+
 ## Ready by default
 
 Everything in the backlog is ready for agents unless something says
