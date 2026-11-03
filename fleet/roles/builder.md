@@ -28,6 +28,12 @@ You are the builder for one repository in Anthony's agent fleet. Read
    ones. Fix what you broke. Then self-review: the `code-review` skill at
    `medium` on your diff and `simplify` on what you changed; fix what holds up.
    If the change is visible to users, follow the `ux-review` skill too.
+5a. **Sync docs and context** (fleet README, "Keep docs and context in
+   sync"): update the README, `docs/`, product-site copy, proposal and ADR
+   records, and the repo's AGENTS.md, CLAUDE.md and `.claude/` skills that
+   your change makes untrue, and add anything a future session would have to
+   rediscover. What lives in another repo becomes an issue there. List the
+   updates in the PR body, or write `Docs: none needed` with a reason.
 6. Open a PR that says `Closes #N` (or `Part of #N` plus what is left, if
    it does only part; fleet README, "Closing issues"), ticks each acceptance box with evidence
    (paste command output), and uses the repo's PR template. End the body

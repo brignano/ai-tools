@@ -18,6 +18,9 @@ own AGENTS.md/CLAUDE.md win where they are stricter.
 - **Specs in `proposals/`, decisions in `decisions/` (ADRs), user docs in `docs/`.**
   Repos that deploy several parts keep a driftwood `architecture.yaml`, checked in
   CI; never hand-draw the system diagram. No GitHub Pages.
+- **Keep everything in sync in the same PR:** README, `docs/`, the product site, and
+  agent context (AGENTS.md, CLAUDE.md, skills) so the next session starts informed.
+  Other repos get an issue.
 - **Labels only from fleet/labels.yml.** Every agent-filed issue gets `proposed`
   plus one `priority:`, `type:`, `size:` and `risk:`.
 
