@@ -43,5 +43,9 @@ Known risks, and anything still unresolved that needs a decision.
 
 ---
 
+In a fleet repo, save it as `proposals/<slug>.md` with a `Status: proposed` line and
+its tracking issue, and add a row to `proposals/README.md` ("Proposals" in the fleet
+standard). When it is approved or rejected, record that as an ADR in `decisions/`.
+
 End by asking whether to approve the TSD or iterate. Do not start implementing until
 it's approved.

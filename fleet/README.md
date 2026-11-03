@@ -167,16 +167,22 @@ built from `docs/` without dragging in rejected designs.
   proposal or changes its status updates the index in the same PR.
 - A proposal that writes "proposed issues" at the end gets them filed by the
   planner as `proposed` once the proposal merges, and the index links them.
+- `/new-tsd` drafts a proposal in this shape; save it as `proposals/<slug>.md`.
 
 Index shape:
 
 ```markdown
 # Proposals
 
-| Proposal | Status | Issue | Split into |
-|---|---|---|---|
-| [AWS provider](aws-provider.md) | proposed | #41 | |
+| Proposal | Status | Issue | Split into | ADR |
+|---|---|---|---|---|
+| [AWS provider](aws-provider.md) | proposed | #41 | | |
 ```
+
+**Lifecycle:** idea (`brignano/ideas`) → `proposals/<slug>.md` → an ADR in
+`decisions/` when it is accepted or rejected → issues → build. The proposal
+keeps the reasoning and the alternatives; the ADR is the one-screen record of
+what was decided, and the index links the two.
 
 **Definition of ready:** open, `agent:ready` (which is automatic, see "Ready
 by default"), and not claimed. If the spec is too thin to build from, the
@@ -186,6 +192,97 @@ stops.
 **Definition of done:** every acceptance box ticked in the PR body, the repo's
 checks green, the review gates passed (see "Review and merge"), and the PR
 merged, by me or, where the merge rules allow it, by the builder.
+
+## Decisions (ADRs)
+
+A decision that lives only in a chat thread or an assistant's memory is lost to
+every repo and agent that comes later. Each repo keeps its own decision log.
+
+- **`decisions/` at the repo root**, never under `docs/` (same reason as
+  proposals). One file per decision, `decisions/NNNN-slug.md`, numbered from
+  `0001`, zero-padded, never renumbered.
+- **`decisions/README.md` is the index**: one row per ADR with number, title,
+  status and date. The PR that adds or supersedes an ADR updates it.
+- **Shape, one screen:**
+
+  ```markdown
+  # NNNN: <the decision, as a statement>
+
+  Status: accepted | superseded by NNNN
+  Date: YYYY-MM-DD
+  From: <proposal, issue or PR it came from>
+
+  ## Context
+  What forced a choice, and the options on the table.
+
+  ## Decision
+  What we chose, in a sentence or two.
+
+  ## Consequences
+  What this makes easier, harder, or rules out.
+  ```
+
+- **Never edited after merge**, except to mark it superseded. A changed mind is
+  a new ADR that names the one it replaces.
+- **Write one when** a proposal is accepted or rejected; a thread, issue or PR
+  settles a choice a future reader would question (a tool picked, an approach
+  rejected, something deliberately not built); or I decide against something.
+  Whoever makes the call (planner, builder relaying my answer, me) writes it,
+  in the PR that acts on it or a small PR of its own.
+- **Not for:** routine implementation choices the code already explains.
+- Existing proposals are not rewritten as ADRs. Back-fill an ADR only for a
+  decision that is recorded nowhere in the repo today.
+
+## Architecture
+
+Diagrams are drawn from a model, never by hand, so they can be checked.
+
+- **Every repo that deploys more than one moving part** (services, workers,
+  sites with backends, actions, scheduled jobs) keeps a
+  [driftwood](https://github.com/brignano/driftwood) model,
+  `architecture.yaml`, at the repo root. A library, CLI or single static site
+  doesn't need one.
+- **CI validates and renders it**, so the picture can't drift from the model:
+
+  ```bash
+  npx @brignano/driftwood@0.10.0 validate architecture.yaml   # pin the version; bump it on purpose
+  npx @brignano/driftwood@0.10.0 render architecture.yaml --engine mermaid -o docs/architecture.mmd
+  git diff --exit-code docs/architecture.mmd   # fails when the committed render is stale
+  # the page's first mermaid fence must match the render
+  awk '/^```mermaid/{f=1;next} /^```/{if(f)exit} f' docs/architecture.md | diff - docs/architecture.mmd
+  ```
+
+  `docs/architecture.md` is the page people read: a few lines of prose and
+  the diagram in a ```` ```mermaid ```` fence copied from `architecture.mmd`
+  (GitHub draws it in place). Named views (`--view <id>`) can be rendered and
+  embedded the same way when they are worth showing.
+- **Where infrastructure is Terraform or CloudFormation**, also run
+  `driftwood preview` on PRs and `reconcile` on demand, so the model is checked
+  against what is deployed. Elsewhere the model is hand-written until driftwood
+  has a provider for it (Docker Compose and Proxmox: brignano/driftwood#115).
+- **The reviewer rejects** a PR that adds, removes or rewires a service or
+  component without updating `architecture.yaml`.
+- Mermaid in docs and proposals is still fine for flows and sequences; the
+  system picture comes from the model.
+
+## Where docs live
+
+| Path | Holds | Published |
+|---|---|---|
+| `README.md` | The front door: what it is, how to start. | With the repo |
+| `docs/` | What someone reads to use, run or operate it: guides, runbooks, `architecture.md`. | Yes, for public products |
+| `proposals/` | Designs and specs, including rejected ones. | No, read on GitHub |
+| `decisions/` | ADRs. | No, read on GitHub |
+
+- **Private repos have no doc site.** GitHub renders Markdown and Mermaid,
+  keeps it private, and costs nothing to run.
+- **Public products** keep the product page at the root of their own site and
+  serve user docs built from `docs/` at `/docs` on that same site (Astro
+  Starlight by default, styled from `@brignano/design`, hosted per the
+  `hosting` skill). The product's own issue can pick a different generator.
+- **Not GitHub Pages:** on a private repo it needs a paid plan and publishes
+  publicly, and it sits outside the Cloudflare and Access pattern every other
+  site uses.
 
 ## Ready by default
 

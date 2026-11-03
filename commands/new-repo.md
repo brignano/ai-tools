@@ -4,7 +4,7 @@ argument-hint: <owner/repo>
 ---
 
 Bring **$ARGUMENTS** onto the fleet standard. Load the `fleet-standard` skill
-("Every session loads this file", "Labels", "Where things live") and work this checklist.
+("Every session loads this file", "Labels", "Where things live", "Where docs live") and work this checklist.
 Do what you can by PR; list what only I can do.
 
 1. **Context:** nothing to install, because the fleet plugin already reaches
@@ -21,6 +21,12 @@ Do what you can by PR; list what only I can do.
    (see the `releases` skill).
 6. **UI:** if it has a UI, it styles from `@brignano/design` (`design-system`
    skill) and calls the reusable `ui-check` workflow.
-7. **For me:** which Claude project owns it, and the project instructions to
+7. **Docs layout** ("Proposals", "Decisions (ADRs)", "Architecture" and
+   "Where docs live" in the standard): `proposals/README.md` and
+   `decisions/README.md` (empty indexes are fine); move any specs, TSDs or
+   briefs out of `docs/` into `proposals/`; and, if it deploys more than one
+   moving part, an `architecture.yaml` with the CI check and
+   `docs/architecture.md`.
+8. **For me:** which Claude project owns it, and the project instructions to
    paste (four lines: the product and its repo, follow the fleet standard,
    hand other repos' work over as issues, no personal topics).
