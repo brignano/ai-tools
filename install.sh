@@ -235,7 +235,38 @@ done
 fi
 
 echo "==> Settings (~/.claude/settings.json)"
-link "$SETTINGS" "$CLAUDE_DIR/settings.json"
+if [ -e "$CLAUDE_DIR/settings.json" ] && [ ! -L "$CLAUDE_DIR/settings.json" ]; then
+  # A real file (yours, or written by /model) can't be linked over. Merge the keys
+  # this repo manages (model, worktree) into it and leave everything else alone.
+  if command -v python3 >/dev/null 2>&1; then
+    if [ "$DRY_RUN" = 1 ]; then
+      echo "    [dry-run] merge model + worktree from $SETTINGS into $CLAUDE_DIR/settings.json"
+    else
+      if python3 - "$SETTINGS" "$CLAUDE_DIR/settings.json" <<'PY'
+import json, sys
+src, dest = sys.argv[1:3]
+base, cur = json.load(open(src)), json.load(open(dest))
+if not isinstance(cur, dict):
+    sys.exit(1)
+for k in ("model", "worktree"):
+    if k in base:
+        cur[k] = base[k]
+text = json.dumps(cur, indent=2, ensure_ascii=False) + "\n"
+with open(dest, "w") as f:
+    f.write(text)
+PY
+      then
+        echo "    merged model + worktree into $CLAUDE_DIR/settings.json (real file kept)"
+      else
+        echo "    SKIP (could not merge; is $CLAUDE_DIR/settings.json valid JSON?): add model/worktree from $SETTINGS by hand"
+      fi
+    fi
+  else
+    echo "    SKIP (real file present, no python3 to merge): add model/worktree from $SETTINGS by hand"
+  fi
+else
+  link "$SETTINGS" "$CLAUDE_DIR/settings.json"
+fi
 
 echo "==> Secrets (secrets.env — gitignored)"
 if [ ! -f "$SECRETS" ]; then
