@@ -482,6 +482,14 @@ without a Decisions section; Sonnet for a build with Decisions; Haiku for
 searches and test runs). A build request for an issue with no Decisions
 section is routed to the planner first.
 
+**How it is enforced.** `claude/settings.json` sets `"model": "opusplan"`, so
+main sessions on my devices plan on Opus (plan mode) and do everything else on
+Sonnet. Override one session with `/model opus` or `/model sonnet`. Subagents
+keep their own `model:` frontmatter. The `implementer` runs with
+`isolation: worktree`, so each step is committed on its own worktree branch (from the
+planner's committed HEAD) and the planner reviews that diff before merging the branch. Cloud sessions take their model from the
+claude.ai project or thread, not a settings file; the coordinator pins it by role.
+
 Nothing runs on a schedule. The reviewer is the exception to "when I ask":
 no PR waits for me to request a review (see "Review and merge"). I start a role from the repo's own Claude project
 ("build the next ready issue", "review the open PR", "plan driftwood") and say
