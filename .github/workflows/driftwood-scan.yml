@@ -1,0 +1,60 @@
+name: driftwood-scan
+
+# Reusable, opt-in fleet step (fleet/README.md "Architecture"). A repo with
+# Compose files, CloudFormation/CDK output, Terraform state, architecture.yaml
+# or OpenTelemetry traces calls it:
+#   on:
+#     push: { branches: [main] }
+#     pull_request:
+#   jobs:
+#     architecture:
+#       uses: brignano/ai-tools/.github/workflows/driftwood-scan.yml@main
+# Runs `driftwood scan` on the checkout, appends the Mermaid diagrams to the job
+# summary (GitHub draws them in place) and uploads the interactive viewer as
+# the `driftwood-scan` artifact. Never fails on what it draws; only a crash of
+# the CLI fails the job. Reads files only: no cloud credentials, no secrets.
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "@brignano/driftwood version. Pinned; bump it on purpose."
+        type: string
+        default: "0.12.0"
+      dir:
+        description: Folder to scan, relative to the repo root.
+        type: string
+        default: "."
+      node-version:
+        type: string
+        default: "22"
+
+permissions:
+  contents: read
+
+jobs:
+  driftwood-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+      - name: Scan
+        env:
+          VERSION: ${{ inputs.version }}
+          DIR: ${{ inputs.dir }}
+        run: npx --yes "@brignano/driftwood@$VERSION" scan "$DIR" --engine mermaid --out-dir driftwood-scan --no-open
+      - name: Job summary
+        run: |
+          if [ -f driftwood-scan/summary.md ]; then
+            cat driftwood-scan/summary.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "driftwood found nothing to draw here ([what it reads](https://www.npmjs.com/package/@brignano/driftwood#the-model))." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload viewer
+        uses: actions/upload-artifact@v4
+        with:
+          name: driftwood-scan
+          path: driftwood-scan
+          if-no-files-found: ignore

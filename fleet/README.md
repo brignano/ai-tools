@@ -300,6 +300,31 @@ Diagrams are drawn from a model, never by hand, so they can be checked.
   has a provider for it (Docker Compose and Proxmox: brignano/driftwood#115).
 - **The reviewer rejects** a PR that adds, removes or rewires a service or
   component without updating `architecture.yaml`.
+- **Any repo with infrastructure in it can also opt in to `driftwood scan`**
+  (Docker Compose files, CloudFormation templates, CDK `cdk.out`, Terraform
+  state, `architecture.yaml`, OpenTelemetry trace files). The shared
+  [`driftwood-scan.yml`](../.github/workflows/driftwood-scan.yml) workflow
+  scans the checkout with no config, draws everything it finds as Mermaid in
+  the job summary on every push, and uploads the interactive viewer as the
+  `driftwood-scan` artifact. It never fails a build on what it draws, and a
+  repo with nothing to draw gets a green job and a one-line note. It
+  complements the `validate`/`render` check above; it doesn't replace it.
+
+  ```yaml
+  on:
+    push: { branches: [main] }
+    pull_request:
+  jobs:
+    architecture:
+      uses: brignano/ai-tools/.github/workflows/driftwood-scan.yml@main
+      # with: { dir: infra, version: "0.12.0" }   # optional; version is pinned, bump it on purpose
+  ```
+
+  `scan` honours `.gitignore` but still reads `cdk.out` and `*.tfstate`.
+  It draws only resource names and kinds, but the summary and artifact are
+  visible to anyone who can read the repo's Actions: fine while fleet repos
+  are private, and a public repo needs driftwood to grow an anonymize option
+  first. Rollout is one issue per adopting repo.
 - Mermaid in docs and proposals is still fine for flows and sequences; the
   system picture comes from the model.
 
