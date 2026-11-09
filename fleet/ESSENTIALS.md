@@ -45,6 +45,9 @@ own AGENTS.md/CLAUDE.md win where they are stricter.
 - **Gates, in order:** self-review (code-review medium + simplify), CI green,
   the `reviewer` subagent posting `Reviewer: APPROVE` with the head SHA, the UX
   gate for anything a user sees, and a preview link at the top of the PR for site repos.
+- **UI changes ship with before/after screenshots** (`ux-review` skill): shoot
+  "before" when you start, "after" when done, look at them yourself, then put
+  them in the thread reply and the PR body, phone first. Demo data only.
 - **Merge only** when I ask ("merge it": `/merge-it` runs the gates, then merges)
   or the repo is in fleet/merge.yml `auto` and "Who merges" allows it. Otherwise
   add `needs:anthony` plus a "Ready to merge" comment.

@@ -1,6 +1,6 @@
 ---
 name: ux-review
-description: The fleet's UX and accessibility gate for any PR that changes what a user sees (pages, components, styles, copy, emails, CLI output people read). Use before opening such a PR, when reviewing one, and when adding the ui-check workflow to a repo.
+description: The fleet's UX and accessibility gate for any change to what a user sees (pages, components, styles, copy, emails, CLI output people read), including its before/after screenshots. Use when starting such a change (to capture "before"), before opening its PR, when reviewing one, and when adding the ui-check workflow to a repo.
 ---
 
 # UX review
@@ -41,11 +41,65 @@ check locally against your dev server:
 node ~/.ai-tools/fleet/ui-check/check.mjs http://localhost:4173 / /about
 ```
 
-## 2. Screenshots in the PR body
+## 2. Before/after screenshots
 
-Attach (or link the `ui-check` artifact for) the changed screens at mobile and
-desktop, light and dark. Before/after when something existing changed. Nobody
-should have to run the branch to see what it does.
+Every change to what a user sees ships with before/after screenshots, so you
+can check your own work and Anthony can review it from his phone without
+running the branch.
+
+1. **Capture "before" first**, before editing anything: serve the default
+   branch (or note the deployed URL) so you can shoot it again at the end.
+2. **Capture "after"** when the change is done, with the branch served:
+
+   ```sh
+   node <compare.mjs> <before-url> <after-url> /path /other-path
+   ```
+
+   `compare.mjs` lives in `fleet/ui-check/`: `~/.ai-tools/fleet/ui-check/`
+   on a machine with ai-tools installed, or `../../fleet/ui-check/` from this
+   skill's folder in the fleet plugin. It needs only Playwright (preinstalled
+   in cloud sessions). It writes one labelled before | after PNG per view to
+   `./ui-compare`, phone views first (`1-phone-*`): phone (390px) and
+   desktop (1280px), light and dark (`UI_COMPARE_SCHEMES=light` for a UI with
+   no dark mode). Use `-` as the before URL for a brand-new screen. Shoot only
+   the screens the change touches. To serve both versions at once, run the
+   default branch from a second `git worktree` on another port. The `run`
+   skill helps start an app you don't know how to serve.
+3. **Look at them yourself.** Open every PNG and compare before with after.
+   Check the change did what was asked and nothing else moved, broke or
+   clipped. Fix and re-shoot before calling it done.
+4. **Demo data only.** Serve fixtures or seed data, never real budget numbers,
+   people, photos or anything else personal.
+5. **Post them in the thread** with the reply that reports the change, phone
+   views first. In a Claude project, copy them under the project files folder
+   (e.g. `screenshots/<repo>-pr-<N>/`) and attach them to the reply.
+6. **Put them in the PR body.** The GitHub API can't upload images, so commit
+   them to the repo's `screenshots` orphan branch (never `main`) and link them:
+
+   ```sh
+   git worktree remove --force /tmp/shots 2>/dev/null
+   if git ls-remote --exit-code --heads origin screenshots >/dev/null; then
+     git fetch origin screenshots && git worktree add -B screenshots /tmp/shots origin/screenshots
+   else
+     git worktree add --orphan -B screenshots /tmp/shots   # first time in this repo
+   fi
+   mkdir -p /tmp/shots/pr-<N> && cp ui-compare/*.png /tmp/shots/pr-<N>/
+   git -C /tmp/shots add . && git -C /tmp/shots commit -m "Screenshots for #<N>" \
+     && git -C /tmp/shots push -u origin screenshots
+   git worktree remove /tmp/shots
+   ```
+
+   ```markdown
+   ## Screenshots
+   ![phone, light](https://github.com/<owner>/<repo>/blob/screenshots/pr-<N>/1-phone-home-light.png?raw=true)
+   ```
+
+   Phone views first. Blob links with `?raw=true` render for anyone who can
+   see a private repo. Use them alongside the `## Preview` link, not instead.
+7. **Can't run it?** If the UI only exists on a server you can't reach (CT 100)
+   or needs a signed-in account, say so in the PR (`Screenshots: after
+   deploy, <why>`) and the reply, then shoot the deployed page once it's live.
+   Never skip silently.
 
 ## 3. Checklist (the reviewer reads the diff for each)
 

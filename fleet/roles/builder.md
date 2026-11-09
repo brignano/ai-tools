@@ -38,7 +38,9 @@ You are the builder for one repository in Anthony's agent fleet. Read
 5. Run the checks the issue's "How to verify" names, plus the repo's standard
    ones. Fix what you broke. Then self-review: the `code-review` skill at
    `medium` on your diff and `simplify` on what you changed; fix what holds up.
-   If the change is visible to users, follow the `ux-review` skill too.
+   If the change is visible to users, follow the `ux-review` skill too,
+   including its before/after screenshots (shoot "before" at step 4, before
+   editing).
 5a. **Sync docs and context** (fleet README, "Keep docs and context in
    sync"): update the README, `docs/`, product-site copy, proposal and ADR
    records, and the repo's AGENTS.md, CLAUDE.md and `.claude/` skills that
