@@ -803,9 +803,12 @@ flowchart LR
    styles, copy, emails). Follow the [`ux-review`](../skills/ux-review/SKILL.md)
    skill: the repo's `ui-check` job (the reusable
    [`ui-check`](../.github/workflows/ui-check.yml) workflow) must pass with no
-   serious or critical accessibility violations, and the PR body carries
-   mobile and desktop screenshots, light and dark. The reviewer checks the
-   skill's list against the diff.
+   serious or critical accessibility violations, and the PR body and the
+   thread reply carry before/after screenshots (phone first, then desktop,
+   light and dark) that the builder captured with `fleet/ui-check/compare.mjs`
+   and looked at itself. "Before" is shot when the work starts, from the
+   default branch, with demo data only. The reviewer checks the skill's list
+   against the diff.
 5. **Merge**, by the rules below.
 
 ### Preview links
@@ -833,8 +836,8 @@ tap a link and see it. For any PR on a repo with a deployable site:
 4. **Use the branch link**, not a per-commit one: it keeps working after the
    next push. Per-commit links are only for comparing two versions.
 5. **No preview possible?** Write `Preview: none (<why>)` and put
-   screenshots or a GIF in the PR body instead (the UX gate already asks for
-   them). If the repo deploys a site but gives PRs no preview, file an
+   the before/after screenshots or a GIF in the PR body instead (the UX gate
+   already asks for them). If the repo deploys a site but gives PRs no preview, file an
    issue there to add one.
 
 Every preview is private to me: Vercel previews ask me to sign in to Vercel,

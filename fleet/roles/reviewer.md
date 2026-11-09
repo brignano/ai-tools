@@ -54,7 +54,8 @@ after the PR.
      the fleet README (numbered blocks, context, options, a recommendation,
      reply codes; never a bare count). A miss is `CHANGES`.
    - **UX**, if the PR changes what a user sees: the `ux-review` skill's
-     checklist, the `ui-check` job green, and screenshots in the PR body.
+     checklist, the `ui-check` job green, and before/after screenshots in
+     the PR body (phone first) that match the diff.
    - **Preview**, if the repo deploys a site: the PR body's `## Preview`
      links point at a preview of the current head and cover each changed
      page, or it says `Preview: none` with a reason ("Preview links" in the

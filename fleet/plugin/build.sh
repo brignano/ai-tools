@@ -20,6 +20,8 @@ cp -R hooks commands "$STAGE/"
 cp fleet/plugin/session-start.sh fleet/plugin/content-hash.sh fleet/plugin/guard.py "$STAGE/fleet/plugin/"
 cp fleet/README.md fleet/ESSENTIALS.md "$STAGE/fleet/"
 cp -R fleet/roles "$STAGE/fleet/"
+mkdir -p "$STAGE/fleet/ui-check"
+cp fleet/ui-check/*.mjs "$STAGE/fleet/ui-check/"
 cp AGENTS.md LICENSE "$STAGE/"
 cp agents/*.md "$STAGE/agents/"
 for d in skills/*/; do
