@@ -59,9 +59,10 @@ running the branch.
    on a machine with ai-tools installed, or `../../fleet/ui-check/` from this
    skill's folder in the fleet plugin. It needs only Playwright (preinstalled
    in cloud sessions). It writes one labelled before | after PNG per view to
-   `./ui-compare`, phone views first (`1-phone-*`): phone (390px) and
-   desktop (1280px), light and dark (`UI_COMPARE_SCHEMES=light` for a UI with
-   no dark mode). Use `-` as the before URL for a brand-new screen. Shoot only
+   `/tmp/ui-compare` (`UI_COMPARE_OUT` changes it; never point it inside the
+   repo), phone views first (`1-phone-*`): phone (390px) and desktop
+   (1280px), light and dark (`UI_COMPARE_SCHEMES=light` for a UI with no dark
+   mode). Base URLs may include a sub-path (`https://host/app/`). Use `-` as the before URL for a brand-new screen. Shoot only
    the screens the change touches. To serve both versions at once, run the
    default branch from a second `git worktree` on another port. The `run`
    skill helps start an app you don't know how to serve.
@@ -83,7 +84,7 @@ running the branch.
    else
      git worktree add --orphan -B screenshots /tmp/shots   # first time in this repo
    fi
-   mkdir -p /tmp/shots/pr-<N> && cp ui-compare/*.png /tmp/shots/pr-<N>/
+   mkdir -p /tmp/shots/pr-<N> && cp /tmp/ui-compare/*.png /tmp/shots/pr-<N>/
    git -C /tmp/shots add . && git -C /tmp/shots commit -m "Screenshots for #<N>" \
      && git -C /tmp/shots push -u origin screenshots
    git worktree remove /tmp/shots

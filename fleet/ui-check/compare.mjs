@@ -5,12 +5,16 @@
 //   node compare.mjs <before-url> <after-url> [path ...]
 //
 // Use "-" as <before-url> for a brand-new screen (after only).
-// Env: UI_COMPARE_OUT (default ./ui-compare), UI_COMPARE_SCHEMES (default
+// Paths are joined onto each base URL, so a base with a sub-path
+// (https://host/app/) keeps it.
+// Env: UI_COMPARE_OUT (default $TMPDIR/ui-compare, outside the repo so the
+// PNGs never land in a commit), UI_COMPARE_SCHEMES (default
 // "light dark"; set "light" for a UI with no dark mode).
 // Needs only `playwright`, resolved with require() so NODE_PATH works.
 import { createRequire } from "node:module";
 import { mkdirSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { tmpdir } from "node:os";
 
 const { chromium } = createRequire(import.meta.url)("playwright");
 
@@ -20,7 +24,7 @@ if (!before || !after) {
   process.exit(2);
 }
 const paths = rawPaths.length ? rawPaths : ["/"];
-const out = resolve(process.env.UI_COMPARE_OUT || "ui-compare");
+const out = resolve(process.env.UI_COMPARE_OUT || join(tmpdir(), "ui-compare"));
 const schemes = (process.env.UI_COMPARE_SCHEMES || "light dark").split(/\s+/).filter(Boolean);
 // Numbered so a plain `ls` or glob lists phone views first.
 const viewports = { "1-phone": { width: 390, height: 844 }, "2-desktop": { width: 1280, height: 800 } };
@@ -36,7 +40,8 @@ async function shoot(base, path, viewport, colorScheme, deviceScaleFactor) {
   const ctx = await browser.newContext({ viewport, colorScheme, reducedMotion: "reduce", deviceScaleFactor });
   try {
     const page = await ctx.newPage();
-    const res = await page.goto(new URL(path, base).href, { waitUntil: "networkidle" });
+    const url = new URL(path.replace(/^\/+/, ""), base.endsWith("/") ? base : `${base}/`).href;
+    const res = await page.goto(url, { waitUntil: "networkidle" });
     if (!res || res.status() >= 400) throw new Error(`HTTP ${res ? res.status() : "no response"}`);
     return (await page.screenshot({ fullPage: true })).toString("base64");
   } finally {
