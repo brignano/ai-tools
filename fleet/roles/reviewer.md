@@ -51,8 +51,8 @@ after the PR.
      What you're approving, Risk and Decisions made in this PR, and reads
      without opening anything else; no decision is left open; and any open
      `needs:anthony` ask on the PR or its issue follows "Asking Anthony" in
-     the fleet README (numbered blocks, context, options, a recommendation,
-     reply codes; never a bare count). A miss is `CHANGES`.
+     the fleet README (on GitHub: numbered blocks, context, options, a
+     recommendation, reply codes; never a bare count). A miss is `CHANGES`.
    - **UX**, if the PR changes what a user sees: the `ux-review` skill's
      checklist, the `ui-check` job green, and before/after screenshots in
      the PR body (phone first) that match the diff.

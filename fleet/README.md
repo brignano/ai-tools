@@ -208,8 +208,8 @@ what was agreed.
      parts;
    - the options it rejected and why, one line each;
    - what it costs: build size (S/M), running cost, and maintenance;
-   - every open question as a choice with a recommendation (a decision card
-     where the app offers one).
+   - every open question as a choice with a recommendation, asked as a
+     question card when the app offers one (see "Asking Anthony").
 
    Then it ends its turn. Nothing else on that issue runs until I answer.
 3. **My answer is the approval.** When I say yes (in the thread or on the
@@ -738,25 +738,45 @@ defined; roles link here and don't restate it.
 - **Never a bare count.** "3 decisions left" or "make the last 2 decisions
   before merging" is not allowed on its own. A count may head a list that
   spells every item out.
-- **One block per decision**, numbered, in this shape:
-
-  ```markdown
-  ### Decision 1 of N: <the question, in plain words>
-  Context: <what this is about and why it came up, 1-2 sentences>
-  Options:
-  - A (recommended): <what it is> → <what happens / cost / risk>
-  - B: <what it is> → <what happens / cost / risk>
-  Why I recommend A: <one sentence>
-  Reply with: "1A" (or your own answer)
-  ```
-
-- **Every decision carries a recommendation.** If you truly have none, say why
-  in the "Why I recommend" line.
-- **Reply codes** (`1A`, `2B`) let me answer several decisions in one line.
+- **Every decision carries a recommendation.** If you truly have none, say why.
 - **A PR with an open decision is not ready.** Put the decision to me first;
   don't post Ready to merge with questions still open.
-- Post the full block wherever you ask (issue comment, thread, card), not a
-  link to somewhere else that holds it.
+
+### In the app: question cards
+
+When the session has a question-card tool (`request_decision` in project
+threads, `AskUserQuestion` in Claude Code), **every decision is a card** so I
+can tap an answer instead of typing one. Don't write the decision as chat text
+with reply codes when a card is available.
+
+- **One card per decision**: the question in plain words (about twelve words),
+  2 to 4 options, each with a short label and one line on what happens, the
+  recommended option marked, and one sentence on why.
+- **Context goes in one short message before the cards** (what this is and why
+  it came up), only if the card can't stand alone without it.
+- Several decisions means several cards, not one text list.
+- If I answer in words instead of tapping, close the card with the option I
+  picked.
+
+### On GitHub, or with no card tool: numbered blocks
+
+Issue and PR comments (`needs:anthony`, Ready to merge), and any channel
+without a card tool, use one block per decision, numbered, in this shape:
+
+```markdown
+### Decision 1 of N: <the question, in plain words>
+Context: <what this is about and why it came up, 1-2 sentences>
+Options:
+- A (recommended): <what it is> → <what happens / cost / risk>
+- B: <what it is> → <what happens / cost / risk>
+Why I recommend A: <one sentence>
+Reply with: "1A" (or your own answer)
+```
+
+- **Reply codes** (`1A`, `2B`) let me answer several decisions in one line.
+  They are only for this text format, never in a thread that has cards.
+- Post the full block wherever you ask, not a link to somewhere else that
+  holds it.
 
 ## Review and merge
 
