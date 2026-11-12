@@ -56,6 +56,12 @@ after the PR.
    - **UX**, if the PR changes what a user sees: the `ux-review` skill's
      checklist, the `ui-check` job green, and before/after screenshots in
      the PR body (phone first) that match the diff.
+   - **Wireframe**, if the PR is substantial UI work ("Wireframes before
+     build" in the fleet README, any size): it links a
+     wireframe at 390px and 1280px that Anthony explicitly OK'd in the
+     thread or on the PR before the code was written, and the after
+     screenshots match it. No wireframe, no OK, or a mismatch with no
+     explanation is `CHANGES`. Exempt work is not a finding.
    - **Preview**, if the repo deploys a site: the PR body's `## Preview`
      links point at a preview of the current head and cover each changed
      page, or it says `Preview: none` with a reason ("Preview links" in the

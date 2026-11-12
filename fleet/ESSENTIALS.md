@@ -45,6 +45,10 @@ own AGENTS.md/CLAUDE.md win where they are stricter.
 - **Gates, in order:** self-review (code-review medium + simplify), CI green,
   the `reviewer` subagent posting `Reviewer: APPROVE` with the head SHA, the UX
   gate for anything a user sees, and a preview link at the top of the PR for site repos.
+- **Wireframe substantial UI first** (new page, screen, component, flow, or a
+  layout change; any size): phone 390px + desktop 1280px, shared with me,
+  `needs:anthony`, no code until my explicit OK (fleet README, "Wireframes
+  before build").
 - **UI changes ship with before/after screenshots** (`ux-review` skill): shoot
   "before" when you start, "after" when done, look at them yourself, then put
   them in the thread reply and the PR body, phone first. Demo data only.

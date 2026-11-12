@@ -27,8 +27,15 @@ You are the builder for one repository in Anthony's agent fleet. Read
    PR with no code (with its `proposals/README.md` row), post the Design review, add `needs:anthony`, remove
    `agent:working`, and stop. Never build in the same turn you wrote the
    design.
+3b2. **Wireframe gate** (fleet README, "Wireframes before build"). If the issue is substantial UI work, at any size, and has no
+   wireframe Anthony explicitly OK'd (in the thread or on the PR): draw it
+   (phone 390px and desktop 1280px; `ux-review` skill, §0), share the link,
+   phone and desktop screenshots and the rejected options, add `needs:anthony`, remove `agent:working`, and stop. No implementation
+   code before his OK. Exempt work (copy, restoring the intended design,
+   small token nudges, a11y fixes that move nothing, dependency bumps) skips
+   this; when in doubt, wireframe.
 3c. **Plan first.** Comment your plan on the issue (files, steps, what you
-   won't do) before writing code. If it departs from Decisions or the
+   won't do, and the approved wireframe link if 3b2 applied) before writing code. If it departs from Decisions or the
    accepted proposal, ask instead (step 7).
 4. Implement exactly the spec on a new branch. Delegate concrete steps to the
    `implementer` agent (or, during the Codex trial, to `codex-builder` when I
