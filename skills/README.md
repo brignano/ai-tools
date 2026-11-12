@@ -23,8 +23,8 @@ The instructions, loaded when a task matches the description.
 ```
 
 On my devices the plugin loads from the checkout, so a file added to a skill
-arrives with a plain `git pull`; cloud sessions get it when the plugin is uploaded
-again. A directory with no `SKILL.md` is ignored.
+arrives with a plain `git pull`; cloud sessions get it in the next thread, since
+they install the plugin from `main` at start. A directory with no `SKILL.md` is ignored.
 
 ## What goes here, and what doesn't
 
