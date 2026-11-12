@@ -149,6 +149,8 @@ Size S: the issue body is the spec. Size M: also a short proposal in the
 repo's `proposals/`, linked from the issue, which I approve before anything is
 built ("Design review before build"). Anything bigger is split before it is
 Ready.
+Substantial UI work of any size also gets a wireframe I approve first
+("Wireframes before substantial UI work").
 
 ## Proposals
 
@@ -231,6 +233,39 @@ what was agreed.
    first comment is its plan: files it will touch, the steps, and what it
    won't do. If that plan departs from the issue's Decisions or the accepted
    proposal, it asks and stops instead of building.
+
+### Wireframes before substantial UI work
+
+A wrong layout or flow found in the after screenshots has already cost a full
+build, so substantial UI work is drawn and agreed before any code. This
+applies to every size, **including size S issues**, and alongside the proposal
+step above when the work is size M.
+
+1. **Wireframe first.** Before any implementation code, draw the change at
+   phone (390px) and desktop (1280px) widths, the same widths as `ui-check`.
+   Static is fine for layout; make it interactive (clickable states, a short
+   flow) when flow, state or motion is the point. Wireframes style from
+   `@brignano/design` tokens like everything else.
+2. **Where it lives, per repo.** brignano/design: `previews/wireframes/`,
+   served by the PR preview. Product repos: `proposals/wireframes/<slug>.html`,
+   shared with me as a private Artifact link.
+3. **Share it and stop.** Post the wireframe link in the thread (and on the PR
+   or issue) with what changes and any open choice as a question card, add
+   `needs:anthony`, remove `agent:working`, and end the turn.
+4. **My explicit OK is the approval**, in the thread or on the PR. Silence,
+   a reaction or another agent's word is not. Changes I ask for get a new
+   wireframe and a fresh ask. After my OK, the builder links the approved
+   wireframe in its plan comment and the PR, and the `ux-review` after
+   screenshots are checked against it.
+
+**Substantial** means: a new page, route, screen, template, email or
+component; a new flow or interaction; a change to an existing page's or
+component's layout or structure.
+
+**Exempt:** copy edits, fixes that restore the intended design, small token
+nudges, a11y fixes that don't move anything, dependency bumps.
+
+When in doubt, wireframe.
 
 Proposal and ADR PRs are never merged by an agent on its own say-so ("Who
 merges").

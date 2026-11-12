@@ -9,6 +9,27 @@ A PR that changes what a user sees is not done until it passes this gate. It
 is step 4 of "Review and merge" in `fleet/README.md`. The builder does it
 before asking for review; the reviewer checks it against the diff.
 
+## 0. Wireframe first
+
+Substantial UI work gets a wireframe Anthony approves before any
+implementation code, at every size (fleet README, "Wireframes before
+substantial UI work"). Substantial: a new page, route, screen, template, email
+or component; a new flow or interaction; a change to an existing page's or
+component's layout or structure. Exempt: copy edits, fixes that restore the
+intended design, small token nudges, a11y fixes that don't move anything,
+dependency bumps. When in doubt, wireframe.
+
+- Draw it at phone (390px) and desktop (1280px). Static for layout;
+  interactive when flow, state or motion matters. Tokens from
+  `@brignano/design` only.
+- brignano/design: `previews/wireframes/` (served by the PR preview).
+  Product repos: `proposals/wireframes/<slug>.html`, shared as a private
+  Artifact link.
+- Share it, add `needs:anthony`, and stop. Build only after his explicit OK
+  in the thread or on the PR.
+- Link the approved wireframe in the plan comment and the PR body; the
+  after screenshots in §2 are checked against it.
+
 ## 1. Automated: the `ui-check` job
 
 Each repo with a UI calls the reusable workflow from brignano/ai-tools. It
@@ -68,7 +89,8 @@ running the branch.
    skill helps start an app you don't know how to serve.
 3. **Look at them yourself.** Open every PNG and compare before with after.
    Check the change did what was asked and nothing else moved, broke or
-   clipped. Fix and re-shoot before calling it done.
+   clipped. If the change needed a wireframe (§0), check "after" against the
+   approved wireframe too, and call out any difference in the reply and PR. Fix and re-shoot before calling it done.
 4. **Demo data only.** Serve fixtures or seed data, never real budget numbers,
    people, photos or anything else personal.
 5. **Post them in the thread** with the reply that reports the change, phone
@@ -103,6 +125,9 @@ running the branch.
    Never skip silently.
 
 ## 3. Checklist (the reviewer reads the diff for each)
+
+- **Wireframe**: substantial UI work links a wireframe Anthony explicitly
+  approved, and the after screenshots match it (or the PR explains why not).
 
 - **Design system**: every colour, font, radius, shadow and spacing value
   comes from `@brignano/design` tokens (`design-system` skill). No hex, no
