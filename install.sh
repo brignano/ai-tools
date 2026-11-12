@@ -439,7 +439,11 @@ PY
     if [ "$DRY_RUN" = 1 ]; then
       case "$action" in
         add)    echo "    [dry-run] register: $name" ;;
-        skip)   echo "    [dry-run] skip (existing registration kept): $name ($arg)" ;;
+        skip)   if claude mcp get "$name" >/dev/null 2>&1; then
+                  echo "    [dry-run] keep as-is: $name ($arg)"
+                else
+                  echo "    [dry-run] skip: $name ($arg)"
+                fi ;;
         retire) echo "    [dry-run] unregister (retired): $name" ;;
       esac
       continue

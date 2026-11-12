@@ -474,7 +474,10 @@ if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
             $json = $srv | ConvertTo-Json -Depth 20 -Compress
         }
         if ($DryRun) {
-            if ($why) { Write-Host "    [dry-run] skip (existing registration kept): $name ($why)" } else { Write-Host "    [dry-run] register: $name" }
+            if ($why) {
+                claude mcp get $name 2>$null | Out-Null
+                if ($LASTEXITCODE -eq 0) { Write-Host "    [dry-run] keep as-is: $name ($why)" } else { Write-Host "    [dry-run] skip: $name ($why)" }
+            } else { Write-Host "    [dry-run] register: $name" }
             continue
         }
         if ($why) {
