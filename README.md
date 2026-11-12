@@ -17,7 +17,7 @@ servers — installed once per device so every machine stays in sync.
 | `skills/<name>/` | `fleet` plugin (linked to `~/.claude/skills/` if there's no `claude` CLI) | Skills — loaded when a task matches their description |
 | `agents/*.md` | `fleet` plugin (linked to `~/.claude/agents/` if there's no `claude` CLI) | Subagents — run in their own context, report back a conclusion |
 | `claude/settings.json` | `~/.claude/settings.json` | Baseline permission allowlist and default model (`opusplan`). If you already have a real settings file, the installer merges only `model` and `worktree` into it |
-| `claude/mcp-servers.json` | user-scope MCP (`claude mcp add-json`) | github, homelab, homelab-calendar, terraform, rea |
+| `claude/mcp-servers.json` | user-scope MCP (`claude mcp add-json`) | github, homelab, homelab-calendar, terraform, rea, google-tasks |
 | `.env.example` → `secrets.env` | sourced by `~/.zshenv` (zsh) / `~/.bashrc` — `.zshenv` so the desktop app sees it too | Tokens (gitignored, never committed) |
 | `shell/profile.ps1` | sourced by both PowerShell `$PROFILE`s | oh-my-zsh-style Windows shell: nav + git aliases, PSReadLine, Starship prompt |
 | `shell/aliases.sh` | sourced by `~/.zshrc` / `~/.bashrc` | Same nav + git aliases on Mac/Linux (prompt untouched — omz stays) |
@@ -55,7 +55,7 @@ Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 Then fill in tokens and reload your shell:
 ```bash
-$EDITOR ~/.ai-tools/secrets.env    # paste HOMELAB_MCP_TOKEN, TFE_TOKEN, GITHUB_MCP_TOKEN
+$EDITOR ~/.ai-tools/secrets.env    # paste HOMELAB_MCP_TOKEN, TFE_TOKEN, GITHUB_MCP_TOKEN, GOOGLE_TASKS_*
 exec $SHELL                        # reload so Claude Code sees them
 ai-refresh                         # re-register MCP servers that were waiting on a token
 claude
@@ -74,9 +74,11 @@ alone; anything you edited yourself is saved alongside as `<name>.bak` before be
 ## MCP servers
 
 `claude/mcp-servers.json` is the source of truth; the installers register each one
-at user scope, and **skip** (and unregister) a server this machine can't run yet,
-saying why: its stdio command isn't installed (`docker`, `uvx`) or a `${VAR}` it
-needs is empty in `secrets.env`. Fill the gap and re-run `ai-refresh`.
+at user scope, and **skip** a server this machine can't run yet, saying why: its
+stdio command isn't installed (`docker`, `uvx`) or a `${VAR}` it needs is empty in
+`secrets.env`. A skipped server keeps any registration it already has (added by
+hand, or by an earlier run with the secret set) and prints `kept as-is`; only
+retired servers are removed. Fill the gap and re-run `ai-refresh`.
 
 | Server | Needs |
 |---|---|
@@ -85,6 +87,7 @@ needs is empty in `secrets.env`. Fill the gap and re-run `ai-refresh`.
 | homelab-calendar | Same `HOMELAB_MCP_TOKEN`, nothing new. Read-only iCloud calendars via Home Assistant (homelab `docker/mcp-calendar/`); Tailscale up |
 | terraform | Docker; `TFE_TOKEN` (HCP Terraform **user** token) for workspaces |
 | rea | Node.js 22.19+ / 24.11+ (`npx`). [REA](https://github.com/morluto/rea): reverse engineer apps you don't have source for (Electron/JS, APKs, .NET, websites, HAR/pcap captures) with no extra installs; native binaries also need Ghidra, Hopper or IDA (`npx -y rea-agents@6.4.0 doctor`). Pinned; bump it together with `skills/reverse-engineer-anything/` |
+| google-tasks | `uv` (`uvx`); `GOOGLE_TASKS_CLIENT_ID` and `GOOGLE_TASKS_CLIENT_SECRET` from the Desktop OAuth client "claude-code" in Google Cloud project homelab-assistant (Google Tasks API enabled). [workspace-mcp](https://github.com/taylorwilsdon/google_workspace_mcp), Tasks tools only, pinned. First Tasks call opens a browser to sign in to Google once per machine; on the unverified-app warning choose Advanced → Continue. Due dates are date-only |
 
 Servers listed under `_retired` are unregistered on every run: Slack, Vercel, Notion
 and aws-mcp. Use their claude.ai connectors instead — no per-machine login, `uvx` or
