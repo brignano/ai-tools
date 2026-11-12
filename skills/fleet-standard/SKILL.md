@@ -13,7 +13,7 @@ freshest copy you can find, in this order:
 2. `standard.md` next to this file: the copy the plugin shipped with.
 
 Sections: Where things live · Every session loads this file · Labels · An issue
-is a spec · Proposals · Design review before build (incl. Wireframes before substantial UI work) · Decisions (ADRs) · Architecture · Where docs live · Keep docs
+is a spec · Proposals · Design review before build · Wireframes before build · Decisions (ADRs) · Architecture · Where docs live · Keep docs
 and context in sync ·
 Ready by default · Status, priority and blocked ·
 "What's next" · Claiming an issue · Closing issues · Roles and models · Projects

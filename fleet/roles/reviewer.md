@@ -57,7 +57,7 @@ after the PR.
      checklist, the `ui-check` job green, and before/after screenshots in
      the PR body (phone first) that match the diff.
    - **Wireframe**, if the PR is substantial UI work ("Wireframes before
-     substantial UI work" in the fleet README, any size): it links a
+     build" in the fleet README, any size): it links a
      wireframe at 390px and 1280px that Anthony explicitly OK'd in the
      thread or on the PR before the code was written, and the after
      screenshots match it. No wireframe, no OK, or a mismatch with no

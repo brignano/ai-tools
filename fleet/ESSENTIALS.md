@@ -48,7 +48,7 @@ own AGENTS.md/CLAUDE.md win where they are stricter.
 - **Wireframe substantial UI first** (new page, screen, component, flow, or a
   layout change; any size): phone 390px + desktop 1280px, shared with me,
   `needs:anthony`, no code until my explicit OK (fleet README, "Wireframes
-  before substantial UI work").
+  before build").
 - **UI changes ship with before/after screenshots** (`ux-review` skill): shoot
   "before" when you start, "after" when done, look at them yourself, then put
   them in the thread reply and the PR body, phone first. Demo data only.

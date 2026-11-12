@@ -11,24 +11,22 @@ before asking for review; the reviewer checks it against the diff.
 
 ## 0. Wireframe first
 
-Substantial UI work gets a wireframe Anthony approves before any
-implementation code, at every size (fleet README, "Wireframes before
-substantial UI work"). Substantial: a new page, route, screen, template, email
-or component; a new flow or interaction; a change to an existing page's or
-component's layout or structure. Exempt: copy edits, fixes that restore the
-intended design, small token nudges, a11y fixes that don't move anything,
-dependency bumps. When in doubt, wireframe.
+Substantial UI work (a new page, route, screen, template, email or component;
+a new flow or interaction; a layout or structure change) gets a wireframe
+Anthony explicitly OKs before any implementation code, at every size. The
+rule, the exempt list and the steps are in the fleet README, "Wireframes
+before build"; when in doubt, wireframe.
 
-- Draw it at phone (390px) and desktop (1280px). Static for layout;
-  interactive when flow, state or motion matters. Tokens from
-  `@brignano/design` only.
-- brignano/design: `previews/wireframes/` (served by the PR preview).
-  Product repos: `proposals/wireframes/<slug>.html`, shared as a private
-  Artifact link.
-- Share it, add `needs:anthony`, and stop. Build only after his explicit OK
-  in the thread or on the PR.
-- Link the approved wireframe in the plan comment and the PR body; the
-  after screenshots in §2 are checked against it.
+- Phone (390px) and desktop (1280px). Static by default; an interactive
+  prototype when flow, state or motion is the point. Real tokens, components
+  and copy; demo data only.
+- Keep it where the repo's wireframes README says
+  (`previews/wireframes/README.md` in brignano/design,
+  `proposals/wireframes/README.md` in product repos).
+- Share a link he can tap on his phone, phone and desktop screenshots, and
+  the rejected options, one line each. Add `needs:anthony` and stop.
+- After his OK, link the approved wireframe in the plan comment and the PR
+  body; the after screenshots in §2 are checked against it.
 
 ## 1. Automated: the `ui-check` job
 

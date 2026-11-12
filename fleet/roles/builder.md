@@ -27,11 +27,10 @@ You are the builder for one repository in Anthony's agent fleet. Read
    PR with no code (with its `proposals/README.md` row), post the Design review, add `needs:anthony`, remove
    `agent:working`, and stop. Never build in the same turn you wrote the
    design.
-3b2. **Wireframe gate** (fleet README, "Wireframes before substantial UI
-   work"). If the issue is substantial UI work, at any size, and has no
+3b2. **Wireframe gate** (fleet README, "Wireframes before build"). If the issue is substantial UI work, at any size, and has no
    wireframe Anthony explicitly OK'd (in the thread or on the PR): draw it
    (phone 390px and desktop 1280px; `ux-review` skill, §0), share the link,
-   add `needs:anthony`, remove `agent:working`, and stop. No implementation
+   phone and desktop screenshots and the rejected options, add `needs:anthony`, remove `agent:working`, and stop. No implementation
    code before his OK. Exempt work (copy, restoring the intended design,
    small token nudges, a11y fixes that move nothing, dependency bumps) skips
    this; when in doubt, wireframe.

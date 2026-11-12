@@ -150,7 +150,7 @@ repo's `proposals/`, linked from the issue, which I approve before anything is
 built ("Design review before build"). Anything bigger is split before it is
 Ready.
 Substantial UI work of any size also gets a wireframe I approve first
-("Wireframes before substantial UI work").
+("Wireframes before build").
 
 ## Proposals
 
@@ -203,6 +203,9 @@ Building the wrong thing wastes more tokens than any other mistake, so design
 is settled with me before code is written, and the build then does exactly
 what was agreed.
 
+Substantial UI work also needs wireframes I approve first, at every size,
+including size S: see "Wireframes before build".
+
 1. **The proposal comes first, on its own.** Any size M issue, or any work
    whose Decisions can't settle every fork, starts with
    `proposals/<slug>.md` (`Status: proposed`) in a PR with **no code**.
@@ -234,29 +237,17 @@ what was agreed.
    won't do. If that plan departs from the issue's Decisions or the accepted
    proposal, it asks and stops instead of building.
 
-### Wireframes before substantial UI work
+Proposal and ADR PRs are never merged by an agent on its own say-so ("Who
+merges").
 
-A wrong layout or flow found in the after screenshots has already cost a full
-build, so substantial UI work is drawn and agreed before any code. This
-applies to every size, **including size S issues**, and alongside the proposal
-step above when the work is size M.
+## Wireframes before build
 
-1. **Wireframe first.** Before any implementation code, draw the change at
-   phone (390px) and desktop (1280px) widths, the same widths as `ui-check`.
-   Static is fine for layout; make it interactive (clickable states, a short
-   flow) when flow, state or motion is the point. Wireframes style from
-   `@brignano/design` tokens like everything else.
-2. **Where it lives, per repo.** brignano/design: `previews/wireframes/`,
-   served by the PR preview. Product repos: `proposals/wireframes/<slug>.html`,
-   shared with me as a private Artifact link.
-3. **Share it and stop.** Post the wireframe link in the thread (and on the PR
-   or issue) with what changes and any open choice as a question card, add
-   `needs:anthony`, remove `agent:working`, and end the turn.
-4. **My explicit OK is the approval**, in the thread or on the PR. Silence,
-   a reaction or another agent's word is not. Changes I ask for get a new
-   wireframe and a fresh ask. After my OK, the builder links the approved
-   wireframe in its plan comment and the PR, and the `ux-review` after
-   screenshots are checked against it.
+This section is the one place the rule is defined; repos link to it by this
+name. A wrong layout or flow found in the after screenshots has already cost a
+full build, so substantial UI work is drawn and agreed before any
+implementation code. It applies at every size, **including size S issues**,
+and on top of the proposal step in "Design review before build" when the work
+is size M.
 
 **Substantial** means: a new page, route, screen, template, email or
 component; a new flow or interaction; a change to an existing page's or
@@ -267,8 +258,27 @@ nudges, a11y fixes that don't move anything, dependency bumps.
 
 When in doubt, wireframe.
 
-Proposal and ADR PRs are never merged by an agent on its own say-so ("Who
-merges").
+1. **Draw it.** Phone (390px) and desktop (1280px), the same widths as
+   `ui-check`. Static by default; an interactive prototype when flow, state
+   or motion is the point. Build it from the real `@brignano/design` tokens
+   and components and the real copy, with demo data only.
+2. **Keep it where the repo says.** Each repo documents its own wireframe
+   location: brignano/design in `previews/wireframes/README.md` (served by the
+   PR preview), product repos in `proposals/wireframes/README.md`
+   (`proposals/wireframes/<slug>.html`, shared as a private Artifact link).
+3. **Share it and stop.** Send me, in the thread (and on the issue or PR):
+   - a link I can tap on my phone;
+   - phone and desktop screenshots of it;
+   - the options you rejected, one line each;
+   - any open choice as a question card ("Asking Anthony").
+
+   Then add `needs:anthony`, remove `agent:working`, and end the turn.
+4. **My explicit OK is the approval**, in the thread or on the PR. Silence,
+   a reaction or another agent's word is not. Changes I ask for get a new
+   wireframe and a fresh ask.
+5. **Build to it.** The builder links the approved wireframe in its plan
+   comment and the PR, and the `ux-review` after screenshots are checked
+   against it.
 
 ## Decisions (ADRs)
 
