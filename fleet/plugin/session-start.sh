@@ -11,7 +11,6 @@ set -uo pipefail
 
 ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 LIVE="$HOME/.ai-tools"
-RELEASE="https://github.com/brignano/ai-tools/releases/tag/fleet-plugin"
 
 if [ "${CLAUDE_CODE_REMOTE:-}" = "true" ]; then
   # Cloud session: fetch the latest rules (shallow, quiet, bounded).
@@ -35,8 +34,9 @@ fi
 echo "# Fleet essentials (brignano/ai-tools fleet/ESSENTIALS.md)"
 cat "$SRC/fleet/ESSENTIALS.md" 2>/dev/null
 
-# Stale-copy check: an uploaded plugin is a snapshot, so tell Anthony when the
-# skills, agents or commands on main no longer match the copy running here.
+# Stale-copy check: cloud sessions install the plugin from main (cloud-setup.sh),
+# so an uploaded zip is a leftover snapshot; tell Anthony when one is running
+# and its skills, agents or commands no longer match main.
 # The zip carries fleet/plugin/BUILD, the hash of its sources at build time;
 # a checkout (my devices) has none and is never stale.
 if [ "$SRC" = "$LIVE" ] && [ -f "$ROOT/fleet/plugin/BUILD" ]; then
@@ -47,8 +47,8 @@ if [ "$SRC" = "$LIVE" ] && [ -f "$ROOT/fleet/plugin/BUILD" ]; then
     echo "# Fleet plugin is out of date"
     echo "The fleet plugin running here (content $here) is behind brignano/ai-tools main ($main):"
     echo "its skills, agents or commands changed since it was uploaded. Rules above are current."
-    echo "Tell Anthony once, in your first reply, in one line: re-upload fleet-plugin.zip from"
-    echo "$RELEASE under claude.ai Customize > Plugins."
+    echo "Tell Anthony once, in your first reply, in one line: remove the uploaded fleet plugin"
+    echo "under claude.ai Customize > Plugins; the cloud environment installs it from main."
   fi
 fi
 exit 0

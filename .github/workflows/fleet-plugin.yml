@@ -2,7 +2,7 @@ name: fleet-plugin
 
 # Builds the fleet plugin zip (fleet/plugin/build.sh). Every run keeps it as a
 # workflow artifact; a merge to main also refreshes the `fleet-plugin` release,
-# so the latest zip to upload at claude.ai is always at one link:
+# so a zip (fallback only; cloud sessions install from main) is at one link:
 # https://github.com/brignano/ai-tools/releases/tag/fleet-plugin
 on:
   push:

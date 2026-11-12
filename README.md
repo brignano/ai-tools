@@ -26,9 +26,8 @@ servers — installed once per device so every machine stays in sync.
 ([`.claude-plugin/`](.claude-plugin/)): commands, skills, agents, and a start
 hook that loads AGENTS.md and the fleet standard. `install.sh` installs it from
 this checkout, so it loads in place and `ai-refresh` keeps it current. Cloud
-sessions get the same plugin from claude.ai (Customize > Plugins, the zip on the
-[`fleet-plugin` release](https://github.com/brignano/ai-tools/releases/tag/fleet-plugin));
-see [fleet/README.md](fleet/README.md#every-session-loads-this-file). Both
+sessions install it from `main` at start, through the cloud environment's setup
+script ([`fleet/plugin/cloud-setup.sh`](fleet/plugin/cloud-setup.sh)); see [fleet/README.md](fleet/README.md#every-session-loads-this-file). Both
 installers fall back to linking them into `~/.claude` when the `claude` CLI is
 missing.
 
