@@ -443,9 +443,10 @@ Write-Host "==> MCP servers (user scope)"
 if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
     Write-Host "    'claude' CLI not found - skipping (install Claude Code, then re-run)"
 } else {
-    # Register each server, or skip it (and unregister any earlier copy) because its
-    # stdio command isn't installed here or a ${VAR} it needs is empty in
-    # secrets.env. Retired servers are unregistered outright.
+    # Register each server, or skip it because its stdio command isn't installed
+    # here or a ${VAR} it needs is empty in secrets.env. A skipped server keeps any
+    # registration it already has: a missing secret never removes it. Retired
+    # servers are unregistered outright.
     $cfg = Get-Content $McpJson -Raw | ConvertFrom-Json
     $sec = @{}
     if (Test-Path $Secrets) {
@@ -473,11 +474,15 @@ if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
             $json = $srv | ConvertTo-Json -Depth 20 -Compress
         }
         if ($DryRun) {
-            if ($why) { Write-Host "    [dry-run] skip: $name ($why)" } else { Write-Host "    [dry-run] register: $name" }
+            if ($why) { Write-Host "    [dry-run] skip (existing registration kept): $name ($why)" } else { Write-Host "    [dry-run] register: $name" }
+            continue
+        }
+        if ($why) {
+            claude mcp get $name 2>$null | Out-Null
+            if ($LASTEXITCODE -eq 0) { Write-Host "    kept as-is: $name ($why)" } else { Write-Host "    skipped: $name ($why)" }
             continue
         }
         claude mcp remove $name -s user 2>$null | Out-Null
-        if ($why) { Write-Host "    skipped: $name ($why)"; continue }
         claude mcp add-json $name $json -s user 2>$null | Out-Null
         if ($LASTEXITCODE -eq 0) { Write-Host "    registered: $name" }
         else { Write-Host "    FAILED: $name - register manually with 'claude mcp add-json'" }

@@ -404,9 +404,11 @@ if ! command -v claude >/dev/null 2>&1; then
 elif ! command -v python3 >/dev/null 2>&1; then
   echo "    python3 not found — skipping MCP registration"
 else
-  # Decide per server: register it, or skip it (and unregister any earlier copy)
-  # because its stdio command isn't installed here or a ${VAR} it needs is empty
-  # in secrets.env. Retired servers are unregistered outright.
+  # Decide per server: register it, or skip it because its stdio command isn't
+  # installed here or a ${VAR} it needs is empty in secrets.env. A skipped server
+  # keeps any registration it already has (added by hand, or by an earlier run with
+  # the secret set): a missing secret never removes it. Retired servers are
+  # unregistered outright.
   plan="$(python3 - "$MCP_JSON" "$SECRETS" <<'PY'
 import json, re, shutil, sys
 cfg = json.load(open(sys.argv[1]))
@@ -437,9 +439,17 @@ PY
     if [ "$DRY_RUN" = 1 ]; then
       case "$action" in
         add)    echo "    [dry-run] register: $name" ;;
-        skip)   echo "    [dry-run] skip: $name ($arg)" ;;
+        skip)   echo "    [dry-run] skip (existing registration kept): $name ($arg)" ;;
         retire) echo "    [dry-run] unregister (retired): $name" ;;
       esac
+      continue
+    fi
+    if [ "$action" = skip ]; then
+      if claude mcp get "$name" >/dev/null 2>&1; then
+        echo "    kept as-is: $name ($arg)"
+      else
+        echo "    skipped: $name ($arg)"
+      fi
       continue
     fi
     claude mcp remove "$name" -s user >/dev/null 2>&1 || true
@@ -450,7 +460,6 @@ PY
         else
           echo "    FAILED: $name — register manually with 'claude mcp add-json'"
         fi ;;
-      skip)   echo "    skipped: $name ($arg)" ;;
       retire) echo "    unregistered (retired): $name" ;;
     esac
   done <<< "$plan"
