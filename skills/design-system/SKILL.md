@@ -35,7 +35,8 @@ Wire it in from the first commit, not as a later restyle.
    0.9.1 but never 0.10.0), so a new minor release needs an explicit bump in
    every consumer. Read that version's notes in `releases/` before bumping.
 
-   No build step? Use jsDelivr, pinned to the version that command prints:
+   No build step? Use jsDelivr, pinned to the version that command prints
+   (the same path serves `components.css`, `templates/` and `icons/`):
    `https://cdn.jsdelivr.net/npm/@brignano/design@<version>/tokens.css`
 
 3. **Import.** Plain CSS:
@@ -47,7 +48,8 @@ Wire it in from the first commit, not as a later restyle.
    ```
 
    `components.css` is the shared controls and patterns as plain CSS, in one
-   layer your own CSS and Tailwind utilities beat without `!important`. State
+   layer (`brignano.components`) that your own unlayered CSS beats without
+   `!important` (`DESIGN.md` §14). State
    comes from the attribute that makes it true (`disabled`, `aria-invalid`,
    `aria-current`), never a class. Use a component before writing your own;
    each one's page under `previews/` is its docs (snippet, when to use it,
@@ -73,8 +75,9 @@ Wire it in from the first commit, not as a later restyle.
 5. **Start from a template and the icon set.** Whole-page layouts ship as
    `@brignano/design/templates/<name>.css`, imported after `components.css`:
    `app-shell` (the frame a tool app sits in), `settings`, `error` (404, 500,
-   offline), `article`, `changelog`, `legal`, and a transactional email
-   (`email.html` + `email.txt`). Icons come only from the package's `icons/`
+   offline), `article`, `changelog` and `legal`. The transactional email is
+   `templates/email.html` + `email.txt`, not a stylesheet: fill its colours
+   from the tokens with `scripts/email-tokens.mjs`. Icons come only from the package's `icons/`
    (Lucide outlines in `currentColor`, at `@brignano/design/icons/<name>.svg`):
    paste one inline and size it with `.icon-sm`, `.icon` or `.icon-lg`. Need
    one that isn't there? Add it to design from Lucide; don't draw one or pull
@@ -82,10 +85,11 @@ Wire it in from the first commit, not as a later restyle.
 
 6. **Load the fonts yourself.** The tokens only name them: Geist (`--sans`)
    and IBM Plex Mono (`--mono`). Use `next/font`, Fontsource or the `geist`
-   package. Geist needs weight 800 available for `.display` and `.stamp`.
-   Heavy Geist is the display treatment in both tiers. Silkscreen is being
-   retired: `--display` still names it on the marketing tier only until
-   brignano/design#142 removes it.
+   package, and load Geist as the variable font or include weight 800:
+   `.display` and `.stamp` need it. Heavy Geist is the display treatment in
+   both tiers. Silkscreen is being retired: `--display` still names it on the
+   marketing tier until brignano/design#142 removes it, so only a surface that
+   already uses `var(--display)` still loads it.
 
 7. **Set the browser floor** in the consumer's `package.json`, or Lightning CSS
    (Next, Vite, Parcel) lowers `light-dark()` and `data-theme` on an inner
