@@ -1,10 +1,12 @@
-<!-- Fleet plugin icon source. Rendered at 1024x1024 with brignano/design tokens.css and fonts/ beside it (dark theme: --bg, --mark, Silkscreen monogram) into .claude-plugin/icon.png. -->
+<!-- Fleet plugin icon source. Rendered at 1024x1024 with brignano/design tokens.css, components.css and fonts/ beside it (0.9.0 or later, for .stamp) into .claude-plugin/icon.png. Dark theme: --bg ground, the A|B monogram as .stamp (Geist at --weight-heavy, spaced open) in --mark, a bar in --mark. -->
 <!doctype html><html data-theme="dark"><head><meta charset="utf-8">
 <link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
 <style>
-@font-face{font-family:Silkscreen;src:url(fonts/silkscreen-latin-400-normal.woff2) format('woff2');}
+@font-face{font-family:Geist;font-weight:100 900;src:url(fonts/geist-latin-wght-normal.woff2) format('woff2');}
 html,body{margin:0;width:1024px;height:1024px;background:var(--bg);}
 .i{width:1024px;height:1024px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:80px;}
-.m{font-family:Silkscreen,monospace;font-size:400px;line-height:1;color:var(--mark);letter-spacing:-8px;}
+/* The negative margin takes back the tracking after the B, so the monogram centres. */
+.m{font-size:360px;line-height:1;color:var(--mark);margin-right:calc(-1 * var(--tracking-caps));}
 .t{width:660px;height:28px;background:var(--mark);border-radius:14px;}
-</style></head><body><div class="i"><div class="m">A|B</div><div class="t"></div></div></body></html>
+</style></head><body><div class="i"><div class="m stamp" role="img" aria-label="Anthony Brignano">A|B</div><div class="t"></div></div></body></html>
