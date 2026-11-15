@@ -39,6 +39,15 @@ Wire it in from the first commit, not as a later restyle.
    (the same path serves `components.css`, `templates/` and `icons/`):
    `https://cdn.jsdelivr.net/npm/@brignano/design@<version>/tokens.css`
 
+   A claude.ai Artifact can't do either: its CSP blocks stylesheets from
+   every host except Google Fonts. Publish the package's `tokens.css` and
+   `components.css` verbatim as files of the artifact (`npm pack
+   @brignano/design@<version>`, then the Artifact tool's `files`) and link
+   them relatively (`<link rel="stylesheet" href="tokens.css">`). Load Geist
+   and IBM Plex Mono from Google Fonts. Never hand-copy a subset of tokens
+   into the page: that is how the Idea Ledger sat on 0.1.0 colours, with a
+   caption grey under the contrast floor, while the package moved on.
+
 3. **Import.** Plain CSS:
 
    ```css
