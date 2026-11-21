@@ -37,7 +37,8 @@ own AGENTS.md/CLAUDE.md win where they are stricter.
   (spec shape, labels, "From owner/repo#N"), and you tell me in one line
   (`/handoff`). Never ask me to add that repo to the project.
 - "What's next" is answered from GitHub in this order: waiting on me, in
-  progress, up next (top 5), held, blocked, tidy-up (`/next`).
+  progress, up next (top 5), held, blocked, tidy-up (`/next`). `/triage`
+  sorts new issues (keep, duplicate, close, merge) and changes nothing until I reply.
 
 ## Shipping
 - Never push to the default branch. Every PR links its issue with `Closes #N`
