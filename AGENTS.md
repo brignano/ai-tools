@@ -74,6 +74,6 @@ reviewing or merging.
 
 ## Commands, skills & agents
 Shipped by the `fleet` plugin from `ai-tools`, in every project and on every
-machine: run `/` to list them. Fleet shortcuts: `/next`, `/handoff`,
+machine: run `/` to list them. Fleet shortcuts: `/next`, `/triage`, `/handoff`,
 `/merge-it`, `/new-repo`. Anything tied to one repo's paths, hosts or services
 goes in **that repo's** `.claude/` instead.

@@ -57,7 +57,8 @@ every project.
 - **Keep ESSENTIALS.md in step.** A PR that changes a rule here checks whether
   the one-line version in ESSENTIALS.md still holds, and fixes it in the same PR.
 - **Shortcuts:** `/next` ("What's next"), `/handoff` ("Projects talk through
-  issues"), `/merge-it` ("Merging when I ask"), `/new-repo` (the checklist below).
+  issues"), `/merge-it` ("Merging when I ask"), `/new-repo` (the checklist below),
+  `/triage` (digest new issues: keep, duplicate, close, needs Decisions, merge).
 - **Cloud (every project):** the Default cloud environment's setup script,
   [`plugin/cloud-setup.sh`](plugin/cloud-setup.sh), clones `main` into
   `~/.ai-tools` (about a second) and runs `claude plugin install fleet@brignano`
@@ -519,6 +520,8 @@ leaving out empty parts:
 
 It is a short list with issue links, not a wall of text. It may close an
 issue that is possibly done, or set a missing priority, only after I say yes.
+When the list is too long to read, `/triage` sorts the new issues into keep,
+duplicate, close and merge for me to approve in one reply.
 
 ## Claiming an issue
 
