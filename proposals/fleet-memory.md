@@ -1,7 +1,8 @@
 # Fleet memory
 
-Status: proposed
+Status: accepted
 Issue: brignano/ai-tools#108
+Decision: [0006](../decisions/0006-fleet-memory.md), accepted by Anthony 2026-11-22 with every recommendation below
 
 ## Problem
 
