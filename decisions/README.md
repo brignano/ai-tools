@@ -7,3 +7,4 @@
 | [0003](0003-design-review-before-build.md) | Design review with Anthony before any size M build | accepted | 2026-11-03 |
 | [0004](0004-codex-builder-trial.md) | Codex as an optional, sandboxed builder for a one-month trial | accepted | 2026-11-03 |
 | [0005](0005-wireframes-before-substantial-ui.md) | Wireframes approved by Anthony before substantial UI work | accepted | 2026-11-12 |
+| [0006](0006-fleet-memory.md) | Fleet memory: facts under `memory/` merge themselves via a CI gate, everything else waits for Anthony | accepted | 2026-11-22 |
