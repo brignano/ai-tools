@@ -130,9 +130,19 @@ Wire it in from the first commit, not as a later restyle.
   are the same message at different volumes). `--danger` = something broke.
   `--mark` = identity, and it inks a *graphic* only (a product's glyph, the
   `A|B` monogram, a hero rule), never a control, chip, border or link. A
-  product's own mark (`data-mark`) has the same contract: buttons and links
-  stay cobalt on every product. One or two coloured things per tool-tier
-  screen.
+  product's own mark (`data-mark`) has the same contract **inside an app**:
+  buttons and links stay cobalt. **On a product page** (`product-page.css`)
+  the mark also fills the one primary button (`--mark-fill`,
+  `--mark-fill-hover`, `--mark-fill-pressed` under `--on-mark`) and may wash
+  the ground (`--mark-surface`, `data-ground="mark"`); `data-button="ink"`
+  keeps that button ink instead (ADR-0017). One or two coloured things per
+  tool-tier screen.
+- **Each product page has its own look.** The product writes five choices
+  (ground, voice, shape, composition, the page does the thing) under **Look**
+  in its `BRIEF.md`, no two products alike, registered in `DESIGN.md` §13. The
+  look lives in the product's own repo over `product-page.css`, in tokens
+  only. A product page may pin `data-theme` only when its look is the theme;
+  apps never pin it.
 - **Never hardcode a hex outside `tokens.css`.** A literal survives a theme
   change silently. That is how a set of status pills stayed light grey in dark
   mode for months.

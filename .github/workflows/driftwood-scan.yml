@@ -9,17 +9,21 @@ name: driftwood-scan
 #   jobs:
 #     architecture:
 #       uses: brignano/ai-tools/.github/workflows/driftwood-scan.yml@main
+#       # Optional: a command to run before the scan, e.g. homelab's Caddy routes
+#       # (driftwood reads `caddy adapt` JSON, never the Caddyfile):
+#       with:
+#         prepare: docker run --rm -v "$PWD/docker/proxy:/c" caddy caddy adapt --config /c/Caddyfile > docker/proxy/caddy.json
 # Runs `driftwood scan` on the checkout, appends the Mermaid diagrams to the job
-# summary (GitHub draws them in place) and uploads the interactive viewer as
-# the `driftwood-scan` artifact. Never fails on what it draws; only a crash of
-# the CLI fails the job. Reads files only: no cloud credentials, no secrets.
+# summary (GitHub draws them in place), uploads the interactive viewer as the
+# `driftwood-scan` artifact and links it from the summary. Never fails on what it draws; only a crash of
+# the CLI (or a failing `prepare`) fails the job. Reads files only: no cloud credentials, no secrets.
 on:
   workflow_call:
     inputs:
       version:
         description: "@brignano/driftwood version. Pinned; bump it on purpose."
         type: string
-        default: "0.12.0"
+        default: "0.13.0"
       dir:
         description: Folder to scan, relative to the repo root.
         type: string
@@ -27,6 +31,10 @@ on:
       node-version:
         type: string
         default: "22"
+      prepare:
+        description: Shell command run in the repo root after checkout and before the scan. Empty skips it; a failure fails the job.
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -36,25 +44,36 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ inputs.node-version }}
+      - name: Prepare
+        if: inputs.prepare != ''
+        env:
+          PREPARE: ${{ inputs.prepare }}
+        run: bash -euo pipefail -c "$PREPARE"
       - name: Scan
         env:
           VERSION: ${{ inputs.version }}
           DIR: ${{ inputs.dir }}
         run: npx --yes "@brignano/driftwood@$VERSION" scan "$DIR" --engine mermaid --out-dir driftwood-scan --no-open
+      - name: Upload viewer
+        id: upload
+        uses: actions/upload-artifact@v5
+        with:
+          name: driftwood-scan
+          path: driftwood-scan
+          if-no-files-found: ignore
       - name: Job summary
+        env:
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
         run: |
           if [ -f driftwood-scan/summary.md ]; then
             cat driftwood-scan/summary.md >> "$GITHUB_STEP_SUMMARY"
           else
             echo "driftwood found nothing to draw here ([what it reads](https://www.npmjs.com/package/@brignano/driftwood#the-model))." >> "$GITHUB_STEP_SUMMARY"
           fi
-      - name: Upload viewer
-        uses: actions/upload-artifact@v4
-        with:
-          name: driftwood-scan
-          path: driftwood-scan
-          if-no-files-found: ignore
+          if [ -n "$ARTIFACT_URL" ]; then
+            printf '\n[Open the interactive viewer](%s) (download, then open `index.html`)\n' "$ARTIFACT_URL" >> "$GITHUB_STEP_SUMMARY"
+          fi

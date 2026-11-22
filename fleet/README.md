@@ -57,7 +57,8 @@ every project.
 - **Keep ESSENTIALS.md in step.** A PR that changes a rule here checks whether
   the one-line version in ESSENTIALS.md still holds, and fixes it in the same PR.
 - **Shortcuts:** `/next` ("What's next"), `/handoff` ("Projects talk through
-  issues"), `/merge-it` ("Merging when I ask"), `/new-repo` (the checklist below).
+  issues"), `/merge-it` ("Merging when I ask"), `/new-repo` (the checklist below),
+  `/triage` (digest new issues: keep, duplicate, close, needs Decisions, merge).
 - **Cloud (every project):** the Default cloud environment's setup script,
   [`plugin/cloud-setup.sh`](plugin/cloud-setup.sh), clones `main` into
   `~/.ai-tools` (about a second) and runs `claude plugin install fleet@brignano`
@@ -355,7 +356,9 @@ Diagrams are drawn from a model, never by hand, so they can be checked.
   [`driftwood-scan.yml`](../.github/workflows/driftwood-scan.yml) workflow
   scans the checkout with no config, draws everything it finds as Mermaid in
   the job summary on every push, and uploads the interactive viewer as the
-  `driftwood-scan` artifact. It never fails a build on what it draws, and a
+  `driftwood-scan` artifact, linked from the summary. A `prepare` input runs
+  one command before the scan (homelab renders Caddy's routes with
+  `caddy adapt`); a failing `prepare` fails the job. It never fails a build on what it draws, and a
   repo with nothing to draw gets a green job and a one-line note. It
   complements the `validate`/`render` check above; it doesn't replace it.
 
@@ -366,7 +369,7 @@ Diagrams are drawn from a model, never by hand, so they can be checked.
   jobs:
     architecture:
       uses: brignano/ai-tools/.github/workflows/driftwood-scan.yml@main
-      # with: { dir: infra, version: "0.12.0" }   # optional; version is pinned, bump it on purpose
+      # with: { dir: infra, version: "0.13.0", prepare: "..." }   # optional; version is pinned, bump it on purpose
   ```
 
   `scan` honours `.gitignore` but still reads `cdk.out` and `*.tfstate`.
@@ -517,6 +520,8 @@ leaving out empty parts:
 
 It is a short list with issue links, not a wall of text. It may close an
 issue that is possibly done, or set a missing priority, only after I say yes.
+When the list is too long to read, `/triage` sorts the new issues into keep,
+duplicate, close and merge for me to approve in one reply.
 
 ## Claiming an issue
 
