@@ -19,7 +19,7 @@ Plan and reasoning: the "Agent fleet plan" doc in the AI Assistant project.
 - **What's on the board** is listed in [`board.yml`](board.yml): driftwood,
   guidebook, sites, brignano.io, homelab, design, ai-tools and breakeven. The
   [`fleet-board`](../.github/workflows/fleet-board.yml) workflow adds every
-  open issue and PR in those repos every 15 minutes, fills the board's Priority
+  open issue and PR in those repos every 4 hours, fills the board's Priority
   field from each card's `priority:` label,
   sets every open card's **Status from its labels** (see "Status, priority
   and blocked"), and flags stale claims (see "Claiming an
@@ -454,7 +454,7 @@ every open issue carries enough labels to say all three, and the board
 follows the labels.
 
 **Status follows labels.** `fleet-board` sets each open card's Status every
-15 minutes. Labels win over where a card sits. A held issue stays held until its hold comes off.
+4 hours. Labels win over where a card sits. A held issue stays held until its hold comes off.
 
 | Labels on the issue | Status |
 |---|---|

@@ -4,6 +4,12 @@ name: fleet-board
 # Fleet project board, sets each card's Priority and Status from its labels,
 # and flags stale claims. It never removes a card.
 # A pull request that changes the list gets a dry run in its checks.
+#
+# How often: CT 100 in brignano/homelab dispatches it every 4 hours
+# (scripts/fleet-board-kick.sh), because GitHub runs schedules hours late. The
+# daily schedule here is only the backstop for when that box is down. Each run
+# is billed as a whole minute, so keep both rare (ai-tools#109: every 10
+# minutes cost ~4,400 minutes a month and ran out the account's quota).
 on:
   push:
     branches: [main]
@@ -11,7 +17,7 @@ on:
   pull_request:
     paths: [fleet/board.yml, fleet/sync-board.py, .github/workflows/fleet-board.yml]
   schedule:
-    - cron: "*/15 * * * *" # every 15 minutes
+    - cron: "23 9 * * *" # daily backstop; CT 100 dispatches every 4 hours
   workflow_dispatch:
     inputs:
       apply:
@@ -22,9 +28,12 @@ on:
 permissions:
   contents: read
 
+# Applying runs (push, schedule, dispatch) share one group and a newer one
+# replaces a queued or running one, so a backlog can't pile up. A pull
+# request's dry run gets its own group so it is never cancelled by a sync.
 concurrency:
-  group: fleet-board
-  cancel-in-progress: false
+  group: fleet-board-${{ github.event_name == 'pull_request' && github.ref || 'apply' }}
+  cancel-in-progress: true
 
 jobs:
   sync:
