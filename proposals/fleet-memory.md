@@ -287,3 +287,25 @@ Anthony's own steps: add the token secret, add the `memory:` carve-out to
 Claude's own per-account memory; a vector store or hosted service; memories
 private to one repo (those go in that repo's AGENTS.md); importing memories
 already saved elsewhere (a later, held PR if wanted).
+
+## As built
+
+Built in #108 as designed, with these changes made while building (each makes
+it simpler or safer; none changes what merges on its own):
+
+- **No token.** memory-pr runs the gate on its own PR in the same job, so a PR
+  opened with the workflow's own token never needs to trigger CI. memory-gate
+  runs on `pull_request_target` from main (never the PR's code) for every
+  other PR touching `memory/`. Anthony enables "Allow GitHub Actions to create
+  and approve pull requests" instead of adding a secret.
+- **Direct merge, no required check.** The gate merges with
+  `--match-head-commit`, so a later push can't ride along. A required
+  `memory-gate` check would block every PR that doesn't touch `memory/`, so
+  there is none.
+- **The `memory: auto` line in fleet/merge.yml is the on-switch.** Until
+  Anthony adds it, every memory PR is held.
+- The Stop/PreCompact hook is `fleet/plugin/memory-prompt.py` (Python, like
+  `guard.py`), and the loader is `fleet/memory/load.py`.
+- `memory` issues are held from builders, like `lead`.
+- ai-tools gets its own `.github/ISSUE_TEMPLATE/`, so it carries copies of
+  the default forms next to the Memory form.

@@ -7,7 +7,7 @@ set -euo pipefail
 cd "$1"
 command -v sha256sum >/dev/null 2>&1 || exit 1
 {
-  printf '%s\0' .claude-plugin/plugin.json fleet/plugin/session-start.sh fleet/plugin/content-hash.sh fleet/plugin/guard.py
+  printf '%s\0' .claude-plugin/plugin.json fleet/plugin/session-start.sh fleet/plugin/content-hash.sh fleet/plugin/guard.py fleet/plugin/memory-prompt.py
   find -L hooks commands -type f -print0
   find -L agents -maxdepth 1 -type f -name '*.md' -print0
   find -L skills -mindepth 2 -type f ! -name standard.md -print0

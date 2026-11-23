@@ -1,0 +1,39 @@
+name: memory-gate
+
+# Fleet memory (decisions/0006): any PR that touches memory/ either merges on
+# its own (one new short fact from a memory issue) or gets needs:anthony and a
+# Ready to merge comment. PRs that memory-pr opens are gated by memory-pr
+# itself (PRs opened with the workflow token don't trigger workflows); this
+# catches hand-made PRs and later pushes.
+#
+# pull_request_target runs this file and fleet/memory/gate.py from main, never
+# from the PR: the PR's files are only read as data (git diff / git show).
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+    paths: [memory/**]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: read
+
+concurrency:
+  group: memory-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          fetch-depth: 0
+      - name: Gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 fleet/memory/gate.py "${{ github.event.pull_request.number }}"

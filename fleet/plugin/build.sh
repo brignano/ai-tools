@@ -11,13 +11,20 @@ case "$OUT" in /*) ;; *) OUT="$PWD/$OUT" ;; esac
 python3 -c 'import json,sys; [json.load(open(f)) for f in sys.argv[1:]]' \
   .claude-plugin/plugin.json hooks/hooks.json
 python3 fleet/plugin/test_guard.py
+python3 fleet/memory/test_gate.py
 
 STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
 mkdir -p "$STAGE/.claude-plugin" "$STAGE/fleet/plugin" "$STAGE/agents" "$STAGE/skills"
 cp .claude-plugin/plugin.json .claude-plugin/icon.png "$STAGE/.claude-plugin/"
 cp -R hooks commands "$STAGE/"
-cp fleet/plugin/session-start.sh fleet/plugin/content-hash.sh fleet/plugin/guard.py "$STAGE/fleet/plugin/"
+cp fleet/plugin/session-start.sh fleet/plugin/content-hash.sh fleet/plugin/guard.py \
+  fleet/plugin/memory-prompt.py "$STAGE/fleet/plugin/"
+# Fleet memory: the loader, and memory/ itself as the offline fallback (the
+# start hook reads the live copy when it can).
+mkdir -p "$STAGE/fleet/memory"
+cp fleet/memory/memlib.py fleet/memory/load.py "$STAGE/fleet/memory/"
+cp -R memory "$STAGE/"
 cp fleet/README.md fleet/ESSENTIALS.md "$STAGE/fleet/"
 cp -R fleet/roles "$STAGE/fleet/"
 mkdir -p "$STAGE/fleet/ui-check"

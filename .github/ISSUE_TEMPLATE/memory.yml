@@ -1,0 +1,48 @@
+name: Memory (fleet fact)
+description: A durable fact Anthony stated, for every future session. Usually filed by a session with /remember.
+title: "Memory: "
+labels: [memory]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One fact, in Anthony's own words. A plain script turns this into a PR; one new short fact with no links, code or instruction words merges on its own, anything else waits for Anthony. This repo is public: nothing personal. See memory/README.md.
+  - type: textarea
+    id: fact
+    attributes:
+      label: Fact
+      description: One or two plain sentences, up to 500 characters. Leave empty only to forget the memory named in Replaces.
+  - type: textarea
+    id: quote
+    attributes:
+      label: Anthony's words
+      description: His words that support the fact, verbatim, as a > quote.
+      value: "> "
+    validations:
+      required: true
+  - type: input
+    id: topic
+    attributes:
+      label: Topic
+      description: One short lowercase word, like hosting, design or homelab.
+    validations:
+      required: true
+  - type: input
+    id: from
+    attributes:
+      label: From
+      description: Where it came from, owner/repo#N or owner/repo.
+    validations:
+      required: true
+  - type: input
+    id: session
+    attributes:
+      label: Session
+      description: The claude.ai session link.
+    validations:
+      required: true
+  - type: input
+    id: replaces
+    attributes:
+      label: Replaces
+      description: Optional. The slug (file name without .md) of the memory this edits or removes. Edits and removals wait for Anthony.

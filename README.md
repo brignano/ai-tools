@@ -160,6 +160,7 @@ ai-tools/
 ├── output-styles/        # Switchable personas / system instructions
 ├── skills/               # One directory per skill (SKILL.md + bundled files)
 ├── agents/               # Subagent definitions, one .md each
+├── memory/               # Fleet memory: one fact per file, loaded at session start
 ├── claude/
 │   ├── settings.json     # Baseline permission allowlist (no secrets)
 │   └── mcp-servers.json  # MCP server defs with ${VAR} secret placeholders
