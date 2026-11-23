@@ -12,7 +12,7 @@
 - `design` — **the design system**. Every UI I build styles from this. See below.
 - `driftwood` — architecture as code, reconciled with live infrastructure (npm package)
 - `guidebook` — guided walkthroughs on any website (private, proof of concept)
-- `sites`, `receipts`, `brignano.io`, `breakeven`, `card` — products, each run from its own Claude project
+- `sites`, `receipts`, `brignano.io`, `breakeven`, `card` — products; every build repo lives in the one **Build** Claude project (Life is separate)
 - `life`, `people` — personal; never referenced from issues or PRs in other repos
 
 ## How I work

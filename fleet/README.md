@@ -4,7 +4,9 @@ I am the product owner. Agents plan, build and review; I decide what gets built
 and what merges. This file is the standard every repo in the fleet follows, and
 every session loads it through the fleet plugin (see "Every session loads this file").
 
-Plan and reasoning: the "Agent fleet plan" doc in the AI Assistant project.
+All of this runs in one Claude project, **Build**, which holds every build repo
+(homelab, ai-tools, design, driftwood, guidebook, sites, receipts, brignano.io,
+breakeven, card). Personal planning stays in the separate **Life** project.
 
 ## Where things live
 
@@ -17,7 +19,8 @@ Plan and reasoning: the "Agent fleet plan" doc in the AI Assistant project.
   (cloud sessions only reach repo-scoped APIs), so **labels are what agents act
   on**, and `fleet-board` moves the cards to match them.
 - **What's on the board** is listed in [`board.yml`](board.yml): driftwood,
-  guidebook, sites, brignano.io, homelab, design, ai-tools and breakeven. The
+  guidebook, sites, receipts, brignano.io, homelab, design, ai-tools, breakeven
+  and card. The
   [`fleet-board`](../.github/workflows/fleet-board.yml) workflow adds every
   open issue and PR in those repos every 4 hours, fills the board's Priority
   field from each card's `priority:` label,
@@ -56,7 +59,7 @@ every project.
   once to remove it. A checkout has no BUILD and is never stale.
 - **Keep ESSENTIALS.md in step.** A PR that changes a rule here checks whether
   the one-line version in ESSENTIALS.md still holds, and fixes it in the same PR.
-- **Shortcuts:** `/next` ("What's next"), `/handoff` ("Projects talk through
+- **Shortcuts:** `/next` ("What's next"), `/handoff` ("Repos talk through
   issues"), `/merge-it` ("Merging when I ask"), `/new-repo` (the checklist below),
   `/triage` (digest new issues: keep, duplicate, close, needs Decisions, merge).
 - **Cloud (every project):** the Default cloud environment's setup script,
@@ -82,8 +85,8 @@ every project.
 2. Labels arrive on their own: the `fleet-labels` workflow syncs every repo I
    own on Mondays. Run it by hand to get them sooner.
 3. If it will have a real backlog, add it to [`board.yml`](board.yml).
-4. Its project lists only the repos it owns. Work for another repo is an issue
-   there (see "Projects talk through issues"), never a repo added to the project.
+4. Add it to the Build project's repositories (I do this in the project's
+   settings). There is no new Claude project per repo.
 
 ## Labels
 
@@ -148,7 +151,7 @@ If not, the missing choice goes in Decisions first.
 
 Size S: the issue body is the spec. Size M: also a short proposal in the
 repo's `proposals/`, linked from the issue, which I approve before anything is
-built ("Design review before build"). Anything bigger is split before it is
+built; proposal and build share one PR ("Design review before build"). Anything bigger is split before it is
 Ready.
 Substantial UI work of any size also gets a wireframe I approve first
 ("Wireframes before build").
@@ -207,11 +210,12 @@ what was agreed.
 Substantial UI work also needs wireframes I approve first, at every size,
 including size S: see "Wireframes before build".
 
-1. **The proposal comes first, on its own.** Any size M issue, or any work
-   whose Decisions can't settle every fork, starts with
-   `proposals/<slug>.md` (`Status: proposed`) in a PR with **no code**.
+1. **The proposal lands first, in the issue's PR.** Any size M issue, or any
+   work whose Decisions can't settle every fork, opens its PR with
+   `proposals/<slug>.md` (`Status: proposed`) and **no code yet**. The same
+   PR later carries the build, so proposal and code ship together.
 2. **Then stop and explain it to me.** The agent adds `needs:anthony` to the
-   issue and the proposal PR and posts a **Design review** in its thread (and
+   issue and the PR and posts a **Design review** in its thread (and
    as a PR comment), in plain words:
    - what will be built and what the user will see;
    - the approach in a few sentences, plus a Mermaid diagram if it has moving
@@ -224,15 +228,18 @@ including size S: see "Wireframes before build".
    Then it ends its turn. Nothing else on that issue runs until I answer.
 3. **My answer is the approval.** When I say yes (in the thread or on the
    PR), the agent pushes `Status: accepted`, the index row and the ADR onto
-   the same proposal PR and merges it: my approval of the design counts as
-   "merge it" for that PR. If I merged the proposal PR myself, it does the
-   same in a small follow-up PR, which my approval also covers. Then it
-   removes `needs:anthony` from the issue so it can be built. Changes I ask
-   for go into the proposal and get a fresh Design review. A rejection sets
-   `Status: rejected` with an ADR, the same way.
-4. **Only then build.** The planner files the proposal's issues with their
-   Decisions taken from the accepted proposal. A builder whose issue links a
-   proposal that isn't `accepted` or `building` stops with `needs:anthony`.
+   the same PR and removes `needs:anthony` from the issue and the PR. Changes
+   I ask for go into the proposal and get a fresh Design review. A rejection
+   sets `Status: rejected` with an ADR on the same PR, which then merges with
+   no code (my rejection counts as "merge it" for that PR).
+4. **Only then build, in the same PR.** The build is pushed onto that PR
+   after the accepted proposal, and the PR then goes through the normal gates
+   and "Who merges" like any other. My approval of the design is not approval
+   to merge the code. If the proposal splits into several issues, the PR
+   stops at the design instead: my approval counts as "merge it" for it, and
+   the planner files the issues with Decisions taken from the proposal. A
+   builder whose issue links a proposal that isn't `accepted` or `building`
+   stops with `needs:anthony`.
 5. **Say the plan before the code.** On every claimed issue, the builder's
    first comment is its plan: files it will touch, the steps, and what it
    won't do. If that plan departs from the issue's Decisions or the accepted
@@ -419,7 +426,7 @@ Every PR updates, in the same PR, whatever its change makes untrue:
   command, a gotcha, a path, a decision, a service.
 
 If the thing to update lives in another repo (the marketing site, ai-tools),
-file an issue there in the same session ("Projects talk through issues") and
+file an issue there in the same session ("Repos talk through issues") and
 link it from the PR. The PR body lists what it updated, or says
 `Docs: none needed` with a reason.
 
@@ -525,7 +532,7 @@ duplicate, close and merge for me to approve in one reply.
 
 ## Claiming an issue
 
-Several projects pick up ready issues, so a session claims an issue
+Several threads pick up ready issues, so a session claims an issue
 before it works on it. Without the claim two sessions can build the same thing.
 
 - **Skip claimed issues.** Never start an issue labelled `agent:working`, even
@@ -580,8 +587,8 @@ AGENTS.md "Planning & delegation".
 
 | Role | Model | Runs | Prompt |
 |---|---|---|---|
-| Planner | Opus | When I ask, in the repo's project | [`roles/planner.md`](roles/planner.md) |
-| Builder | Sonnet; Haiku for searches and test runs | When I ask, in the repo's project | [`roles/builder.md`](roles/builder.md) |
+| Planner | Opus | When I ask, in the Build project | [`roles/planner.md`](roles/planner.md) |
+| Builder | Sonnet; Haiku for searches and test runs | When I ask, in the Build project | [`roles/builder.md`](roles/builder.md) |
 | Builder (optional) | Codex via the [`codex-builder`](../agents/codex-builder.md) agent, Sonnet wrapper | Only when I say "use Codex" or the Claude weekly limit is low (trial, see below) | same prompt; the Claude session stays builder of record |
 | Reviewer | Opus, fresh context | **Automatically**, started by the builder once CI is green | [`roles/reviewer.md`](roles/reviewer.md), as the [`reviewer`](../agents/reviewer.md) subagent |
 
@@ -638,20 +645,22 @@ back, so mark the PR `needs:anthony`. Do not merge fleet-rule or agent-context
 changes this way.
 
 Nothing runs on a schedule. The reviewer is the exception to "when I ask":
-no PR waits for me to request a review (see "Review and merge"). I start a role from the repo's own Claude project
-("build the next ready issue", "review the open PR", "plan driftwood") and say
+no PR waits for me to request a review (see "Review and merge"). I start a role from the Build project, naming the repo
+("build the next ready issue in driftwood", "review the open PR", "plan driftwood") and say
 which role; the thread doing the work reads its prompt from `roles/`. New ideas
-are planned in the Life project, and an idea that starts being built gets its
-own project.
+are planned in the Life project; an idea that starts being built gets a repo,
+which joins the Build project.
 
 The builder takes the Ready item with the highest `priority:` label, then the
 smallest, then the oldest. When I just say "build the next ready issue", one
 open builder PR per repo at a time. When I name specific issues, each gets its
 own thread and they may run in parallel.
 
-## Projects orchestrate, threads do one thing
+## The Build project orchestrates, threads do one thing
 
-Each repo's Claude project is run by its coordinator (the project chat). The
+Every build repo lives in one Claude project, **Build**, run by its
+coordinator (the project chat). Life is a separate project for personal
+planning; nothing here reaches into it. The
 coordinator is the **orchestrator**: it plans, routes and keeps track, but it
 does not do the work itself. Work happens in threads, **one thread per issue or
 PR**, so every thread's context is about one thing and I can run several side
@@ -661,12 +670,13 @@ by side.
   issue, a PR, a role run on one item, or anything that will end in a PR, the
   coordinator starts a new thread for it instead of doing it in the project
   chat or in an existing thread. Several issues means several threads.
-- **Title the thread after the item**, in plain words plus the number, for
-  example "Fix login redirect loop (#42)". A role run that is not about one
+- **Title the thread after the item, naming its repo**: `repo#N` plus plain
+  words, for example "homelab#386: Track work on the home dashboard". One
+  project holds every repo, so a bare "#42" is ambiguous. A role run that is not about one
   item yet ("plan driftwood", "review open PRs") gets its own thread too, and
   any issue it turns into a build gets a thread of its own.
 - **One item per thread.** If a thread uncovers new work, it files an issue
-  in the repo that owns that work (see "Projects talk through
+  in the repo that owns that work (see "Repos talk through
   issues") and tells the coordinator; it does not start the new work itself. Follow-ups on the same issue or its PR (review fixes, CI, my
   comments) stay in that thread.
 - **A thread ends when its item does**: the PR merges, or the issue closes or
@@ -679,21 +689,22 @@ by side.
 - Short questions that change no code (a status check, "what does X do") can
   be answered in the project chat without a thread.
 
-## Projects talk through issues
+## Repos talk through issues
 
-Projects can't see each other: a session in one project has no way to reach
-another project's chat or threads. **GitHub issues are how projects hand each
-other work.** Each project already picks up its own repo's issues, so an issue
-in the right repo is the message.
+Every repo is in the Build project, but each piece of work still belongs to
+one repo, and a PR never spans two. **GitHub issues are how one repo's work
+asks another repo for something.** Ready issues are picked up in priority
+order wherever they live, so an issue in the right repo is the message.
 
 - **Work that belongs to another repo goes in an issue there.** When a thread
   finds that a fix, feature or decision lives in another repo (driftwood needs
   a token in `design`, `sites` needs a route in `homelab`), it opens an issue
   in *that* repo instead of doing the work here.
-- **Don't ask me to add the other repo to this project** so you can work in it,
-  and don't tell me you can't reach the other project. Attach the repo to the
-  session only as far as filing the issue needs; never save it to the project
-  and never push to it.
+- **One issue per repo, linked to each other.** Work that spans repos gets an
+  issue in each repo it touches, each linking the others, and one PR per
+  issue. Don't widen your thread to the other repo: its issue gets its own
+  thread when it is picked up. There is no other project to hand it to and
+  no "start a session in project X".
 - **The issue is a normal spec**: the spec shape above, one `priority:`,
   `type:`, `size:` and `risk:` label from `labels.yml`. Say which repo and
   issue or PR it came from (`From brignano/driftwood#42`), so the other side
@@ -703,12 +714,11 @@ in the right repo is the message.
   issue or PR, `Blocked by brignano/design#12`, add `blocked` to your issue,
   and leave your thread open.
   Don't build a workaround that the other repo's fix will undo.
-- **Tell me in one line**, in the thread: "Filed brignano/design#12 for the
-  design project." That's all. It is ready like any other issue,
-  and the other project builds it in priority order.
+- **Tell me in one line**, in the thread: "Filed brignano/design#12." That's
+  all. It is ready like any other issue and gets built in priority order.
 - **Only when it's urgent** (it blocks something I asked for today, or
-  something is broken in production) add: "Start a session in the **design**
-  project for #12." Otherwise don't send me to another project.
+  something is broken in production) also tell the coordinator, so it can
+  start a thread for #12 now.
 - **Never for personal topics.** Nothing from `life` or `people` goes into an
   issue, and no project files issues in `life`, `people` or `ideas`. A new
   product idea goes to me in the Life project, not into an issue.
@@ -949,10 +959,10 @@ A PR **may be merged by the builder** only when every one of these holds:
   included); data migrations or anything that deletes data; versions,
   changelogs or release notes; agent rules (`AGENTS.md`, `CLAUDE.md`,
   `.claude/`); proposals and decisions (`proposals/`, `decisions/`), except
-  the accept or reject PR my design approval covers ("Design review before
-  build"); and anything the repo's own AGENTS.md lists as protected.
+  a design-only or rejected proposal PR my answer covers ("Design review
+  before build"); and anything the repo's own AGENTS.md lists as protected.
 
-Then the builder squash-merges, deletes the branch, and tells me in one line
+Then the builder merges with a merge commit, deletes the branch, and tells me in one line
 in the thread: what merged and the PR link.
 
 **Everything else waits for me**, already reviewed. The builder adds
@@ -991,8 +1001,8 @@ Claude session, it just works. That ask is my approval for that PR, whatever
    new comments, CI not green), it runs the missing gates first: bring the
    branch up to date with the base, wait for CI, re-run the reviewer on the
    new head. It does not ask me to wait or to re-confirm unless a gate fails.
-2. Merges with the repo's merge method (squash by default) and deletes the
-   branch.
+2. Merges with a merge commit (never squash, even where a repo still allows it) and deletes
+   the branch.
 3. Checks the result: CI on the default branch after the merge, and the
    deploy if the repo deploys on merge. It tells me in one line that it
    merged and that main is green, or what broke.

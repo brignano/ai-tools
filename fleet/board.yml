@@ -11,6 +11,7 @@ repos:
   - driftwood
   - guidebook
   - sites
+  - receipts
   - brignano.io
   - homelab
   - design

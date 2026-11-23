@@ -8,3 +8,4 @@
 | [0004](0004-codex-builder-trial.md) | Codex as an optional, sandboxed builder for a one-month trial | accepted | 2026-11-03 |
 | [0005](0005-wireframes-before-substantial-ui.md) | Wireframes approved by Anthony before substantial UI work | accepted | 2026-11-12 |
 | [0006](0006-fleet-memory.md) | Fleet memory: facts under `memory/` merge themselves via a CI gate, everything else waits for Anthony | accepted | 2026-11-22 |
+| [0007](0007-one-build-project.md) | One Build project for every repo; merge commits; size M proposal and build in one PR | accepted | 2026-11-23 |
