@@ -16,12 +16,12 @@
 # (homelab's `dns`, for example).
 
 labels:
-  # Workflow: blue (--i family). The board's columns follow these.
+  # Workflow: blue (--action family). The board's columns follow these.
   - name: agent:working
     color: 87b5f3 # --seq-2
     description: Claimed by a session; others skip it
   - name: agent:pause
-    color: 003e82 # --i-pressed
+    color: 003e82 # --action-pressed
     description: Agents leave this alone until Anthony removes it
 
   # Blocked: orange. needs:anthony (on me) is the bright one so it stands out;
@@ -89,7 +89,7 @@ labels:
     color: 1baf7a # --chart-3
     description: A fact proposed for fleet memory; a script turns it into a PR
   - name: memory:rejected
-    color: e1e1e4 # --n-200
+    color: e1e1e4 # --neutral-200
     description: Fleet memory Anthony rejected; not proposed again
 
   # Leads: teal. Inbound leads, never agent work. Own colour, not in any group above.
@@ -97,11 +97,11 @@ labels:
     color: 1f7a8c # not yet checked against brignano/design tokens
     description: Inbound lead; open until someone has replied
 
-  # Dependabot: neutral (--n-200). Dependabot creates these by name on its
+  # Dependabot: neutral (--neutral-200). Dependabot creates these by name on its
   # PRs, so they keep their names and just get one quiet colour. The language
   # ones are only recoloured where they already exist (only_if_present).
   - name: dependencies
-    color: e1e1e4 # --n-200
+    color: e1e1e4 # --neutral-200
     description: Updates a dependency file (Dependabot)
   - name: javascript
     color: e1e1e4
