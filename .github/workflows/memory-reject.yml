@@ -48,5 +48,7 @@ jobs:
         run: |
           n="${REF#memory/}"
           case "$n" in ''|*[!0-9]*) exit 0 ;; esac
+          is_memory="$(gh issue view "$n" --repo "$GITHUB_REPOSITORY" --json labels -q '[.labels[].name] | index("memory")')"
+          [ -n "$is_memory" ] && [ "$is_memory" != "null" ] || exit 0
           gh issue edit "$n" --repo "$GITHUB_REPOSITORY" --add-label memory:rejected
           gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/$n" -f state=closed -f state_reason=not_planned >/dev/null

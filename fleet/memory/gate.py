@@ -115,7 +115,9 @@ def gh_json(path):
 def collect(repo, number, base_sha, head_sha):
     pr = gh_json(f"repos/{repo}/pulls/{number}")
     sh("git", "fetch", "-q", "origin", f"+refs/pull/{number}/head:refs/memory-gate/head")
-    head = head_sha or sh("git", "rev-parse", "refs/memory-gate/head").strip()
+    if not head_sha:
+        sh("git", "fetch", "-q", "origin", pr["head"]["sha"], check=False)
+    head = head_sha or pr["head"]["sha"]  # the live head, not a possibly stale ref
     base = base_sha or pr["base"]["sha"]
     changes = []
     for line in sh("git", "diff", "--name-status", "--no-renames", f"{base}...{head}").splitlines():
