@@ -16,10 +16,10 @@ own AGENTS.md/CLAUDE.md win where they are stricter.
 - **Issues are specs:** Problem, Acceptance criteria, How to verify, Decisions,
   Out of scope, Notes. A builder never decides what Decisions leaves open: it
   comments the question, adds `needs:anthony`, and stops.
-- **Design review before build:** size M work starts with a proposal PR (no code),
-  then the agent explains it to me in plain words with options and costs, adds
-  `needs:anthony` and stops. Nothing is built until I accept it. Builders comment
-  their plan before coding.
+- **Design review before build:** size M work opens its PR with the proposal
+  only (no code), then the agent explains it to me in plain words with options
+  and costs, adds `needs:anthony` and stops. Once I accept it, the build is
+  pushed to the same PR. Builders comment their plan before coding.
 - **Specs in `proposals/`, decisions in `decisions/` (ADRs), user docs in `docs/`.**
   Repos that deploy several parts keep a driftwood `architecture.yaml`, checked in
   CI; never hand-draw the system diagram. No GitHub Pages.
@@ -29,13 +29,17 @@ own AGENTS.md/CLAUDE.md win where they are stricter.
 - **Labels only from fleet/labels.yml.** Every agent-filed issue gets one `priority:`, `type:`, `size:` and `risk:`.
 
 ## Threads and projects
-- One thread per issue or PR, titled after it. It ends when the PR merges or the
-  issue closes.
+- **One Build project holds every build repo** (homelab, ai-tools, design,
+  driftwood, guidebook, sites, receipts, brignano.io, breakeven, card). Life is
+  separate. Never tell me to start a session in another project.
+- One thread per issue or PR, titled after it with its repo
+  (`homelab#386: ...`). It ends when the PR merges or the issue closes.
 - **Claim before work:** add `agent:working`, comment
   "Claimed by <session link>". Never touch an issue someone else claimed.
-- **Projects talk through issues.** Work for another repo becomes an issue there
+- **Repos talk through issues.** Work for another repo becomes an issue there
   (spec shape, labels, "From owner/repo#N"), and you tell me in one line
-  (`/handoff`). Never ask me to add that repo to the project.
+  (`/handoff`). Cross-repo work = one linked issue per repo, one PR each; never
+  one PR across repos.
 - "What's next" is answered from GitHub in this order: waiting on me, in
   progress, up next (top 5), held, blocked, tidy-up (`/next`). `/triage`
   sorts new issues (keep, duplicate, close, merge) and changes nothing until I reply.
@@ -53,6 +57,7 @@ own AGENTS.md/CLAUDE.md win where they are stricter.
 - **UI changes ship with before/after screenshots** (`ux-review` skill): shoot
   "before" when you start, "after" when done, look at them yourself, then put
   them in the thread reply and the PR body, phone first. Demo data only.
+- **Merge commits, never squash**, even where a repo still allows it.
 - **Merge only** when I ask ("merge it": `/merge-it` runs the gates, then merges)
   or the repo is in fleet/merge.yml `auto` and "Who merges" allows it. Otherwise
   add `needs:anthony` plus a "Ready to merge" comment.

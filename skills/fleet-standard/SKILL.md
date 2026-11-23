@@ -16,8 +16,8 @@ Sections: Where things live · Every session loads this file · Labels · An iss
 is a spec · Proposals · Design review before build · Wireframes before build · Decisions (ADRs) · Architecture · Where docs live · Keep docs
 and context in sync ·
 Ready by default · Status, priority and blocked ·
-"What's next" · Claiming an issue · Closing issues · Roles and models · Projects
-orchestrate, threads do one thing · Projects talk through issues · Releases are
+"What's next" · Claiming an issue · Closing issues · Roles and models · The Build
+project orchestrates, threads do one thing · Repos talk through issues · Releases are
 planned · Asking Anthony · Review and merge (Preview links, Who merges, Ready to merge, Merging
 when I ask) · Leads · Hard rules for every agent.
 
