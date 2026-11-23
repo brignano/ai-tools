@@ -1,0 +1,52 @@
+name: memory-reject
+
+# Fleet memory (decisions/0006): closing a memory issue, or its PR unmerged, as
+# not planned records the rejection as the `memory:rejected` label, which
+# /remember and memory-pr both check, so the fact isn't proposed again.
+# Jobs that don't match skip, so ordinary closes cost no runner minutes.
+on:
+  issues:
+    types: [closed]
+  pull_request_target:
+    types: [closed]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  issue:
+    if: >-
+      github.event_name == 'issues' &&
+      github.event.issue.state_reason == 'not_planned' &&
+      contains(github.event.issue.labels.*.name, 'memory') &&
+      github.event.issue.user.login == github.repository_owner
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Label rejected, close its PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          N: ${{ github.event.issue.number }}
+        run: |
+          gh issue edit "$N" --repo "$GITHUB_REPOSITORY" --add-label memory:rejected
+          gh pr close "memory/$N" --repo "$GITHUB_REPOSITORY" --delete-branch 2>/dev/null || true
+
+  pr:
+    if: >-
+      github.event_name == 'pull_request_target' &&
+      !github.event.pull_request.merged &&
+      startsWith(github.event.pull_request.head.ref, 'memory/') &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Label the issue rejected and close it
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          n="${REF#memory/}"
+          case "$n" in ''|*[!0-9]*) exit 0 ;; esac
+          gh issue edit "$n" --repo "$GITHUB_REPOSITORY" --add-label memory:rejected
+          gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/$n" -f state=closed -f state_reason=not_planned >/dev/null

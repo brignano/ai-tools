@@ -26,8 +26,11 @@ other path wait for Anthony. Closing as not planned labels the issue
 - About 3k more tokens at each session start, and one extra step in long
   sessions.
 - A new fine-grained token (ai-tools only) so the PRs the script opens run CI.
+  Amended at build (#108): no token; the script gates its own PR. See the
+  proposal's "As built".
 - CI can't prove a quote is Anthony's, because cloud sessions post as him too;
   protection rests on additions-only, the content rules, the size cap and
   one-click revert. Anthony accepted that trade-off.
 - Anthony adds the `memory:` carve-out to `fleet/merge.yml` and makes
-  `memory-gate` a required check himself.
+  `memory-gate` a required check himself. Amended at build (#108): the
+  carve-out is the line `memory: auto`, and no required check (see "As built").

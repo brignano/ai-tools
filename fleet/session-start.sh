@@ -42,3 +42,9 @@ cat "$DIR/AGENTS.md"
 echo
 echo "# Fleet standard (brignano/ai-tools fleet/README.md)"
 cat "$DIR/fleet/README.md"
+
+# Fleet memory (decisions/0006), as data after the rules.
+if command -v python3 >/dev/null 2>&1 && [ -d "$DIR/memory" ]; then
+  echo
+  timeout 10 python3 "$DIR/fleet/memory/load.py" "$DIR/memory" 2>/dev/null || true
+fi

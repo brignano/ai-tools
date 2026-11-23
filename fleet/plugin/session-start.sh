@@ -34,6 +34,13 @@ fi
 echo "# Fleet essentials (brignano/ai-tools fleet/ESSENTIALS.md)"
 cat "$SRC/fleet/ESSENTIALS.md" 2>/dev/null
 
+# Fleet memory (decisions/0006): facts sessions learned from Anthony, printed
+# as data after the rules, capped at 12 KB. Read live like the rules above.
+if command -v python3 >/dev/null 2>&1 && [ -d "$SRC/memory" ]; then
+  echo
+  timeout 10 python3 "$SRC/fleet/memory/load.py" "$SRC/memory" 2>/dev/null || true
+fi
+
 # Stale-copy check: cloud sessions install the plugin from main (cloud-setup.sh),
 # so an uploaded zip is a leftover snapshot; tell Anthony when one is running
 # and its skills, agents or commands no longer match main.

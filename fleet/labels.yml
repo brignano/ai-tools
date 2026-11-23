@@ -83,6 +83,15 @@ labels:
     description: Documentation only
     aliases: [documentation]
 
+  # Fleet memory (decisions/0006): aqua. Used in ai-tools; synced everywhere
+  # like every other label.
+  - name: memory
+    color: 1baf7a # --chart-3
+    description: A fact proposed for fleet memory; a script turns it into a PR
+  - name: memory:rejected
+    color: e1e1e4 # --n-200
+    description: Fleet memory Anthony rejected; not proposed again
+
   # Leads: teal. Inbound leads, never agent work. Own colour, not in any group above.
   - name: lead
     color: 1f7a8c # not yet checked against brignano/design tokens

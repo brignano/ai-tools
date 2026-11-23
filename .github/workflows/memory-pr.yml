@@ -1,0 +1,37 @@
+name: memory-pr
+
+# Fleet memory (decisions/0006): turns a `Memory:` issue into a PR, then runs
+# memory-gate on it, which merges it or holds it for Anthony. A plain script,
+# no model. Event-driven only: an issue that isn't a memory skips the job, so
+# it costs no runner minutes.
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: memory-pr-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  pr:
+    if: >-
+      github.event.issue.state == 'open' &&
+      !github.event.issue.pull_request &&
+      contains(github.event.issue.labels.*.name, 'memory') &&
+      !contains(github.event.issue.labels.*.name, 'memory:rejected')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Issue to PR, then gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 fleet/memory/issue_to_pr.py

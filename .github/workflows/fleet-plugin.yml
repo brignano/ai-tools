@@ -15,6 +15,7 @@ on:
       - fleet/ESSENTIALS.md
       - fleet/roles/**
       - fleet/plugin/**
+      - fleet/memory/**
       - fleet/ui-check/**
       - skills/**
       - agents/**
@@ -25,6 +26,7 @@ on:
       - .claude-plugin/**
       - hooks/**
       - fleet/plugin/**
+      - fleet/memory/**
       - fleet/ui-check/**
       - skills/**
       - agents/**

@@ -22,6 +22,28 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v python3 >/dev/null 2>&1 || exit 0; exec python3 \"${CLAUDE_PLUGIN_ROOT}/fleet/plugin/memory-prompt.py\" stop",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v python3 >/dev/null 2>&1 || exit 0; exec python3 \"${CLAUDE_PLUGIN_ROOT}/fleet/plugin/memory-prompt.py\" precompact",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }
