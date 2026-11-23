@@ -18,3 +18,8 @@ never:
   - life
   - people
   - ideas
+
+# Fleet memory (decisions/0006): memory-gate merges a PR that adds one new
+# short fact from my own memory issue; everything else under memory/ waits for
+# me. Added Nov 23 2026 (Anthony's "merge it"). Remove this line to hold all.
+memory: auto
