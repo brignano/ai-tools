@@ -1001,7 +1001,7 @@ Claude session, it just works. That ask is my approval for that PR, whatever
    new comments, CI not green), it runs the missing gates first: bring the
    branch up to date with the base, wait for CI, re-run the reviewer on the
    new head. It does not ask me to wait or to re-confirm unless a gate fails.
-2. Merges with a merge commit (squash is disabled on my repos) and deletes
+2. Merges with a merge commit (never squash, even where a repo still allows it) and deletes
    the branch.
 3. Checks the result: CI on the default branch after the merge, and the
    deploy if the repo deploys on merge. It tells me in one line that it

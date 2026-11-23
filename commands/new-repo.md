@@ -30,3 +30,5 @@ Do what you can by PR; list what only I can do.
 8. **For me:** add the repo to the **Build** Claude project's repositories
    (project settings), and if the Build project instructions list the repos,
    add it there too. Never create a new project for it.
+   In the repo's settings, turn off squash and rebase merging so PRs merge
+   with merge commits.

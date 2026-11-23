@@ -57,7 +57,7 @@ own AGENTS.md/CLAUDE.md win where they are stricter.
 - **UI changes ship with before/after screenshots** (`ux-review` skill): shoot
   "before" when you start, "after" when done, look at them yourself, then put
   them in the thread reply and the PR body, phone first. Demo data only.
-- **Merge commits, never squash** (squash is disabled on my repos).
+- **Merge commits, never squash**, even where a repo still allows it.
 - **Merge only** when I ask ("merge it": `/merge-it` runs the gates, then merges)
   or the repo is in fleet/merge.yml `auto` and "Who merges" allows it. Otherwise
   add `needs:anthony` plus a "Ready to merge" comment.

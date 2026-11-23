@@ -10,7 +10,7 @@ On 2026-11-22 Anthony moved every build repo into one Claude project, Build,
 and archived the per-repo projects; Life stays separate. The standard still
 assumed one project per repo, so agents would send him to "start a session
 in project X" or treat other repos as unreachable. Two rules from the old
-projects also weren't written down: squash merging is disabled on his repos,
+projects also weren't written down: PRs merge with merge commits, never squash,
 and a size M issue's proposal and build share one PR.
 
 ## Decision
