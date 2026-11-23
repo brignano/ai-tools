@@ -1,5 +1,5 @@
 ---
-description: Bring a new or existing repo onto the fleet standard (labels, board, project setup)
+description: Bring a new or existing repo onto the fleet standard (labels, board, Build project)
 argument-hint: <owner/repo>
 ---
 
@@ -27,6 +27,6 @@ Do what you can by PR; list what only I can do.
    briefs out of `docs/` into `proposals/`; and, if it deploys more than one
    moving part, an `architecture.yaml` with the CI check and
    `docs/architecture.md`.
-8. **For me:** which Claude project owns it, and the project instructions to
-   paste (four lines: the product and its repo, follow the fleet standard,
-   hand other repos' work over as issues, no personal topics).
+8. **For me:** add the repo to the **Build** Claude project's repositories
+   (project settings), and if the Build project instructions list the repos,
+   add it there too. Never create a new project for it.
