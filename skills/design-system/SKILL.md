@@ -125,7 +125,7 @@ Wire it in from the first commit, not as a later restyle.
 
 ## The rules that matter most
 
-- **One hue, one meaning.** `--i-*` = you can act on this. `--success` =
+- **One hue, one meaning.** `--action-*` = you can act on this. `--success` =
   settled/done. `--attention` = this wants you (warning *and* now/next — they
   are the same message at different volumes). `--danger` = something broke.
   `--mark` = identity, and it inks a *graphic* only (a product's glyph, the
@@ -143,21 +143,28 @@ Wire it in from the first commit, not as a later restyle.
   look lives in the product's own repo over `product-page.css`, in tokens
   only. A product page may pin `data-theme` only when its look is the theme;
   apps never pin it.
-- **Never hardcode a hex outside `tokens.css`.** A literal survives a theme
+- **Never hardcode a hex outside the tokens.** A literal survives a theme
   change silently. That is how a set of status pills stayed light grey in dark
-  mode for months.
+  mode for months. `tokens.css` is generated from `tokens/*.json` in
+  brignano/design: change a value there, never edit `tokens.css`.
+- **Three tiers, and which to read** (`DESIGN.md` §12). Primitive
+  (`--neutral-300`): read from other tokens only, never from a rule.
+  Semantic (`--ink`, `--line`, `--action`, `--success-surface`): read
+  anywhere. Component (`--button-radius`, `--card-line`, `--focus-ring`):
+  read only from that component.
 - **Colour is a surface, not text.** Use the `-surface` / `-line` wash tokens
   behind near-ink text; use the `-ink` step when a state must be a label.
-- **Fill and ink are different steps.** Fill a surface with `--i` (hover
-  `--i-hover`, pressed `--i-pressed`) under a white `--on-i` label, in both
-  themes. Write or draw on a surface with `--i-ink` (links, icons, focus). A
-  hovered link takes `--i-ink-hover`, never `--i-hover`: in dark that is a
+- **Fill and ink are different steps.** Fill a surface with `--action` (hover
+  `--action-hover`, pressed `--action-pressed`) under a white `--on-action`
+  label, in both themes. Write or draw on a surface with `--action-ink`
+  (links, icons, focus). A hovered link takes `--action-ink-hover`, never
+  `--action-hover`: in dark that is a
   deep fill, too dark to read as text. A destructive button fills with
   `--danger-fill` (and its `-hover` / `-pressed` steps) under `--on-danger`,
   not with `--danger`, which in dark is a pale rust for reading.
 - **Never colour alone** — every state ships with an icon and a word.
-- **Controls.** Disabled is neutral (`--i-disabled-*`), never hued. Focus is
-  always a visible 2px `--i-ink` outline, 2px offset. A control's own edge is
+- **Controls.** Disabled is neutral (`--disabled`, `--disabled-ink`), never hued.
+  Focus is always a visible 2px `--action-ink` outline, 2px offset. A control's own edge is
   `--line-control`.
 - **Type.** `--sans` with tabular figures for body and headings; `--mono` for
   data that must read precise (codes, timestamps, stats, eyebrows). No serif.
@@ -173,9 +180,9 @@ Wire it in from the first commit, not as a later restyle.
   short bar in the mark above a hero heading.
 - **Words are part of the interface** (`DESIGN.md` §15): sentence case, a
   button is a verb and its object, errors say what happened and how to fix it.
-- **Space and shape.** 4px scale `--s1…--s9`. Four radii, by what the thing
+- **Space and shape.** 4px scale `--space-1…--space-9`. Four radii, by what the thing
   is: `--radius-sm` (6px) chips and pills; `--radius-control` (8px) buttons,
-  inputs, selects, the segmented control and menu items; `--radius` (12px)
+  inputs, selects, the segmented control and menu items; `--radius-card` (12px)
   cards, messages, popovers and code blocks; `--radius-lg` (18px) dialogs
   and hero surfaces. Light mode separates surfaces with hairline + shadow;
   dark mode with lighter surfaces, not borders.
