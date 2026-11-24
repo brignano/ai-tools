@@ -13,24 +13,14 @@ breakeven, card). Personal planning stays in the separate **Life** project.
 - **Ideas** start in `brignano/ideas` (`inbox/` → `proposals/` → `building/`).
   A brief reaching `building/` is the signal to break it into issues.
 - **Work items** are GitHub Issues in the repo that owns the code.
-- **The board** is one GitHub Project, [**Fleet**](https://github.com/users/brignano/projects/1),
-  across every fleet repo. Status columns: Proposed, Ready, Building, In review,
-  Blocked, Done. Priority: P1, P2, P3. It is my view. Agents can't read or write it
+- **The board** is the Work page (`work.home.brignano.io`, homelab#386). It reads
+  GitHub live and refreshes itself, so nothing syncs it. Agents can't read it
   (cloud sessions only reach repo-scoped APIs), so **labels are what agents act
-  on**, and `fleet-board` moves the cards to match them.
-- **What's on the board** is listed in [`board.yml`](board.yml): driftwood,
-  guidebook, sites, receipts, brignano.io, homelab, design, ai-tools, breakeven
-  and card. The
-  [`fleet-board`](../.github/workflows/fleet-board.yml) workflow adds every
-  open issue and PR in those repos every 4 hours, fills the board's Priority
-  field from each card's `priority:` label,
-  sets every open card's **Status from its labels** (see "Status, priority
-  and blocked"), and flags stale claims (see "Claiming an
-  issue"). It never removes a card,
-  using the `FLEET_PROJECT_TOKEN` secret: a classic token with `project` and
-  `repo` scopes. A repo earns a spot when agents ship work there and it has a
-  real backlog. **life, people and ideas never go on the board.** The
-  "By repo" view groups cards by Repository.
+  on**; the page follows them. Which repos it shows is listed in
+  [`board.yml`](board.yml): driftwood, guidebook, sites, receipts, brignano.io,
+  homelab, design, ai-tools, breakeven and card. **life, people and ideas never
+  go on it.** The old GitHub Project (Fleet) and its `fleet-board` Action are
+  retired (ai-tools#126). `FLEET_PROJECT_TOKEN` stays for `fleet-backlog-health`.
 
 ## Every session loads this file
 
@@ -102,7 +92,7 @@ workflow syncs the file to every repo I own on merge and every Monday
 | `agent:pause` | Leave it alone until I remove this. Holds an issue back from builders. | Me |
 | `needs:anthony` | Blocked on a decision, account or hardware from me. | Any agent |
 | `blocked` | Waiting on another issue or PR, named in a `Blocked by owner/repo#N` line in the body. | Any agent |
-| `priority:p1` / `p2` / `p3` | Source of truth for priority; `fleet-board` copies it to the board's Priority field. Every open issue has one. | Whoever files it proposes, I confirm |
+| `priority:p1` / `p2` / `p3` | Source of truth for priority. Every open issue has one. | Whoever files it proposes, I confirm |
 | `risk:low` / `risk:high` | Decides merge rules. | Planner proposes, I confirm |
 | `size:s` / `size:m` | Agents take S and M only. Bigger gets split. | Planner |
 | `type:bug` / `feature` / `chore` / `docs` | What kind of work it is. | Whoever files it |
@@ -464,8 +454,7 @@ at a glance what is moving, what is waiting on me and what comes next. So
 every open issue carries enough labels to say all three, and the board
 follows the labels.
 
-**Status follows labels.** `fleet-board` sets each open card's Status every
-4 hours. Labels win over where a card sits. A held issue stays held until its hold comes off.
+**Status follows labels.** The Work page derives each item's status from its labels on every load. Labels win over where an item sits. A held issue stays held until its hold comes off.
 
 | Labels on the issue | Status |
 |---|---|
@@ -558,10 +547,9 @@ before it works on it. Without the claim two sessions can build the same thing.
   blocked, I said stop), remove `agent:working`, comment why, and add
   `needs:anthony` if it needs me. Never leave a
   silent claim.
-- **The board follows the claim.** `fleet-board` moves an `agent:working`
-  card to **Building**. A claim more than 24 hours old with no open PR linked
-  to the issue gets `needs:anthony` and one comment, so a stuck session can't
-  block it. To release it, I remove `agent:working` and `needs:anthony`.
+- **The Work page follows the claim.** An `agent:working` item shows as in
+  progress, and a claim with no activity in 24 hours is marked **Stalled**, so a
+  stuck session is visible. To release it, I remove `agent:working`.
 
 ## Closing issues
 

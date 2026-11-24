@@ -6,8 +6,8 @@ issue in another repo, or touch labels, releases or leads. Repo rules in its
 own AGENTS.md/CLAUDE.md win where they are stricter.
 
 ## How work flows
-- **Backlog = GitHub issues in the repo that owns the code.** The Fleet board
-  (github.com/users/brignano/projects/1) is my view; labels are what agents act on.
+- **Backlog = GitHub issues in the repo that owns the code.** The Work page
+  (work.home.brignano.io) is my view; labels are what agents act on.
 - **Every open issue is ready** unless held: `needs:anthony`, `blocked`,
   `agent:pause`, `agent:working`, `lead`, `memory`, a `Release plan:` issue, one
   opened by a bot or outsider, or (filed since 2026-11-02) one with no `## Decisions`.
