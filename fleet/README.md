@@ -92,7 +92,7 @@ workflow syncs the file to every repo I own on merge and every Monday
 | `agent:pause` | Leave it alone until I remove this. Holds an issue back from builders. | Me |
 | `needs:anthony` | Blocked on a decision, account or hardware from me. | Any agent |
 | `blocked` | Waiting on another issue or PR, named in a `Blocked by owner/repo#N` line in the body. | Any agent |
-| `priority:p1` / `p2` / `p3` | Source of truth for priority; `fleet-board` copies it to the board's Priority field. Every open issue has one. | Whoever files it proposes, I confirm |
+| `priority:p1` / `p2` / `p3` | Source of truth for priority. Every open issue has one. | Whoever files it proposes, I confirm |
 | `risk:low` / `risk:high` | Decides merge rules. | Planner proposes, I confirm |
 | `size:s` / `size:m` | Agents take S and M only. Bigger gets split. | Planner |
 | `type:bug` / `feature` / `chore` / `docs` | What kind of work it is. | Whoever files it |
