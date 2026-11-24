@@ -54,6 +54,9 @@ reviewing or merging.
 - **Any UI, styling or colour:** the `design-system` skill. Every UI styles from
   [`brignano/design`](https://github.com/brignano/design) tokens; never pick a
   colour or hardcode a hex. Missing something? Add it to design, don't invent it.
+- **Any claude.ai Artifact** (tracker, plan, dashboard, explainer): the same
+  `design-system` skill, before writing the page. Run its `artifact-kit.sh` and
+  build on the starter it gives; my design system beats artifact-design's look.
 - **Any site, subdomain, preview or access change:** the `hosting` skill.
   Cloudflare Workers on the `brignano.io` zone, private by default.
 - **Planning or cutting a release, release notes, tag workflows:** the

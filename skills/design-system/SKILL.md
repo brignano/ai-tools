@@ -1,6 +1,6 @@
 ---
 name: design-system
-description: How to style anything with brignano/design — wiring it into a new project (npm or jsDelivr, fonts, browserslist, Tailwind bridge, a product's mark, components, templates, icons), what each colour token means, fill vs ink vs surface steps, the mono voice, the two tiers, dark mode, chart colours, and diagram/diff colours. Use when starting any new project, site or app, and before writing any UI, CSS, Tailwind classes, colour, theme, chart or diagram colours or component styling, in any repo.
+description: How to style anything with brignano/design — wiring it into a new project (npm or jsDelivr, fonts, browserslist, Tailwind bridge, a product's mark, components, templates, icons), what each colour token means, fill vs ink vs surface steps, the mono voice, the two tiers, dark mode, chart colours, diagram/diff colours, and claude.ai Artifacts (artifact-kit.sh). Use when starting any new project, site, app or claude.ai Artifact (tracker, plan page, dashboard, explainer), and before writing any UI, CSS, Tailwind classes, colour, theme, chart or diagram colours or component styling, in any repo.
 ---
 
 # Styling — always use the design system
@@ -40,13 +40,7 @@ Wire it in from the first commit, not as a later restyle.
    `https://cdn.jsdelivr.net/npm/@brignano/design@<version>/tokens.css`
 
    A claude.ai Artifact can't do either: its CSP blocks stylesheets from
-   every host except Google Fonts. Publish the package's `tokens.css` and
-   `components.css` verbatim as files of the artifact (`npm pack
-   @brignano/design@<version>`, then the Artifact tool's `files`) and link
-   them relatively (`<link rel="stylesheet" href="tokens.css">`). Load Geist
-   and IBM Plex Mono from Google Fonts. Never hand-copy a subset of tokens
-   into the page: that is how the Idea Ledger sat on 0.1.0 colours, with a
-   caption grey under the contrast floor, while the package moved on.
+   every host except Google Fonts. See **claude.ai Artifacts** below.
 
 3. **Import.** Plain CSS:
 
@@ -122,6 +116,39 @@ Wire it in from the first commit, not as a later restyle.
    Tailwind colour utilities (there should be none), look at the page in both
    themes, and note in the README that it uses `@brignano/design`, which tier,
    and its mark if it has one.
+
+## claude.ai Artifacts
+
+Every Artifact Claude builds for Anthony (tracker, plan page, dashboard,
+explainer, review page) is on this system, in the tool tier, with no mark
+attribute. Run the kit first, then write the page:
+
+```sh
+bash "<this skill's directory>/artifact-kit.sh" <scratchpad>/<artifact-name>
+```
+
+It puts the latest package's `tokens.css` and `components.css` beside a
+starter `index.html` (Geist and IBM Plex Mono from Google Fonts, `--bg`
+body, an eyebrow, a theme toggle that sets `data-theme`) and prints the
+Artifact `files` map to publish with. Build on the starter: components from
+`components.css` (`.card`, `.btn`, `.pill-*`, `.table`, `.stat`, `.msg-*`,
+`.num`), values from tokens, page layout as the only local CSS.
+
+- **The design system replaces the artifact-design skill's look, not its
+  contract.** Keep its rules for the title, script hosts, phone width, storage
+  and size. Skip its palette, font and "define tokens on `:root`" advice:
+  `tokens.css` already themes light and dark through `color-scheme` and
+  `data-theme`, so the page writes no `:root` colours and no
+  `prefers-color-scheme` block of its own.
+- **Never hand-copy a subset of tokens into the page.** That is how the Idea
+  Ledger sat on 0.1.0 colours, with a caption grey under the contrast floor,
+  while the package moved on. Republishing an old artifact? Re-run the kit
+  into its folder (it leaves `index.html` alone) and publish the refreshed
+  stylesheets with it.
+- **Not covered:** Claude Docs and typed Artifacts (Slides, Design) take their
+  look from the Artifact type or its design system, not from page CSS.
+- Charts in an Artifact use `--chart-1..8` (`tokens.chart.css` from the same
+  tarball, published the same way).
 
 ## The rules that matter most
 

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- @brignano/design __DESIGN_VERSION__, tool tier. tokens.css and components.css
+     are published beside this page as artifact files (see artifact-kit.sh). -->
+<title>Page title</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<style>
+  /* Page layout only. Every colour, size, radius and font comes from a token. */
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: var(--leading-body);
+  }
+  main {
+    max-width: 56rem;
+    margin-inline: auto;
+    padding: var(--space-6) var(--space-4) var(--space-8);
+  }
+  .page-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+  .page-head h1 { margin: var(--space-1) 0 0; }
+</style>
+</head>
+<body>
+<main>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Where this is</p>
+      <h1>Page title</h1>
+    </div>
+    <!-- Follows the OS until clicked; then data-theme pins it. -->
+    <button type="button" class="btn btn-ghost btn-sm" id="theme-toggle" aria-pressed="false">Dark theme</button>
+  </header>
+
+  <section class="stack">
+    <div class="card">
+      <div class="card-body"><p>Content goes here. Numbers, dates and codes take <span class="num">.num</span>.</p></div>
+    </div>
+  </section>
+</main>
+<script>
+  (function () {
+    var root = document.documentElement, btn = document.getElementById('theme-toggle');
+    function isDark() {
+      var t = root.getAttribute('data-theme');
+      return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    function label() {
+      var d = isDark();
+      btn.textContent = d ? 'Light theme' : 'Dark theme';
+      btn.setAttribute('aria-pressed', String(d));
+    }
+    try { var saved = localStorage.getItem('theme'); if (saved) root.setAttribute('data-theme', saved); } catch (e) {}
+    label();
+    btn.addEventListener('click', function () {
+      var next = isDark() ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('theme', next); } catch (e) {}
+      label();
+    });
+  })();
+</script>
+</body>
+</html>
