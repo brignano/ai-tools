@@ -34,13 +34,20 @@ on:
         description: Newline-separated paths to check.
         type: string
         default: /
+      runs-on:
+        description: >-
+          JSON for the runner. Private repos pass '["self-hosted","homelab"]'
+          so the job stops spending the shared Actions minutes. A reusable
+          workflow bills the CALLER, so a private caller pays for it.
+        type: string
+        default: '"ubuntu-latest"'
 
 permissions:
   contents: read
 
 jobs:
   ui-check:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     timeout-minutes: 20
     defaults:
       run:
